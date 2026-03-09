@@ -1,0 +1,393 @@
+/* ============================================================================
+   DEAL PIPELINE — FINAL CANONICAL CSS (COMPACT PRODUCTION)
+============================================================================ */
+
+/* ================= ROOT ================= */
+
+.deal-pipeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  height: 100%;
+
+  font-size: 12px;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ================= 2-COL GRID ================= */
+
+.pipeline-grid-2col {
+  display: grid;
+  grid-template-columns: 40fr 60fr;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
+}
+
+.pipeline-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+}
+
+.pipeline-placeholder {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ================= TRINITY ADVICE ================= */
+
+.trinity-advice {
+  flex: 1;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(120, 180, 255, 0.15);
+  background: radial-gradient(
+    circle at top,
+    rgba(120, 180, 255, 0.06),
+    rgba(0, 0, 0, 0.85)
+  );
+}
+
+.trinity-advice-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #5ba8f5;
+  margin-bottom: 8px;
+  text-shadow: 0 0 6px rgba(120, 180, 255, 0.3);
+}
+
+.trinity-advice-list {
+  list-style: disc;
+  margin: 0;
+  padding: 0 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trinity-advice-list li {
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(160, 200, 240, 0.8);
+  letter-spacing: 0.2px;
+}
+
+.trinity-advice-list li::marker {
+  color: #5ba8f5;
+}
+
+/* ================= PANEL BASE ================= */
+
+.pipeline-panel-valid,
+.pipeline-panel-wait {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;                 /* 4 → 2 */
+  padding: 8px;             /* 12 → 8 */
+  height: 100%;
+  min-height: 0;
+
+  border-radius: 12px;
+  border: 1px solid rgba(255, 200, 120, 0.18);
+
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 215, 120, 0.05),
+    rgba(0, 0, 0, 0.9)
+  );
+}
+
+/* ================= VALID / WAIT PANELS ================= */
+
+.pipeline-panel-valid {
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(76, 255, 154, 0.05);
+}
+
+.pipeline-panel-wait {
+  box-shadow: inset 0 0 10px rgba(245, 194, 107, 0.05);
+}
+
+/* ================= TITLES ================= */
+
+.box-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f5c26b;
+}
+
+.pipeline-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #f5c26b;
+}
+
+.pipeline-count {
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffd87a;
+  background: rgba(255, 200, 120, 0.12);
+  border: 1px solid rgba(255, 200, 120, 0.35);
+}
+
+/* ================= ITEMS ================= */
+
+.pipeline-item {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 1.2fr 0.8fr 0.5fr 4fr;
+  column-gap: 8px;
+  padding: 2px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  line-height: 0.95;
+}
+
+/* WAIT layout override */
+.pipeline-panel-wait .pipeline-item {
+  grid-template-columns: 1.4fr 1.1fr 0.8fr 3fr;
+}
+
+/* ================= TEXT ================= */
+
+.pipeline-item span {
+  color: #e8d4a7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ================= MINI BREAKDOWN ================= */
+
+.pipeline-item .mini {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.05;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  padding: 2px 6px;
+  border-radius: 4px;
+
+  background: linear-gradient(
+    to right,
+    rgba(255, 215, 120, 0.16),
+    rgba(255, 215, 120, 0.05) 50%,
+    transparent
+  );
+
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 2px rgba(0,0,0,0.65);
+}
+
+.pipeline-clickable:hover .mini {
+  background: linear-gradient(
+    to right,
+    rgba(255, 215, 120, 0.22),
+    rgba(255, 215, 120, 0.08) 50%,
+    transparent
+  );
+}
+
+.pipeline-item.muted .mini {
+  opacity: 0.45;
+  background: none;
+}
+
+
+/* ===== BREAKDOWN METRICS ===== */
+
+.mini-bd {
+  flex-shrink: 0;
+}
+
+.mini-bd.type-continuation { color: #4fc3f7; font-weight: 600; }
+.mini-bd.type-reversal     { color: #c989ee; font-weight: 600; }
+.mini-bd.phase             { color: #e8d4a7; }
+
+
+
+/* ================= STATES ================= */
+
+.pipeline-item.muted {
+  opacity: 0.55;
+}
+
+.pipeline-clickable {
+  cursor: pointer;
+}
+
+.pipeline-clickable:hover {
+  background: rgba(245, 194, 107, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(245, 194, 107, 0.25);
+}
+
+/* ================= EMPTY ================= */
+
+.pipeline-empty {
+  font-size: 10px;
+  opacity: 0.6;
+  padding: 2px;
+}
+
+/* ================= COLUMNS ================= */
+
+.pipeline-item .sym {
+  color: #ffd88a;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.pipeline-item .side {
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.pipeline-item .side.buy  { color: #00ff9c; }
+.pipeline-item .side.sell { color: #ff6b6b; }
+
+.pipeline-item .tf {
+  font-size: 13px;
+   text-align: center;
+  color: #ffd88a;
+  font-weight: 600;
+}
+
+.pipeline-item .metric.score {
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.4px;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255,215,140,0.08)
+  );
+  border-radius: 4px;
+}
+
+/* ================= WAIT REASON ================= */
+
+.pipeline-item .reason {
+  font-size: 12px;
+    color: #ffd88a;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   TRINITY PANEL
+============================================================================ */
+
+.pipeline-panel-trinity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  height: 100%;
+  border: none;
+  box-shadow: none;
+
+  background: radial-gradient(
+    circle at top,
+    rgba(120, 180, 255, 0.10),
+    rgba(0, 0, 0, 0.88)
+  );
+}
+
+/* ================= TRINITY LABEL ================= */
+
+.trinity-label {
+  margin-top: 4px;
+
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 10px;
+  text-align: center;
+
+  color: #1687ea;
+
+  text-shadow:
+    0 0 8px  rgba(120,180,255,0.35),
+    0 0 16px rgba(120,180,255,0.18);
+
+  transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+/* ================= TRINITY IMAGE ================= */
+
+.trinity-image {
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+
+  will-change: transform;
+  transition: transform 0.7s ease, filter 0.7s ease;
+
+  filter: drop-shadow(0 0 14px rgba(120, 180, 255, 0.45));
+}
+
+/* ================= ANIMATIONS ================= */
+
+.pipeline-panel-trinity.idle .trinity-image {
+  animation: trinity-idle-breathe 2s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+@keyframes trinity-idle-breathe {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+.pipeline-panel-trinity.scan .trinity-image {
+  animation: trinity-scan-breathe 3.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(120,180,255,0.55));
+}
+
+@keyframes trinity-scan-breathe {
+  0%   { transform: scale(1); opacity: 0.82; }
+  50%  { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.82; }
+}
+
+.pipeline-panel-trinity.alert .trinity-image {
+  animation: trinity-alert 0.45s ease-out 2;
+  filter: drop-shadow(0 0 22px rgba(255,80,80,0.65));
+}
+
+@keyframes trinity-alert {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trinity-image {
+    animation: none !important;
+    transform: none !important;
+  }
+}

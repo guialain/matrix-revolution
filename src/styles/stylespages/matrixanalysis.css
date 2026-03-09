@@ -1,0 +1,102 @@
+/* =========================================================
+   MATRIX ANALYSIS — LAYOUT FINAL STABLE
+========================================================= */
+
+/* =========================================================
+   ROOT PAGE
+========================================================= */
+
+.h-screen.flex.flex-col {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* =========================================================
+   ROW 1 — ROBOT (FULL WIDTH)
+========================================================= */
+
+.h-screen > .p-4 {
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   ROW 2 — MAIN GRID (LEFT / RIGHT)
+========================================================= */
+
+.flex-1.grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  align-items: stretch;   /* IMPORTANT */
+}
+
+/* =========================================================
+   LEFT COLUMN
+========================================================= */
+
+.flex-1.grid > div:first-child {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Indicators block (top) */
+.flex-1.grid > .flex.flex-col:first-child > *:first-child {
+  flex: 0 0 auto;
+}
+
+/* Risk + Trend block */
+.flex-1.grid > .flex.flex-col:first-child > .grid.grid-cols-2 {
+  flex: 0 0 auto;
+}
+
+/* =========================================================
+   RIGHT COLUMN
+========================================================= */
+
+.flex-1.grid > div:last-child {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;   
+}
+
+/* =========================================================
+   TOP MOVERS — FIXED HEIGHT (ABSOLUTE CONTROL)
+========================================================= */
+
+/* =========================================================
+   TOP MOVERS — STRICT FIXED HEIGHT
+========================================================= */
+
+.panel-topmovers {
+  height: 650px;          /* ← HAUTEUR FIXE */
+  min-height: 600px;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;       /* coupe tout débordement */
+}
+
+/* header fixe */
+.panel-topmovers .panel-header {
+  flex: 0 0 auto;
+}
+
+/* contenu scrollable uniquement */
+.panel-topmovers .stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* =========================================================
+   SAFETY FLEX FIX
+========================================================= */
+
+.flex-1.grid > div {
+  min-height: 0;
+}

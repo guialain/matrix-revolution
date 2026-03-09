@@ -1,0 +1,91 @@
+/* ============================================================================
+   CAPITAL ALLOCATION PANEL
+============================================================================ */
+
+.dashboard-allocation {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ============================================================================
+   TUBES CONTAINER — SOCLE COMMUN
+============================================================================ */
+
+.allocation-tubes {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;              /* 🔒 sol commun */
+  justify-content: space-around;
+  gap: 14px;
+  padding: 6px 18px;
+}
+
+/* ============================================================================
+   TUBE WRAPPER — EMPREINTE FIXE
+============================================================================ */
+
+.tube-wrapper {
+  width: 96px;                        /* largeur fixe */
+  height: 100%;                       /* 🔒 même hauteur pour tous */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;          /* 🔒 alignement bas */
+}
+
+/* ============================================================================
+   TUBES VIDES
+============================================================================ */
+
+.tube-empty {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+/* ============================================================================
+   VALEUR AU-DESSUS DU TUBE
+============================================================================ */
+
+.tube-value {
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f5c26b;
+}
+
+/* ============================================================================
+   LABEL CLASSE (FX / CRYPTO / …)
+============================================================================ */
+
+.tube-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #bfae80;
+  letter-spacing: 0.4px;
+}
+
+/* ============================================================================
+   PRIORITÉ STRATÉGIQUE PAR CLASSE
+   (agit sur le SVG, pas sur le socle)
+============================================================================ */
+
+.tube-wrapper[data-class="INDEX"] .vertical-tube {
+  transform-origin: bottom;
+  transform: scaleY(1);              /* dominante */
+}
+
+.tube-wrapper[data-class="FX"] .vertical-tube {
+  transform-origin: bottom;
+  transform: scaleY(0.85);
+}
+
+/* ============================================================================
+   VERTICAL TUBE (SVG)
+============================================================================ */
+
+.vertical-tube {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+}

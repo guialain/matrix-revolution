@@ -1,0 +1,161 @@
+/* =======================================================
+   MARKET TREND — V6 CLEAN
+   Harmonized with risk.css
+======================================================= */
+
+/* =======================================================
+   PANEL
+======================================================= */
+
+.markettrend-panel {
+  background: #0b0c0e;
+  border: 1px solid rgba(255, 200, 80, 0.15);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow:
+    0 0 12px rgba(255, 200, 80, 0.08),
+    inset 0 0 18px rgba(255, 200, 80, 0.06);
+}
+
+/* =======================================================
+   GRID — SINGLE SOURCE OF TRUTH
+======================================================= */
+
+.markettrend-header-row,
+.markettrend-row {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 34px;
+  align-items: center;
+}
+
+/* =======================================================
+   HEADER
+======================================================= */
+
+.markettrend-header-row {
+  padding: 2px 14px;
+  margin-bottom: 10px;
+}
+
+.markettrend-header-col {
+  color: #ffcc66;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(255, 200, 80, 0.45);
+}
+
+.markettrend-header-col:first-child {
+  text-align: left;
+}
+
+/* =======================================================
+   ROWS (risk-row compatible)
+======================================================= */
+
+.markettrend-row {
+  position: relative;
+  padding: 2px 14px;
+  margin: 4px 0;
+  border-radius: 6px;
+
+  background: rgba(255, 204, 102, 0.06);
+  border-top: 2px solid rgba(255, 204, 102, 0.22);
+  border-bottom: 2px solid rgba(255, 204, 102, 0.22);
+
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.markettrend-row:hover {
+  background: rgba(255, 204, 102, 0.12);
+  box-shadow:
+    0 0 12px rgba(255, 204, 102, 0.18),
+    inset 0 0 12px rgba(255, 204, 102, 0.10);
+}
+
+/* =======================================================
+   NEON OVERLAY
+======================================================= */
+
+.markettrend-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  pointer-events: none;
+
+  border: 1px solid rgba(0, 150, 255, 0.18);
+  box-shadow:
+    0 0 10px rgba(0, 150, 255, 0.30),
+    inset 0 0 6px rgba(0, 150, 255, 0.15);
+
+  transition: 0.25s ease;
+}
+
+.markettrend-row:hover::after {
+  border-color: rgba(0, 180, 255, 0.30);
+  box-shadow:
+    0 0 16px rgba(0, 180, 255, 0.50),
+    inset 0 0 10px rgba(0, 180, 255, 0.25);
+}
+
+/* =======================================================
+   TEXT
+======================================================= */
+
+.markettrend-name {
+  color: #ffcc66;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.markettrend-num {
+  color: #ffe9c2;
+  font-size: 0.78rem;
+  font-weight: 500;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =======================================================
+   CHANGE / DIRECTION
+======================================================= */
+
+.markettrend-dir {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* =======================================================
+   COLORS (shared)
+======================================================= */
+
+.markettrend-green   { color: #7cffb2; }
+.markettrend-red     { color: #ff6b6b; }
+.markettrend-neutral { color: #cccccc; opacity: 0.75; }
+
+.markettrend-up      { color: #7cffb2; }
+.markettrend-down    { color: #ff7070; }
+.markettrend-flat    { color: #b5b5b5; opacity: 0.6; }
+
+/* =======================================================
+   FLAGS (OPTIONAL — PREMIUM)
+======================================================= */
+
+.flag-icon {
+  width: 16px;
+  height: 8px;
+  border-radius: 1px;
+  object-fit: cover;
+  filter: drop-shadow(0 0 3px rgba(255,255,255,0.25));
+  animation: flagPulse 2.2s ease-in-out infinite;
+}
+
+@keyframes flagPulse {
+  0%   { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(255,255,255,0.25)); }
+  50%  { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(212,175,55,0.45)); }
+  100% { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(255,255,255,0.25)); }
+}

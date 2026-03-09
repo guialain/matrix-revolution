@@ -1,0 +1,197 @@
+/* ============================================================
+   MARKET WATCH PANEL — NEO MATRIX
+============================================================ */
+
+/* ============================================================
+   PANEL BASE
+============================================================ */
+.panel-topmovers {
+  display: flex;
+  flex-direction: column;
+  height: clamp(380px, 42vh, 520px);
+  min-height: 0;
+
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 215, 140, 0.08),
+    rgba(0, 0, 0, 0.85) 60%
+  );
+
+  border: 1px solid rgba(255, 200, 120, 0.25);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+
+  box-shadow:
+    0 0 18px rgba(255, 185, 80, 0.18),
+    inset 0 0 14px rgba(255, 210, 120, 0.08);
+
+  backdrop-filter: blur(6px);
+  color: #ffe9c2;
+  overflow: hidden;
+}
+
+/* ============================================================
+   HEADER
+============================================================ */
+.panel-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.panel-title-group h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: #f5d48a;
+  text-shadow: 0 0 6px rgba(255, 215, 120, 0.45);
+}
+
+.timestamp {
+  font-size: 0.7rem;
+  opacity: 0.5;
+  color: #bbb;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   SCROLL ZONE
+============================================================ */
+.stack {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ============================================================
+   TABLE
+============================================================ */
+.mw-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.76rem;
+}
+
+/* ============================================================
+   HEADER
+============================================================ */
+.mw-table thead th {
+  text-align: center;
+  padding: 0.18rem 0.20rem;
+  font-size: 0.62rem;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255, 233, 194, 0.55);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  user-select: none;
+}
+
+/* ============================================================
+   TABLE
+============================================================ */
+.mw-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.76rem;
+}
+
+/* largeur optimisée pour éviter scroll */
+.mw-table th:nth-child(1) { width: 30%; } /* symbol */
+.mw-table th:nth-child(2) { width: 18%; } /* price */
+.mw-table th:nth-child(3) { width: 16%; } /* daily */
+.mw-table th:nth-child(4) { width: 12%; } /* rsi */
+.mw-table th:nth-child(5) { width: 12%; } /* zscore */
+.mw-table th:nth-child(6) { width: 12%; } /* slope */
+
+/* ============================================================
+   BODY
+============================================================ */
+.mw-table tbody td {
+  padding: 0.12rem 0.20rem;
+  border-bottom: 1px dashed rgba(255,255,255,0.04);
+  text-align: center;
+  font-size: 0.73rem;
+  font-weight: 300;
+  color: #ffe9c2;
+ line-height: 0.9;
+  font-family: "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.mw-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================
+   SYMBOL COLUMN
+============================================================ */
+td.sym {
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  text-align: left;
+  font-family: inherit;
+}
+
+/* ============================================================
+   GROUP TITLE
+============================================================ */
+.mw-group-title {
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+
+  color: #c8a800;
+  background: #1a1400;
+
+  padding: 4px 8px 3px;
+
+  border-top: 1px solid #3a3000;
+  border-bottom: 1px solid rgba(200,168,0,0.15);
+
+  text-align: left;
+  pointer-events: none;
+}
+
+/* ============================================================
+   CLICKABLE ROWS
+============================================================ */
+.tm-row-clickable {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.tm-row-clickable:hover {
+  background: rgba(255, 215, 120, 0.07);
+}
+
+.tm-row-clickable:active {
+  background: rgba(255, 215, 120, 0.12);
+}
+
+/* ============================================================
+   VALUE COLORS
+============================================================ */
+.mw-table td.mw-pos      { color: #00cc66; }
+.mw-table td.mw-neg      { color: #ff4444; }
+.mw-table td.mw-rsi-high { color: #ff4444; }
+.mw-table td.mw-rsi-low  { color: #00cc66; }
+.mw-table td.mw-z-high   { color: #ff8800; }
+.mw-table td.mw-z-low    { color: #44aaff; }
+
+/* ============================================================
+   EMPTY
+============================================================ */
+.empty {
+  padding: 0.6rem;
+  font-size: 0.75rem;
+  opacity: 0.5;
+  text-align: center;
+}

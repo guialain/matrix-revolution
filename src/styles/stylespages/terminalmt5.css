@@ -1,0 +1,118 @@
+/* ============================================================================
+   TERMINAL MT5 — MAIN GRID (2x2)
+============================================================================ */
+
+.terminal-mt5-grid {
+  display: grid;
+  grid-template-columns: 80fr 20fr;     /* gauche / droite */
+  grid-template-rows: 1fr auto;         /* haut / bas */
+  gap: 12px;
+  height: calc(100vh - 72px);           /* hors header */
+  padding: 12px;
+  min-height: 0;
+}
+
+
+.left-column {
+  display: grid;
+  grid-template-rows:
+    minmax(370px, 0.78fr)   /* 🔥 HAUT dominant */
+    minmax(220px, 0.6fr);  /* 🔽 BAS compact */
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ============================================================================
+   BAS GAUCHE — Account Health + Exposure Distribution
+============================================================================ */
+
+.left-bottom-row {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr; /* AccountHealth | Exposure */
+  gap: 12px;
+  min-height: 260px;
+
+}
+
+/* Sécurité interne */
+.terminal-block.account-health,
+.terminal-block.exposure-distribution {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+
+/* ============================================================================
+   COLONNE DROITE
+   - Haut : Open Positions
+   - Bas  : Capital Allocation
+============================================================================ */
+
+.right-column {
+  display: grid;
+  grid-template-rows: 1.18fr minmax(300px, 0.9fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+
+/* ============================================================================
+   GAUCHE HAUT — PIPELINE + DEALING ROOM
+============================================================================ */
+
+.left-top-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+/* ============================================================================
+   BLOCS COMMUNS
+============================================================================ */
+
+.terminal-block {
+  border: 1px solid rgba(255, 200, 120, 0.25);
+  border-radius: 14px;
+  padding: 14px;
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 215, 140, 0.08),
+    rgba(0, 0, 0, 0.92)
+  );
+  min-height: 0;
+}
+
+/* ============================================================================
+   BLOCS HAUT — FLEX COLUMN (remplissent leur cellule)
+============================================================================ */
+
+.terminal-block.pipeline,
+.terminal-block.dealing,
+.terminal-block.open-positions {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Scroll contrôlé uniquement où nécessaire */
+.terminal-block.pipeline,
+.terminal-block.open-positions {
+  overflow-y: auto;
+}
+
+
+
+/* ============================================================================
+   CAPITAL ALLOCATION — BAS DROITE (AGRANDI)
+============================================================================ */
+
+.terminal-block.capital-allocation {
+  padding: 14px;
+  min-height: 320px;        /* 🔥 clé */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;  /* centre vertical si peu de data */
+}

@@ -1,0 +1,86 @@
+// hooks (remonter à src/)
+import useMT5Data from "../../hooks/useMT5Data";
+import useRobotCore from "../../hooks/useRobotCore";
+
+// matrixanalysis components (déjà dans src/components)
+import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
+import AccountLevels from "../matrixanalysis/AccountLevels";
+import MarketTrend from "../matrixanalysis/MarketTrend";
+import NeoRobot from "../matrixanalysis/NeoRobot";
+
+// styles
+import "../../styles/stylespages/matrixanalysis.css";
+
+export default function MatrixAnalysis() {
+
+  // ==================================================
+  // 🔑 HOOKS (ORDRE STRICT)
+  // ==================================================
+  const { data, ready, error } = useMT5Data();
+
+  const snapshot = data ? {
+    time: data.time ?? {},
+    account: data.account ?? {},
+    openPositions: data.openPositions ?? [],
+
+    asset: data.asset ?? null,
+    indicators: data.indicators ?? {},
+    macro: data.macro ?? {},
+
+    topMovers:   data.topMovers   ?? null,
+    marketWatch: data.marketWatch ?? [],
+  } : null;
+
+  const robotData = useRobotCore(snapshot);
+
+
+  // ==================================================
+  // STATES
+  // ==================================================
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500 bg-black">
+        MT5 connection error
+      </div>
+    );
+  }
+
+  if (!ready || !data) {
+    return (
+      <div className="h-screen flex items-center justify-center text-gray-500 bg-black">
+        Waiting for MT5 snapshot…
+      </div>
+    );
+  }
+
+  // ==================================================
+  // PAGE
+  // ==================================================
+ return (
+    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+
+      {/* ==================================================
+         ROW 1 — ROBOT (FULL WIDTH)
+      ================================================== */}
+      <div className="p-4">
+        <NeoRobot snapshot={snapshot} robot={robotData} />
+      </div>
+
+      {/* ==================================================
+         ROW 2 — MAIN CONTENT (2 COLUMNS)
+      ================================================== */}
+<div className="flex-1 flex flex-col gap-4 px-4 pb-4 overflow-hidden min-h-0">
+
+          {/* --- INDICATORS (TOP) --- */}
+          <IndicatorsMatrix snapshot={snapshot} />
+
+          {/* --- RISK + TREND (BOTTOM, SIDE BY SIDE) --- */}
+          <div className="grid grid-cols-2 gap-4">
+            <AccountLevels snapshot={snapshot} />
+            <MarketTrend snapshot={snapshot} />
+          </div>
+
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,146 @@
+// src/components/terminalmt5/DealPipeline.jsx
+
+import React, { useState } from "react";
+import useTrinityVoice from "../../hooks/useTrinityVoice";
+import "../../styles/stylesterminalMT5/dealpipeline.css";
+
+export default function DealPipeline({ robot, onSelectDeal }) {
+
+  // ================= EXTRACTION TRINITY =================
+  const {
+    validOpportunities = [],
+    waitOpportunities  = []
+  } = robot ?? {};
+
+  const hasValid = validOpportunities.length > 0;
+  const hasWait  = waitOpportunities.length > 0;
+
+  const [muted, setMuted] = useState(false);
+
+  // ================= 🔊 VOICE HOOK =================
+  const trinityState = useTrinityVoice({
+    valid: validOpportunities.length,
+    wait: waitOpportunities.length,
+    topValid: validOpportunities[0] ?? null,
+    muted
+  }) || "";
+
+  /* =====================================================
+     SOUS-COMPONENT — TrinityOpportunityLine
+  ===================================================== */
+  function TrinityOpportunityLine({ op, muted = false, onClick }) {
+
+    if (!op) return null;
+
+    const fmtScore = v =>
+      Number.isFinite(v)
+        ? `${v > 0 ? "+" : ""}${Math.round(v)}`
+        : "—";
+
+    const type      = String(op.type ?? "").toUpperCase();          // CONTINUATION | REVERSAL
+    const typeShort = type === "CONTINUATION" ? "CONT" : type === "REVERSAL" ? "REV" : type;
+    const phase     = op.signalPhase ?? op.signalType ?? "";        // e.g. STRONG_UP / BUY_RSI_LOW
+    const waitState = String(op.state ?? "").replace(/^WAIT_/, ""); // e.g. M5_CONTRARY
+
+    return (
+      <div
+        className={`pipeline-item ${muted ? "muted" : ""} pipeline-clickable`}
+        onClick={() => onClick?.(op)}
+      >
+        {/* SYMBOL */}
+        <span className="sym">{op.symbol}</span>
+
+        {/* SIDE */}
+        <span className={`side ${(op.side ?? "").toLowerCase()}`}>
+          {muted ? `WAIT-${op.side}` : op.side}
+        </span>
+
+        {/* SCORE */}
+        <span className="metric score">
+          {fmtScore(op.score)}
+        </span>
+
+        {/* TYPE + PHASE */}
+        <span className="mini">
+          {typeShort && (
+            <span className={`mini-bd type-${type.toLowerCase()}`}>
+              {typeShort}
+            </span>
+          )}
+          <span className="mini-bd phase">
+            {muted ? waitState : phase}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  // ================= RENDER =================
+  return (
+    <div className="deal-pipeline">
+
+      <div className="box-title">
+        Deal Pipeline
+        <button
+          className={`voice-btn ${muted ? "off" : "on"}`}
+          onClick={() => setMuted(m => !m)}
+          title={muted ? "Activer la voix" : "Désactiver la voix"}
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
+      </div>
+
+      <div className="pipeline-grid-2col">
+
+        {/* ================= LEFT — Trinity + placeholder ================= */}
+        <div className="pipeline-col-left">
+          <div className={`pipeline-panel-trinity ${trinityState}`}>
+            <img
+              src="/trinity.png"
+              alt="Trinity AI"
+              className="trinity-image"
+            />
+            <div className="trinity-label">TRINITY</div>
+          </div>
+          <div className="trinity-advice">
+            <div className="trinity-advice-title">TRINITY ADVICE</div>
+            <ul className="trinity-advice-list">
+              <li>Reduce exposure on volatile assets</li>
+              <li>Monitor drawdown limits</li>
+              <li>Respect position sizing</li>
+              <li>Wait for confirmation before entry</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* ================= RIGHT — VALID ================= */}
+        <div className="pipeline-panel-valid">
+
+          <div className="pipeline-title">
+            VALID
+            <span className="pipeline-count">
+              {validOpportunities.length}
+            </span>
+          </div>
+
+          {!hasValid ? (
+            <div className="pipeline-empty">
+              No validated opportunity
+            </div>
+          ) : (
+            validOpportunities.slice(0, 7).map((op, i) => (
+              <TrinityOpportunityLine
+                key={`${op.symbol}-${i}`}
+                op={op}
+                onClick={onSelectDeal}
+              />
+            ))
+          )}
+
+        </div>
+
+      </div>
+
+    </div>
+  );
+}

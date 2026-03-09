@@ -1,0 +1,108 @@
+/* ============================================================================
+   ACCOUNT HEALTH — TUBES
+============================================================================ */
+
+/* ============================================================================
+   CONTAINER
+============================================================================ */
+
+.health-tubes {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0;
+
+  max-width: 360px;
+  margin: 0 auto;
+  padding-top: 4px;
+   padding-bottom: 4px;
+}
+
+/* ============================================================================
+   TUBE WRAPPERS
+============================================================================ */
+
+/* New structure */
+.health-tube {
+  width: 104px;
+  flex: 0 0 auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  margin: 0;
+  padding: 0;
+}
+
+/* Legacy compatibility (kept intentionally) */
+.tube-wrapper {
+  width: 114px;
+  flex: 0 0 auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+
+  padding-bottom: 8px;
+}
+
+/* ============================================================================
+   LABELS
+============================================================================ */
+
+.health-tube-label {
+  font-size: 0.7rem;
+  color: #f5c26b;
+  margin-top: 2px;
+}
+
+/* ============================================================================
+   VALUES ABOVE TUBES (SVG TEXT)
+============================================================================ */
+
+/* Base value style (shared) */
+.health-tube-value,
+.tube-value {
+  fill: #f5c26b;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+
+  text-shadow:
+    0 0 4px rgba(245, 194, 107, 0.65),
+    0 0 10px rgba(245, 194, 107, 0.35);
+}
+
+/* ============================================================================
+   STATE MODIFIERS
+============================================================================ */
+
+.health-tube-value--danger,
+.tube-value.danger {
+  fill: #ff5c5c;
+  text-shadow:
+    0 0 4px rgba(255, 92, 92, 0.8),
+    0 0 10px rgba(255, 92, 92, 0.5);
+}
+
+.health-tube-value--safe,
+.tube-value.safe {
+  fill: #4cff9a;
+  text-shadow:
+    0 0 4px rgba(76, 255, 154, 0.7),
+    0 0 10px rgba(76, 255, 154, 0.35);
+}
+
+/* ============================================================================
+   MISC / LEGACY
+============================================================================ */
+
+.tube-percent {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+}

@@ -1,0 +1,244 @@
+/* =======================================================
+   NEO MATRIX — INDICATORS MATRIX (Gold Royal Ultra Premium)
+   ======================================================= */
+
+:root {
+  --gold-1: #FFCC66;             /* or pur */
+  --gold-2: #DDB05A;             /* or profond */
+  --gold-3: #B98E43;             /* bronze */
+  --gold-light: rgba(255, 204, 102, 0.25);
+  --gold-glow: rgba(255, 204, 102, 0.55);
+}
+
+/* -------------------------------------------------------
+   PANEL
+------------------------------------------------------- */
+.indicators-panel {
+  background: #0b0c0e;
+  border: 1px solid rgba(255, 204, 102, 0.25);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow:
+    0 0 25px rgba(255, 204, 102, 0.08),
+    inset 0 0 15px rgba(255, 204, 102, 0.05);
+}
+
+/* -------------------------------------------------------
+   GRID
+------------------------------------------------------- */
+.indicators-grid {
+  display: grid;
+  grid-template-columns: 130px repeat(9, 1fr);
+  gap: 6px 10px;
+}
+
+/* -------------------------------------------------------
+   LABELS
+------------------------------------------------------- */
+.indicator-label {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 204, 102, 0.12) 0%,
+    rgba(255, 204, 102, 0.05) 100%
+  );
+
+  border-radius: 6px;
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+
+  color: var(--gold-1);
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  box-shadow:
+    0 0 10px rgba(255, 204, 102, 0.18),
+    inset 0 0 10px rgba(255, 204, 102, 0.15);
+}
+
+/* -------------------------------------------------------
+   HEADERS TF
+------------------------------------------------------- */
+.indicator-header {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 204, 102, 0.2) 0%,
+    rgba(255, 204, 102, 0.07) 100%
+  );
+  border: 1px solid rgba(255, 204, 102, 0.4);
+  border-radius: 6px;
+  padding: 2px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--gold-1);
+
+  text-shadow:
+    0 0 6px var(--gold-glow),
+    0 0 6px rgba(255, 204, 102, 0.35);
+
+  box-shadow:
+    0 0 12px rgba(255, 204, 102, 0.20),
+    inset 0 0 12px rgba(255, 204, 102, 0.15);
+
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animation scanning line */
+.indicator-header::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 120%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 235, 180, 0.55) 50%,
+    transparent 100%
+  );
+  opacity: 0.45;
+  animation: gold-scan 4s infinite linear;
+}
+
+@keyframes gold-scan {
+  0% { left: -120%; }
+  100% { left: 120%; }
+}
+
+.indicator-header::before {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 10%;
+  width: 80%;
+  height: 2px;
+
+  background: linear-gradient(
+    90deg,
+    rgba(255, 204, 102, 0) 0%,
+    rgba(255, 204, 102, 0.75) 50%,
+    rgba(255, 204, 102, 0) 100%
+  );
+
+  box-shadow:
+    0 0 6px rgba(255, 204, 102, 0.5),
+    0 0 10px rgba(255, 204, 102, 0.25);
+
+  border-radius: 2px;
+}
+
+/* -------------------------------------------------------
+   CELLULES
+------------------------------------------------------- */
+.indicator-cell {
+  background: #141416;
+  border-radius: 6px;
+
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  color: #ffe9c2;
+  font-size: 0.80rem;
+  font-weight: 400;
+
+  transition: 0.25s ease-in-out;
+}
+
+.indicator-cell:hover {
+  box-shadow:
+    0 0 10px rgba(255, 204, 102, 0.35),
+    inset 0 0 10px rgba(255, 204, 102, 0.25);
+}
+
+/* =======================================================
+   SIGNAL COLORS
+======================================================= */
+
+.signal-strong-buy {
+  color: #66ff99;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(80, 255, 140, 0.7);
+}
+
+.signal-buy {
+  color: #00ffcc;
+  font-weight: 600;
+}
+
+.signal-neutral {
+  color: #cccccc;
+  opacity: 0.7;
+}
+
+.signal-sell {
+  color: #ff8844;
+  font-weight: 600;
+}
+
+.signal-strong-sell {
+  color: #ff4444;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.7);
+}
+
+/* =======================================================
+   RSI ZONE COLORS
+======================================================= */
+
+.rsi-z7 { color: #ff6666; font-weight: 600; }
+.rsi-z6 { color: #ff9955; }
+.rsi-z5 { color: #66ff99; }
+.rsi-z4 { color: #cccccc; }
+.rsi-z3 { color: #ffbb55; }
+.rsi-z2 { color: #55aaff; }
+.rsi-z1 { color: #66ccff; font-weight: 600; }
+
+/* =======================================================
+   SLOPE COLORS
+======================================================= */
+.slope-up-strong { color: #66ff99; font-weight: 700; }
+.slope-up        { color: #00ffcc; }
+.slope-mild-up   { color: #33ffaa; }
+.slope-flat      { color: #cccccc; }
+.slope-mild-down { color: #ffbb55; }
+.slope-down      { color: #ff8844; }
+.slope-strong-down {
+  color: #ff4444;
+  font-weight: 700;
+  text-shadow: 0 0 6px rgba(255, 80, 80, 0.6);
+}
+
+/* =======================================================
+   DELTA RANGE COLORS + ANIM
+======================================================= */
+
+
+.delta-negative {
+  color: #ff4d4d;
+  font-weight: 600;
+}
+
+
+@keyframes redPulse {
+  0% {
+    box-shadow:
+      0 0 4px rgba(255, 80, 80, 0.3),
+      inset 0 0 4px rgba(255, 80, 80, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 10px rgba(255, 80, 80, 0.55),
+      inset 0 0 8px rgba(255, 80, 80, 0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 4px rgba(255, 80, 80, 0.3),
+      inset 0 0 4px rgba(255, 80, 80, 0.3);
+  }
+}
+

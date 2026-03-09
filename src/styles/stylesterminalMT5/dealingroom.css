@@ -1,0 +1,417 @@
+/* ============================================================================
+   DEALING ROOM — NEO MATRIX (REFINED)
+============================================================================ */
+
+/* ================= ROOT ================= */
+
+.dealing-room {
+  display: block;
+}
+
+/* ================= TITLES & LABELS ================= */
+
+.box-title {
+  font-size: 9px;
+  font-weight: 600;
+  color: #e8d4a7;
+  margin-bottom: 6px;
+}
+
+/* ================= ASSET READONLY ================= */
+
+.asset-readonly {
+  display: grid;
+  grid-template-columns: 0.7fr auto;
+  gap: 6px;
+}
+
+.asset-readonly span {
+  min-height: 30px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 19px;
+  font-weight: 700;
+  color: #f6e0bd;
+}
+
+/* ================= BUY / SELL ================= */
+
+.btn-buy,
+.btn-sell {
+  flex: 1;
+  min-height: 28px;
+  padding: 7px;
+
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-buy { background: rgba(33, 154, 79, 0.75); color: #44aa6b; }
+.btn-sell { background: rgba(229, 34, 34, 0.28); color: #ff5050a5; }
+
+.btn-buy.active,
+.btn-sell.active { opacity: 1; }
+
+/* ============================================================================
+   SELL | LOTS | BUY — ONE LINE
+============================================================================ */
+
+.deal-side-lots-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 10px;
+  align-items: end;
+  margin-top: 7px;
+}
+
+.deal-side-lots-row .btn-sell,
+.deal-side-lots-row .btn-buy {
+  height: 55px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+/* ================= LOTS INLINE ================= */
+
+.lots-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+}
+
+.lots-inline label {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(245, 194, 107, 0.9);
+  text-align: center;
+}
+
+/* ============================================================================
+   SL / TP — INLINE (ONE LINE)
+============================================================================ */
+
+.deal-sl-tp-inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.sl-tp-item {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  align-items: center;
+  gap: 4px;
+}
+
+.sl-tp-item label {
+  text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(245, 194, 107, 0.9);
+}
+
+/* ============================================================================
+   DEAL SEPARATOR
+============================================================================ */
+
+.deal-separator {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  margin: 8px 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(245, 194, 107, 0.9) 50%,
+    transparent 100%
+  );
+
+  opacity: 0.85;
+}
+
+.deal-separator::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(245, 194, 107, 0.35),
+    transparent
+  );
+
+  filter: blur(2px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ============================================================================
+   PREVIEW — CLEAN & COMPACT
+============================================================================ */
+
+.deal-preview {
+  margin: 6px 0 5px;
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  border-radius: 8px;
+  border: 1.5px dashed rgba(245, 194, 107, 0.55);
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.deal-preview.buy {
+  color: #b6ffd9;
+  border-color: rgba(71, 255, 145, 0.55);
+  box-shadow:
+    0 0 8px rgba(71, 255, 145, 0.35),
+    inset 0 0 4px rgba(71, 255, 145, 0.18);
+}
+
+.deal-preview.sell {
+  color: #ffd1d1;
+  border-color: rgba(255, 80, 80, 0.6);
+  box-shadow:
+    0 0 8px rgba(255, 80, 80, 0.35),
+    inset 0 0 4px rgba(255, 80, 80, 0.18);
+}
+
+/* ================= ROWS ================= */
+
+.preview-row {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  align-items: center;
+  gap: 13px;
+}
+
+.preview-main {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preview-risk {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+/* ================= ELEMENTS ================= */
+
+.preview-side {
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.preview-side.buy {
+  background: rgba(71, 255, 145, 0.15);
+  color: #4cff9a;
+}
+
+.preview-side.sell {
+  background: rgba(255, 80, 80, 0.15);
+  color: #ff6b6b;
+}
+
+.preview-symbol {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f6e0bd;
+}
+
+.preview-class {
+  font-size: 8px;
+  opacity: 0.75;
+}
+
+.preview-lots {
+  font-size: 12px;
+  color: #ffd88a;
+  font-weight: 700;
+}
+
+/* ============================================================================
+   ACTION ROW
+============================================================================ */
+
+.deal-action-row {
+  display: flex;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.deal-send,
+.deal-cancel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deal-send.preview {
+  flex: 1;
+  height: 45px;
+  font-size: 10px;
+  color: #f5c26b;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px dashed rgba(245, 194, 107, 0.65);
+  border-radius: 8px;
+}
+
+.deal-send.send {
+  flex: 1;
+  height: 35px;
+  font-size: 13px;
+  font-weight: 700;
+  background: linear-gradient(180deg, #f5c26b, #d9a441);
+  color: #000;
+  border-radius: 8px;
+}
+
+.deal-cancel {
+  flex: 0 0 28%;
+  height: 35px;
+  font-size: 13px;
+  font-weight: 700;
+  background: #a9edef;
+  color: #892f0c;
+  border-radius: 8px;
+}
+
+/* ============================================================================
+   STATUS
+============================================================================ */
+
+.order-status {
+  margin-top: 7px;
+  text-align: center;
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+.order-status.ok {
+  color: #4cff9a;
+}
+
+.order-status.error {
+  color: #ff6b6b;
+}
+
+/* ============================================================================
+   DEAL HINTS (Max Lots, Infos)
+============================================================================ */
+
+.deal-hint {
+  margin: 8px 0 9px;
+  padding: 10px 12px;
+
+  font-size: 14px;
+  font-weight: 600;
+  color: #f6e0bd;
+
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 200, 120, 0.35);
+  border-radius: 6px;
+}
+
+.deal-hint strong {
+  color: #ffd88a;
+}
+
+.deal-hint.warning {
+  border-color: rgba(255, 160, 80, 0.6);
+  box-shadow: 0 0 6px rgba(255, 160, 80, 0.25);
+}
+
+/* ============================================================================
+   ORDER WARNINGS / BLOCKS
+============================================================================ */
+
+.send-warning {
+  margin: 7px 0;
+  padding: 6px 8px;
+
+  font-size: 8px;
+  font-weight: 700;
+  text-align: center;
+
+  border-radius: 6px;
+}
+
+.send-warning.block {
+  color: #ffd1d1;
+  background: rgba(255, 80, 80, 0.12);
+  border: 1px solid rgba(255, 80, 80, 0.55);
+  box-shadow: 0 0 6px rgba(255, 80, 80, 0.25);
+}
+
+.send-warning.warn {
+  color: #ffe3a3;
+  background: rgba(255, 200, 120, 0.12);
+  border: 1px solid rgba(255, 200, 120, 0.45);
+}
+
+/* ============================================================================
+   MINI BADGES
+============================================================================ */
+
+.mini.compact {
+  display: flex;
+  gap: 7px;
+  font-size: 8px;
+  opacity: 0.9;
+}
+
+.mini-bd.struct { color: #e3ad30; }
+.mini-bd.timing { color: #4fc3f7; }
+.mini-bd.bb     { color: #e44343; }
+.mini-bd.flow   { color: #96e47a; }
+.mini-bd.vol    { color: #a39be6; }
+
+/* ============================================================================
+   EMPTY STATE & READONLY VALUES
+============================================================================ */
+
+.deal-empty {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 600;
+  color: rgba(245, 194, 107, 0.5);
+  letter-spacing: 0.3px;
+}
+
+.deal-readonly-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 4px 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8d4a7;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}

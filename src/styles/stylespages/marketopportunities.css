@@ -1,0 +1,112 @@
+/* =========================================================
+   MarketOpportunities — 3-column layout (50-15-35)
+   ========================================================= */
+
+.mo-page {
+  display: grid;
+  grid-template-columns: 38fr 20fr 42fr;
+  align-items: stretch;
+  gap: 12px;
+  padding: 16px;
+  height: calc(100vh - 80px);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.mo-section {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 200, 120, 0.25);
+  background: radial-gradient(
+    circle at top,
+    rgba(255, 215, 140, 0.08),
+    rgba(0, 0, 0, 0.92)
+  );
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* ── Center column: robot + not eligible stacked ── */
+.mo-center {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mo-robot {
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mo-robot-img {
+  width: 320px;
+  height: 250px;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 120, 0.35));
+}
+
+.mo-wait {
+  overflow-y: auto;
+}
+
+.mo-wait-count {
+  margin-left: 6px;
+  font-size: 11px;
+  opacity: 0.6;
+}
+
+.mo-wait-card {
+  opacity: 0.7;
+}
+
+.mo-not-eligible {
+  flex: 1;
+  border-color: rgba(255, 80, 80, 0.35);
+  background: radial-gradient(
+    circle at top,
+    rgba(180, 40, 40, 0.15),
+    rgba(0, 0, 0, 0.92)
+  );
+}
+
+/* ── Market Watch — full-height scroll ── */
+.mo-market-watch {
+  padding: 0;
+  border: none;
+  background: none;
+  overflow: hidden;
+}
+
+.mo-market-watch .panel-topmovers {
+  height: 100%;
+  max-height: none;
+}
+
+/* ── Market Watch — fit content in frame, no scroll ── */
+.mo-market-watch .mw-table tbody td {
+  font-size: 11px;
+  padding: 2.3px 6px;
+  line-height: 1.2;
+}
+
+.mo-market-watch .mw-table thead th {
+  padding: 3px 6px;
+  font-size: 0.64rem;
+}
+
+.mo-market-watch .mw-group-title {
+  font-size: 0.72rem;
+  padding: 4px 8px 3px;
+}
+
+.mo-market-watch .panel-topmovers {
+  padding: 0.6rem 0.9rem;
+}
+
+.mo-market-watch .panel-header {
+  margin-bottom: 0.4rem;
+}

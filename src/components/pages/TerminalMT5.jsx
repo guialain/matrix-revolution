@@ -70,7 +70,7 @@ const exposure = useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
     setDraftDeal(op);
     setDealLocked(true);
 
-    fetch("http://localhost:3001/api/mt5switch", {
+    fetch("https://matrix-revolution.onrender.com/api/mt5switch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ symbol: op.symbol })

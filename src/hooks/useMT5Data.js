@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 // Source of truth frontend
 // ============================================================================
 
-const API_URL = "http://localhost:3001/api/mt5data";
+const API_URL = "https://matrix-revolution.onrender.com/api/mt5data?userId=NeoTrader";
 const REFRESH_MS = 800;
 
 export default function useMT5Data() {

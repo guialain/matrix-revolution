@@ -9,7 +9,7 @@ export default function useClosedTrades(intervalMs = 5000) {
 
     const fetch_ = async () => {
       try {
-        const res  = await fetch("http://localhost:3001/api/closedtrades");
+        const res  = await fetch("https://matrix-revolution.onrender.com/api/closedtrades?userId=NeoTrader");
         const data = await res.json();
         if (active) {
           setTrades(data.trades ?? []);

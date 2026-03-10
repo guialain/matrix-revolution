@@ -3,7 +3,7 @@
 // Rôle : envoyer des ordres OPEN et CLOSE vers MT5 via l’API Node
 // ============================================================================
 
-const API_BASE = "http://localhost:3001/api";
+const API_BASE = "https://matrix-revolution.onrender.com/api";
 
 // ============================================================================
 // OPEN POSITION

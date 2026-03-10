@@ -25,7 +25,7 @@ export default function OpenPositions() {
   // =========================
   useEffect(() => {
     const fetchData = () => {
-      fetch("http://localhost:3001/api/mt5data")
+      fetch("https://matrix-revolution.onrender.com/api/mt5data?userId=NeoTrader")
         .then(r => r.json())
         .then(d => setPositions(d.openPositions || []))
         .catch(() => setPositions([]));

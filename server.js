@@ -502,6 +502,7 @@ app.post("/api/mt5order", (req, res) => {
 
 app.post("/api/mt5close", (req, res) => {
   try {
+    console.log("CLOSE RECEIVED userId:", req.body?.userId, "ticket:", req.body?.ticket);
     const { ticket, symbol, volume, userId } = req.body ?? {};
 
     if (!ticket) {
@@ -561,6 +562,7 @@ app.post("/api/mt5switch", (req, res) => {
 app.get("/api/poll/:userId", authMiddleware, (req, res) => {
   try {
     const { userId } = req.params;
+    console.log("POLL userId:", userId, "closes:", STORE[userId]?.pendingClose?.length);
 
     if (req.userId !== userId) {
       return res.status(403).json({ error: "FORBIDDEN", reason: "Token/userId mismatch" });

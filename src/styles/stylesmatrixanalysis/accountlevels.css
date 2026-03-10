@@ -1,195 +1,78 @@
-/* =======================================================
-   RISK & ACCOUNT PANEL — GOLD PREMIUM UI (OPTIMISÉ)
-   ======================================================= */
+/* =========================================================
+   ACCOUNT LEVELS — HEATMAP
+========================================================= */
 
-.risk-panel {
-  background: #0b0c0e;
-  border: 1px solid rgba(255, 200, 80, 0.15);
+.al-panel {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 200, 120, 0.2);
   border-radius: 10px;
-  padding: 14px;
-  box-shadow:
-    0 0 12px rgba(255, 200, 80, 0.08),
-    inset 0 0 18px rgba(255, 200, 80, 0.06);
-}
-
-/* TITLE */
-.risk-title {
-  color: #ffcc66;
-  font-size: 1rem;
-  font-weight: 300;
-  margin-top: 0px;
-margin-bottom: 6px;
-  text-shadow: 0 0 8px rgba(255, 200, 80, 0.45);
-}
-
-/* =======================================================
-   STRUCTURE GRID (3 COLONNES)
-   ======================================================= */
-
-.risk-grid {
+  background: rgba(0, 0, 0, 0.85);
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
-.risk-row {
+/* ─── TITLE ──────────────────────────────────────────────── */
+
+.al-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f5c26b;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 200, 120, 0.12);
+}
+
+/* ─── GRID ───────────────────────────────────────────────── */
+
+.al-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ─── ROW ────────────────────────────────────────────────── */
+
+.al-row {
   display: grid;
-  grid-template-columns: 145px 120px 110px;
+  grid-template-columns: 1fr 1fr 1fr;
   align-items: center;
-  margin: 2px 0;
-  padding: 2px 10px;
-  border-radius: 6px;
-  background: rgba(255, 204, 102, 0.06);
-  border-top: 2px solid rgba(255, 204, 102, 0.22);
-  border-bottom: 2px solid rgba(255, 204, 102, 0.22);
-  position: relative;
-  transition: 0.25s ease;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.2s;
 }
 
-/* Hover gold */
-.risk-row:hover {
-  background: rgba(255, 204, 102, 0.12);
-  box-shadow:
-  0 0 12px rgba(255, 204, 102, 0.18),
-  inset 0 0 12px rgba(255, 204, 102, 0.10);
+.al-row:hover {
+  filter: brightness(1.15);
 }
 
-/* NEON BLEU contour */
-.risk-row::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 150, 255, 0.18);
-  box-shadow:
-    0 0 10px rgba(0, 150, 255, 0.30),
-    inset 0 0 6px rgba(0, 150, 255, 0.15);
-  pointer-events: none;
-  transition: 0.25s ease;
-}
+/* ─── CELLS ──────────────────────────────────────────────── */
 
-.risk-row:hover::after {
-  border-color: rgba(0, 180, 255, 0.30);
-  box-shadow:
-    0 0 16px rgba(0, 180, 255, 0.50),
-    inset 0 0 10px rgba(0, 180, 255, 0.25);
-}
-
-/* =======================================================
-   LABELS & VALUES
-   ======================================================= */
-
-.risk-label {
-  color: #ffcc66;
+.al-label {
+  font-size: 12px;
   font-weight: 600;
-  font-size: 0.83rem;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
-.risk-value {
-  color: #ffe9c2;
+.al-value {
+  font-size: 11px;
   font-weight: 600;
-  font-size: 0.83rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: #ffffff;
+}
+
+.al-stage {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   text-align: right;
-  padding-right: 12px;
   white-space: nowrap;
-}
-
-/* =======================================================
-   STAGE (Danger, Safe, Profit…)
-   ======================================================= */
-
-.risk-stage {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-align: left;
-  padding-left: 8px;
-  white-space: nowrap;
-  letter-spacing: 0.3px;
-}
-
-/* Colors */
-.risk-stage.stage-safe    { color:#7CFFB2; }
-.risk-stage.stage-medium  { color:#ffcc66; }
-.risk-stage.stage-danger  { color:#ff4444; font-weight:bold; }
-.risk-stage.stage-loss    { color:#ff6b6b; }
-.risk-stage.stage-critical{ color:#ff0000; font-weight:bold; }
-.risk-stage.stage-profit  { color:#7CFFB2; font-weight:bold; }
-
-/* Pulses */
-.risk-stage.stage-safe {
-  animation: pulse-safe-text 2.2s infinite ease-in-out;
-}
-@keyframes pulse-safe-text {
-  0%   { text-shadow: 0 0 4px rgba(0,255,160,0.4); }
-  50%  { text-shadow: 0 0 10px rgba(0,255,160,0.9); }
-  100% { text-shadow: 0 0 4px rgba(0,255,160,0.4); }
-}
-
-.risk-stage.stage-medium {
-  animation: pulse-medium-text 2.0s infinite ease-in-out;
-}
-@keyframes pulse-medium-text {
-  0%   { text-shadow: 0 0 3px rgba(255,220,120,0.3); }
-  50%  { text-shadow: 0 0 8px rgba(255,220,120,0.8); }
-  100% { text-shadow: 0 0 3px rgba(255,220,120,0.3); }
-}
-
-.risk-stage.stage-danger,
-.risk-stage.stage-critical {
-  animation: pulse-danger-text 1.2s infinite ease-in-out;
-}
-@keyframes pulse-danger-text {
-  0%   { text-shadow: 0 0 4px rgba(255,60,60,0.4); }
-  50%  { text-shadow: 0 0 10px rgba(255,40,40,1); }
-  100% { text-shadow: 0 0 4px rgba(255,60,60,0.4); }
-}
-
-/* =======================================================
-   EQUITY GAUGE INLINE — VERSION FINALE OPTIMISÉE
-   ======================================================= */
-
-.equity-gauge-inline {
-  position: relative;                 
-  height: 6px;                        
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 4px;
-  overflow: hidden;                   
-  justify-self: start;                
-  width: 245px;                       
-  transform: translateX(6px) translateY(1px); 
-}
-
-.equity-gauge-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease-out, background 0.4s ease-out;
-}
-
-/* === AI SCANNER EFFECT — VERSION ULTRA VISIBLE === */
-
-.equity-scan {
-  position: absolute;
-  top: 0;
-  left: -45%;
-  width: 45%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(0, 255, 255, 0.25) 25%,    /* lueur douce */
-    rgba(0, 255, 255, 0.85) 50%,    /* noyau très lumineux */
-    rgba(0, 255, 255, 0.25) 75%,    /* fade out */
-    transparent 100%
-  );
-
-  filter: blur(6px);                 /* Lueur nette et visible */
-  animation: ai-scan-move 2.1s infinite ease-in-out;
-  pointer-events: none;
-}
-
-@keyframes ai-scan-move {
-  0%   { left: -45%; opacity: 0.0; }
-  10%  { opacity: 0.5; }
-  50%  { left: 65%; opacity: 0.9; }   /* plus lumineux au centre */
-  90%  { opacity: 0.5; }
-  100% { left: 130%; opacity: 0.0; }
 }

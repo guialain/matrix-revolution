@@ -1,161 +1,235 @@
-/* =======================================================
-   MARKET TREND — V6 CLEAN
-   Harmonized with risk.css
-======================================================= */
-
-/* =======================================================
-   PANEL
-======================================================= */
+/* =========================================================
+   MARKET TREND — BLOOMBERG TERMINAL STYLE
+========================================================= */
 
 .markettrend-panel {
-  background: #0b0c0e;
-  border: 1px solid rgba(255, 200, 80, 0.15);
-  border-radius: 10px;
-  padding: 14px;
-  box-shadow:
-    0 0 12px rgba(255, 200, 80, 0.08),
-    inset 0 0 18px rgba(255, 200, 80, 0.06);
+  width: 100%;
+  box-sizing: border-box;
+  background: #020508;
+  border: 1px solid rgba(0, 200, 100, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: 'Courier New', Courier, monospace;
 }
 
-/* =======================================================
-   GRID — SINGLE SOURCE OF TRUTH
-======================================================= */
-
-.markettrend-header-row,
-.markettrend-row {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 34px;
+.markettrend-loading {
+  display: flex;
   align-items: center;
+  gap: 8px;
+  padding: 14px;
+  font-size: 10px;
+  color: rgba(0, 255, 136, 0.5);
+  letter-spacing: 0.1em;
 }
 
-/* =======================================================
-   HEADER
-======================================================= */
+/* ─── TOP BAR ────────────────────────────────────────────── */
 
-.markettrend-header-row {
-  padding: 2px 14px;
-  margin-bottom: 10px;
+.mt-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  background: rgba(0, 255, 136, 0.04);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.1);
 }
 
-.markettrend-header-col {
-  color: #ffcc66;
-  font-size: 0.82rem;
-  font-weight: 500;
-  text-align: center;
-  text-shadow: 0 0 8px rgba(255, 200, 80, 0.45);
+.mt-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.markettrend-header-col:first-child {
-  text-align: left;
+.mt-live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00ff88;
+  box-shadow: 0 0 6px #00ff88;
+  animation: mt-blink 1.4s ease-in-out infinite;
 }
 
-/* =======================================================
-   ROWS (risk-row compatible)
-======================================================= */
-
-.markettrend-row {
-  position: relative;
-  padding: 2px 14px;
-  margin: 4px 0;
-  border-radius: 6px;
-
-  background: rgba(255, 204, 102, 0.06);
-  border-top: 2px solid rgba(255, 204, 102, 0.22);
-  border-bottom: 2px solid rgba(255, 204, 102, 0.22);
-
-  transition: background 0.25s ease, box-shadow 0.25s ease;
-}
-
-.markettrend-row:hover {
-  background: rgba(255, 204, 102, 0.12);
-  box-shadow:
-    0 0 12px rgba(255, 204, 102, 0.18),
-    inset 0 0 12px rgba(255, 204, 102, 0.10);
-}
-
-/* =======================================================
-   NEON OVERLAY
-======================================================= */
-
-.markettrend-row::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 6px;
-  pointer-events: none;
-
-  border: 1px solid rgba(0, 150, 255, 0.18);
-  box-shadow:
-    0 0 10px rgba(0, 150, 255, 0.30),
-    inset 0 0 6px rgba(0, 150, 255, 0.15);
-
-  transition: 0.25s ease;
-}
-
-.markettrend-row:hover::after {
-  border-color: rgba(0, 180, 255, 0.30);
-  box-shadow:
-    0 0 16px rgba(0, 180, 255, 0.50),
-    inset 0 0 10px rgba(0, 180, 255, 0.25);
-}
-
-/* =======================================================
-   TEXT
-======================================================= */
-
-.markettrend-name {
-  color: #ffcc66;
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-align: left;
-}
-
-.markettrend-num {
-  color: #ffe9c2;
-  font-size: 0.78rem;
-  font-weight: 500;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
-/* =======================================================
-   CHANGE / DIRECTION
-======================================================= */
-
-.markettrend-dir {
-  font-size: 0.82rem;
+.mt-title {
+  font-size: 10px;
   font-weight: 700;
-  text-align: center;
-  opacity: 0.9;
+  color: #00ff88;
+  letter-spacing: 0.15em;
 }
 
-/* =======================================================
-   COLORS (shared)
-======================================================= */
-
-.markettrend-green   { color: #7cffb2; }
-.markettrend-red     { color: #ff6b6b; }
-.markettrend-neutral { color: #cccccc; opacity: 0.75; }
-
-.markettrend-up      { color: #7cffb2; }
-.markettrend-down    { color: #ff7070; }
-.markettrend-flat    { color: #b5b5b5; opacity: 0.6; }
-
-/* =======================================================
-   FLAGS (OPTIONAL — PREMIUM)
-======================================================= */
-
-.flag-icon {
-  width: 16px;
-  height: 8px;
-  border-radius: 1px;
-  object-fit: cover;
-  filter: drop-shadow(0 0 3px rgba(255,255,255,0.25));
-  animation: flagPulse 2.2s ease-in-out infinite;
+.mt-topbar-time {
+  font-size: 9px;
+  color: rgba(0, 255, 136, 0.4);
+  letter-spacing: 0.1em;
 }
 
-@keyframes flagPulse {
-  0%   { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(255,255,255,0.25)); }
-  50%  { transform: scale(1.08); filter: drop-shadow(0 0 8px rgba(212,175,55,0.45)); }
-  100% { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(255,255,255,0.25)); }
+/* ─── COLUMN HEADERS ─────────────────────────────────────── */
+
+.mt-col-headers {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr 70px;
+  padding: 5px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.mt-ch {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.12em;
+}
+
+.mt-ch-bid,
+.mt-ch-pct  { text-align: right; }
+.mt-ch-dir  { text-align: center; }
+
+/* ─── ROWS ───────────────────────────────────────────────── */
+
+.mt-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.mt-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.4fr 70px;
+  align-items: center;
+  padding: 5px 14px;
+  transition: background 0.2s;
+  cursor: default;
+}
+
+.mt-row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* ─── CELLS ──────────────────────────────────────────────── */
+
+.mt-cell { box-sizing: border-box; min-width: 0; }
+
+.mt-asset {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c8d8e8;
+  letter-spacing: 0.05em;
+}
+
+.mt-bid {
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.mt-pct {
+  text-align: right;
+}
+
+.mt-pct-value {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.mt-dir {
+  text-align: right;
+}
+
+/* ─── DIRECTION COLORS ───────────────────────────────────── */
+
+.mt-up   { color: #00ff88; }
+.mt-down { color: #ff3d5a; }
+.mt-flat { color: #8899aa; }
+
+/* ─── PROGRESS BAR ───────────────────────────────────────── */
+
+.mt-progbar-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.mt-progbar-fill {
+  position: absolute;
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
+
+/* ─── DIR BADGE ──────────────────────────────────────────── */
+
+.mt-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-family: 'Courier New', Courier, monospace;
+  border-radius: 3px;
+}
+
+.mt-badge-up {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.12);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
+}
+
+.mt-badge-down {
+  color: #ff3d5a;
+  background: rgba(255, 61, 90, 0.12);
+  border: 1px solid rgba(255, 61, 90, 0.4);
+  box-shadow: 0 0 8px rgba(255, 61, 90, 0.2);
+}
+
+.mt-badge-flat {
+  color: #8899aa;
+  background: rgba(136, 153, 170, 0.1);
+  border: 1px solid rgba(136, 153, 170, 0.3);
+}
+
+/* ─── SEPARATOR ──────────────────────────────────────────── */
+
+.mt-separator {
+  margin: 0 14px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.05) 70%,
+    transparent
+  );
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+
+.mt-footer {
+  padding: 5px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.mt-legend {
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+}
+
+.mt-legend-up   { color: #00ff88; }
+.mt-legend-down { color: #ff3d5a; }
+.mt-legend-flat { color: #8899aa; }
+
+/* ─── ANIMATION ──────────────────────────────────────────── */
+
+@keyframes mt-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
 }

@@ -1,125 +1,85 @@
 // ============================================================================
-//  RISK PANEL — Neo Matrix (SAFE HOOKS + JS leverage)
+//  RISK PANEL — Neo Matrix — Heatmap version
 // ============================================================================
 
-import React, { useMemo } from "react";
+import React from "react";
 import useMT5Data from "../../hooks/useMT5Data";
 import useExposureByAsset from "../../hooks/useExposureByAsset";
 import "../../styles/stylesmatrixanalysis/accountlevels.css";
 
-
-// ============================================================================
-// HELPERS
-// ============================================================================
+// ─── helpers ─────────────────────────────────────────────────────────────────
 
 function getStage(label, value, balance = null) {
   switch (label) {
     case "Margin Level":
-      if (value < 350) return "Danger - Plus de marge";
-      if (value < 750) return "Medium - Attention";
-      return "Marge confortable";
-
+      if (value < 350) return { text: "Danger",   color: "#ef4444" };
+      if (value < 750) return { text: "Attention", color: "#f97316" };
+      return               { text: "Safe",        color: "#4ade80" };
     case "PnL":
       if (balance !== null && value <= balance * -0.3)
-        return "Critical - Grosse perte";
-      if (value < 0) return "Loss";
-      return "Profit";
-
+        return             { text: "Critical",    color: "#ef4444" };
+      if (value < 0) return { text: "Loss",        color: "#f97316" };
+      return               { text: "Profit",      color: "#4ade80" };
     case "Leverage":
-      if (value > 30) return "Danger - Trop Eleve";
-      if (value > 15) return "Medium - Attention ";
-      return "Safe - Optimal";
-
-    default:
-      return "";
+      if (value > 30) return { text: "Danger",    color: "#ef4444" };
+      if (value > 15) return { text: "Attention", color: "#f97316" };
+      return                 { text: "Optimal",   color: "#4ade80" };
+    default: return null;
   }
 }
 
-const fmtEUR = (v) =>
-  v === null || v === undefined || isNaN(v)
-    ? "—"
-    : `${Math.round(v).toLocaleString("fr-FR")} €`;
+function getValueColor(label, value, balance = null) {
+  const s = getStage(label, value, balance);
+  return s ? s.color : "#f5c26b";
+}
 
-const fmtPct = (v) =>
-  v === null || v === undefined || isNaN(v)
-    ? "—"
-    : `${Math.round(v)} %`;
+function getRowBg(label, value, balance = null) {
+  const s = getStage(label, value, balance);
+  if (!s) return "transparent";
+  if (s.color === "#ef4444") return "rgba(239,68,68,0.08)";
+  if (s.color === "#f97316") return "rgba(249,115,22,0.07)";
+  if (s.color === "#4ade80") return "rgba(74,222,128,0.06)";
+  return "transparent";
+}
 
-const fmtLev = (v) =>
-  v === null || v === undefined || isNaN(v)
-    ? "—"
-    : `x${v.toFixed(1)}`;
+const fmtEUR = v => v == null || isNaN(v) ? "—" : `${Math.round(v).toLocaleString("fr-FR")} €`;
+const fmtPct = v => v == null || isNaN(v) ? "—" : `${Math.round(v)} %`;
+const fmtLev = v => v == null || isNaN(v) ? "—" : `x${v.toFixed(1)}`;
+const fmtPnL = v => v == null || isNaN(v) ? "—" : `${v > 0 ? "+" : ""}${fmtEUR(v)}`;
 
-const fmtPnL = (v) =>
-  v === null || v === undefined || isNaN(v)
-    ? "—"
-    : `${v > 0 ? "+" : ""}${fmtEUR(v)}`;
-
-// ============================================================================
-// COMPONENT
-// ============================================================================
+// ─── main ─────────────────────────────────────────────────────────────────────
 
 export default function AccountLevels() {
-
-  // 🔒 TOUS LES HOOKS — TOUJOURS APPELÉS
   const { data, ready } = useMT5Data();
+  const { total: totalExposure } = useExposureByAsset(data, { topN: 99, minPct: 0 });
 
-const { rows: exposureData, total: totalExposure } =
-  useExposureByAsset(data, {
-    topN: 99,
-    minPct: 0
-  });
-
-
-  // 🟡 RENDER LOADING APRÈS HOOKS
-  if (!ready || !data?.account) {
-    return <div className="risk-panel">Loading…</div>;
-  }
+  if (!ready || !data?.account) return <div className="al-panel">Loading…</div>;
 
   const a = data.account;
-
-  // ========================================================================
-  // CALCUL LEVERAGE — JS SOURCE OF TRUTH
-  // ========================================================================
-
-  const leverageUsed =
-    a.equity > 0
-      ? totalExposure / a.equity
-      : 0;
-
-  // ========================================================================
-  // ROWS
-  // ========================================================================
+  const leverageUsed = a.equity > 0 ? totalExposure / a.equity : 0;
 
   const rows = [
-    { label: "Balance", value: a.balance, format: fmtEUR },
-    { label: "Equity", value: a.equity, format: fmtEUR },
-    { label: "Margin Level", value: a.marginLevel, format: fmtPct },
-    { label: "Free Margin", value: a.freeMargin, format: fmtEUR },
-    { label: "Leverage", value: leverageUsed, format: fmtLev },
-    { label: "PnL", value: a.pnl, format: fmtPnL }
+    { label: "Balance",      value: a.balance,     fmt: fmtEUR },
+    { label: "Equity",       value: a.equity,      fmt: fmtEUR },
+    { label: "Margin Level", value: a.marginLevel, fmt: fmtPct },
+    { label: "Free Margin",  value: a.freeMargin,  fmt: fmtEUR },
+    { label: "Leverage",     value: leverageUsed,  fmt: fmtLev },
+    { label: "PnL",          value: a.pnl,         fmt: fmtPnL },
   ];
 
-  // ========================================================================
-  // RENDER
-  // ========================================================================
-
   return (
-    <div className="risk-panel">
-      <div className="risk-title">Risk & Account</div>
-
-      <div className="risk-grid">
-        {rows.map((row) => {
-          const stage =
-            row.label === "PnL"
-              ? getStage(row.label, row.value, a.balance)
-              : getStage(row.label, row.value);
-
+    <div className="al-panel">
+      <div className="al-title">Risk &amp; Account</div>
+      <div className="al-grid">
+        {rows.map(row => {
+          const stage  = getStage(row.label, row.value, row.label === "PnL" ? a.balance : null);
+          const vcolor = getValueColor(row.label, row.value, row.label === "PnL" ? a.balance : null);
+          const bg     = getRowBg(row.label, row.value, row.label === "PnL" ? a.balance : null);
           return (
-            <div key={row.label} className="risk-row">
-              <div className="risk-label">{row.label}</div>
-              <div className="risk-value">{row.format(row.value)}</div>
-              {stage && <div className="risk-stage">{stage}</div>}
+            <div key={row.label} className="al-row" style={{ background: bg }}>
+              <span className="al-label">{row.label}</span>
+              <span className="al-value" style={{ color: vcolor }}>{row.fmt(row.value)}</span>
+              {stage && <span className="al-stage" style={{ color: stage.color }}>{stage.text}</span>}
             </div>
           );
         })}

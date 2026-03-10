@@ -11,7 +11,7 @@
   padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* ─── HEADER ─────────────────────────────────────────────── */
@@ -35,7 +35,7 @@
 .cmtf-header-symbol {
   font-size: 12px;
   font-weight: 800;
-  color: #ffd88a;
+  color: #ffff;
   letter-spacing: 0.08em;
 }
 
@@ -44,7 +44,7 @@
 .cmtf-cards {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 1px;
 }
 
 .cmtf-card {
@@ -52,7 +52,7 @@
   grid-template-columns: 1fr 1.4fr;
   align-items: center;
   gap: 12px;
-  padding: 5px 8px;
+  padding: 2px 8px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.04);
@@ -90,7 +90,7 @@
 .cmtf-card-label {
   font-size: 12px;
   font-weight: 600;
-  color: #f5c26b;
+  color: #ffff;
   white-space: nowrap;
 }
 
@@ -125,7 +125,7 @@
 
 .cmtf-card-align {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #ffff;
   text-align: center;
 }
 

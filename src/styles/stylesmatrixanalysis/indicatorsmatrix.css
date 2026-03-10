@@ -1,242 +1,74 @@
-/* =======================================================
-   NEO MATRIX — INDICATORS MATRIX (Gold Royal Ultra Premium)
-   ======================================================= */
+/* =========================================================
+   INDICATORS MATRIX — HEATMAP
+========================================================= */
 
-:root {
-  --gold-1: #FFCC66;             /* or pur */
-  --gold-2: #DDB05A;             /* or profond */
-  --gold-3: #B98E43;             /* bronze */
-  --gold-light: rgba(255, 204, 102, 0.25);
-  --gold-glow: rgba(255, 204, 102, 0.55);
-}
-
-/* -------------------------------------------------------
-   PANEL
-------------------------------------------------------- */
-.indicators-panel {
-  background: #0b0c0e;
-  border: 1px solid rgba(255, 204, 102, 0.25);
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow:
-    0 0 25px rgba(255, 204, 102, 0.08),
-    inset 0 0 15px rgba(255, 204, 102, 0.05);
-}
-
-/* -------------------------------------------------------
-   GRID
-------------------------------------------------------- */
-.indicators-grid {
-  display: grid;
-  grid-template-columns: 130px repeat(9, 1fr);
-  gap: 6px 10px;
-}
-
-/* -------------------------------------------------------
-   LABELS
-------------------------------------------------------- */
-.indicator-label {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 204, 102, 0.12) 0%,
-    rgba(255, 204, 102, 0.05) 100%
-  );
-
-  border-radius: 6px;
-  padding-left: 10px;
-  display: flex;
-  align-items: center;
-
-  color: var(--gold-1);
-  font-weight: 600;
-  font-size: 0.80rem;
-
-  box-shadow:
-    0 0 10px rgba(255, 204, 102, 0.18),
-    inset 0 0 10px rgba(255, 204, 102, 0.15);
-}
-
-/* -------------------------------------------------------
-   HEADERS TF
-------------------------------------------------------- */
-.indicator-header {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 204, 102, 0.2) 0%,
-    rgba(255, 204, 102, 0.07) 100%
-  );
-  border: 1px solid rgba(255, 204, 102, 0.4);
-  border-radius: 6px;
-  padding: 2px 0;
-  font-size: 0.80rem;
-  font-weight: 600;
-  text-align: center;
-  color: var(--gold-1);
-
-  text-shadow:
-    0 0 6px var(--gold-glow),
-    0 0 6px rgba(255, 204, 102, 0.35);
-
-  box-shadow:
-    0 0 12px rgba(255, 204, 102, 0.20),
-    inset 0 0 12px rgba(255, 204, 102, 0.15);
-
-  position: relative;
+.im-panel {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(255, 200, 120, 0.2);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.85);
   overflow: hidden;
 }
 
-/* Animation scanning line */
-.indicator-header::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -120%;
-  width: 120%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 235, 180, 0.55) 50%,
-    transparent 100%
-  );
-  opacity: 0.45;
-  animation: gold-scan 4s infinite linear;
+/* ─── GRID ───────────────────────────────────────────────── */
+
+.im-grid {
+  display: grid;
+  grid-template-columns: 100px repeat(9, 1fr);
+  width: 100%;
 }
 
-@keyframes gold-scan {
-  0% { left: -120%; }
-  100% { left: 120%; }
+/* ─── HEADER ─────────────────────────────────────────────── */
+
+.im-header {
+  font-size: 11px;
+  font-weight: 800;
+  color: #f5c26b;
+  text-align: center;
+  padding: 6px 2px;
+  background: rgba(255, 200, 120, 0.06);
+  border-bottom: 1px solid rgba(255, 200, 120, 0.15);
+  letter-spacing: 0.05em;
 }
 
-.indicator-header::before {
-  content: "";
-  position: absolute;
-  bottom: -3px;
-  left: 10%;
-  width: 80%;
-  height: 2px;
+/* ─── ROW LABEL ──────────────────────────────────────────── */
 
-  background: linear-gradient(
-    90deg,
-    rgba(255, 204, 102, 0) 0%,
-    rgba(255, 204, 102, 0.75) 50%,
-    rgba(255, 204, 102, 0) 100%
-  );
-
-  box-shadow:
-    0 0 6px rgba(255, 204, 102, 0.5),
-    0 0 10px rgba(255, 204, 102, 0.25);
-
-  border-radius: 2px;
-}
-
-/* -------------------------------------------------------
-   CELLULES
-------------------------------------------------------- */
-.indicator-cell {
-  background: #141416;
-  border-radius: 6px;
-  height: 22px;
+.im-row-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  padding: 4px 8px;
   display: flex;
-  justify-content: center;
   align-items: center;
-  color: #ffe9c2;
-  font-size: 0.70rem;
-  font-weight: 400;
-
-  transition: 0.25s ease-in-out;
+  background: rgba(255, 200, 120, 0.04);
+  border-right: 1px solid rgba(255, 200, 120, 0.10);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
 }
 
-.indicator-cell:hover {
-  box-shadow:
-    0 0 10px rgba(255, 204, 102, 0.35),
-    inset 0 0 10px rgba(255, 204, 102, 0.25);
-}
+/* ─── CELL ───────────────────────────────────────────────── */
 
-/* =======================================================
-   SIGNAL COLORS
-======================================================= */
-
-.signal-strong-buy {
-  color: #66ff99;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(80, 255, 140, 0.7);
-}
-
-.signal-buy {
-  color: #00ffcc;
+.im-cell {
+  font-size: 11px;
   font-weight: 600;
+  text-align: center;
+  padding: 4px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-right: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.signal-neutral {
-  color: #cccccc;
-  opacity: 0.7;
+.im-cell:hover {
+  filter: brightness(1.2);
 }
 
-.signal-sell {
-  color: #ff8844;
-  font-weight: 600;
+/* ─── ALTERNATING ROW TINT ───────────────────────────────── */
+
+.im-row-label:nth-child(20n+1),
+.im-grid > .im-cell:nth-child(10n+1) {
+  background-blend-mode: overlay;
 }
-
-.signal-strong-sell {
-  color: #ff4444;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(255, 80, 80, 0.7);
-}
-
-/* =======================================================
-   RSI ZONE COLORS
-======================================================= */
-
-.rsi-z7 { color: #ff6666; font-weight: 600; }
-.rsi-z6 { color: #ff9955; }
-.rsi-z5 { color: #66ff99; }
-.rsi-z4 { color: #cccccc; }
-.rsi-z3 { color: #ffbb55; }
-.rsi-z2 { color: #55aaff; }
-.rsi-z1 { color: #66ccff; font-weight: 600; }
-
-/* =======================================================
-   SLOPE COLORS
-======================================================= */
-.slope-up-strong { color: #66ff99; font-weight: 700; }
-.slope-up        { color: #00ffcc; }
-.slope-mild-up   { color: #33ffaa; }
-.slope-flat      { color: #cccccc; }
-.slope-mild-down { color: #ffbb55; }
-.slope-down      { color: #ff8844; }
-.slope-strong-down {
-  color: #ff4444;
-  font-weight: 700;
-  text-shadow: 0 0 6px rgba(255, 80, 80, 0.6);
-}
-
-/* =======================================================
-   DELTA RANGE COLORS + ANIM
-======================================================= */
-
-
-.delta-negative {
-  color: #ff4d4d;
-  font-weight: 600;
-}
-
-
-@keyframes redPulse {
-  0% {
-    box-shadow:
-      0 0 4px rgba(255, 80, 80, 0.3),
-      inset 0 0 4px rgba(255, 80, 80, 0.3);
-  }
-  50% {
-    box-shadow:
-      0 0 10px rgba(255, 80, 80, 0.55),
-      inset 0 0 8px rgba(255, 80, 80, 0.55);
-  }
-  100% {
-    box-shadow:
-      0 0 4px rgba(255, 80, 80, 0.3),
-      inset 0 0 4px rgba(255, 80, 80, 0.3);
-  }
-}
-

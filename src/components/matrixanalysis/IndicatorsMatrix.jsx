@@ -1,207 +1,217 @@
 // ============================================================================
-//  INDICATORS MATRIX — Neo Matrix (ENGINE-DRIVEN / CLEAN)
+//  INDICATORS MATRIX — Heatmap version
 // ============================================================================
 
 import React, { useMemo } from "react";
 import useMT5Data from "../../hooks/useMT5Data";
 import "../../styles/stylesmatrixanalysis/indicatorsmatrix.css";
-
-
 import IndicatorsEngine from "../robot/engines/IndicatorsEngine";
-
-// ---------------------------------------------------------------------------
-// TIMEFRAMES (DOIT MATCHER MT5)
-// ---------------------------------------------------------------------------
 
 const TFS = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN"];
 
-// ---------------------------------------------------------------------------
-// ROWS
-// ---------------------------------------------------------------------------
+// ─── color helpers ───────────────────────────────────────────────────────────
 
-const ROWS = [
-  { key: "signal",      label: "Signal" },
-  { key: "rsi",         label: "RSI" },
-  { key: "rsiZone",     label: "RSI Zone" },
-  { key: "slope",       label: "Slope" },
-  { key: "direction",   label: "Direction" },
-  { key: "atrSpread",   label: "ATR / Spread" },
-  { key: "rangeSpread", label: "Range / Spread" },
-  { key: "deltaSpread", label: "Delta Range" },
-  { key: "high",        label: "High" },
-  { key: "low",         label: "Low" }
-];
+function signalBg(signal) {
+  if (!signal) return "transparent";
+  const s = signal.toLowerCase();
+  if (s.includes("strong buy")  || s === "strong up")   return "rgba(34,197,94,0.25)";
+  if (s.includes("buy")         || s === "up")           return "rgba(74,222,128,0.15)";
+  if (s.includes("neutral"))                             return "rgba(234,179,8,0.10)";
+  if (s.includes("sell")        || s === "down")         return "rgba(249,115,22,0.18)";
+  if (s.includes("strong sell") || s === "strong down")  return "rgba(239,68,68,0.28)";
+  return "transparent";
+}
 
-// ---------------------------------------------------------------------------
-// FORMAT
-// ---------------------------------------------------------------------------
+function signalColor(signal) {
+  if (!signal) return "#888";
+  const s = signal.toLowerCase();
+  if (s.includes("strong buy")  || s === "strong up")   return "#22c55e";
+  if (s.includes("buy")         || s === "up")           return "#4ade80";
+  if (s.includes("neutral"))                             return "#eab308";
+  if (s.includes("sell")        || s === "down")         return "#f97316";
+  if (s.includes("strong sell") || s === "strong down")  return "#ef4444";
+  return "#fff";
+}
 
-const fmt = (v, digits = 1) =>
-  v === null || v === undefined || Number.isNaN(Number(v))
-    ? "—"
-    : Number(v).toLocaleString("fr-FR", {
-        minimumFractionDigits: digits,
-        maximumFractionDigits: digits
-      });
+function rsiBg(rsi) {
+  if (!Number.isFinite(rsi)) return "transparent";
+  if (rsi >= 70) return "rgba(239,68,68,0.22)";
+  if (rsi >= 60) return "rgba(249,115,22,0.15)";
+  if (rsi <= 30) return "rgba(34,197,94,0.22)";
+  if (rsi <= 40) return "rgba(74,222,128,0.12)";
+  return "rgba(234,179,8,0.08)";
+}
 
-// ============================================================================
-// COMPONENT
-// ============================================================================
+function rsiColor(rsi) {
+  if (!Number.isFinite(rsi)) return "#888";
+  if (rsi >= 70) return "#ef4444";
+  if (rsi >= 60) return "#f97316";
+  if (rsi <= 30) return "#22c55e";
+  if (rsi <= 40) return "#4ade80";
+  return "#fff";
+}
+
+function slopeBg(slope) {
+  if (!Number.isFinite(slope)) return "transparent";
+  if (slope > 3)  return "rgba(34,197,94,0.20)";
+  if (slope > 1)  return "rgba(74,222,128,0.12)";
+  if (slope < -3) return "rgba(239,68,68,0.22)";
+  if (slope < -1) return "rgba(249,115,22,0.15)";
+  return "rgba(234,179,8,0.07)";
+}
+
+function slopeColor(slope) {
+  if (!Number.isFinite(slope)) return "#888";
+  if (slope > 3)  return "#22c55e";
+  if (slope > 1)  return "#4ade80";
+  if (slope < -3) return "#ef4444";
+  if (slope < -1) return "#f97316";
+  return "#ffff";
+}
+
+function deltaBg(v) {
+  if (!Number.isFinite(v)) return "transparent";
+  if (v > 5)  return "rgba(34,197,94,0.18)";
+  if (v < -5) return "rgba(239,68,68,0.20)";
+  if (v < 0)  return "rgba(249,115,22,0.12)";
+  return "transparent";
+}
+
+function deltaColor(v) {
+  if (!Number.isFinite(v)) return "#888";
+  if (v > 5)  return "#4ade80";
+  if (v < -5) return "#ef4444";
+  if (v < 0)  return "#f97316";
+  return "#ffff";
+}
+
+const fmt = (v, d = 1) =>
+  v == null || !Number.isFinite(Number(v)) ? "—"
+  : Number(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ─── HeatCell ─────────────────────────────────────────────────────────────────
+
+function HeatCell({ bg, color, value }) {
+  return (
+    <div className="im-cell" style={{ background: bg, color: color ?? "#ccc" }}>
+      {value}
+    </div>
+  );
+}
+
+// ─── main ─────────────────────────────────────────────────────────────────────
 
 export default function IndicatorsMatrix() {
-
   const { data, ready } = useMT5Data();
   const indicators = data?.indicators ?? null;
-
-  const spread = data?.asset?.spread ?? null;
+  const spread     = data?.asset?.spread ?? null;
   const validSpread = Number.isFinite(spread) && spread > 0;
-
-  // -------------------------------------------------------------------------
-  // TF MAP (RAW DATA ONLY)
-  // -------------------------------------------------------------------------
 
   const tfMap = useMemo(() => {
     if (!indicators) return {};
-
     const out = {};
     TFS.forEach(tf => {
       out[tf] = {
-        rsi:   indicators.rsi?.[tf] ?? null,
+        rsi:   indicators.rsi?.[tf]      ?? null,
         slope: indicators.rsiSlope?.[tf] ?? null,
-        atr:   indicators.atr?.[tf] ?? null,
-        range: indicators.range?.[tf] ?? null,
-        high:  indicators.high?.[tf] ?? null,
-        low:   indicators.low?.[tf] ?? null
+        atr:   indicators.atr?.[tf]      ?? null,
+        range: indicators.range?.[tf]    ?? null,
+        high:  indicators.high?.[tf]     ?? null,
+        low:   indicators.low?.[tf]      ?? null,
       };
     });
     return out;
   }, [indicators]);
 
-  if (!ready || !indicators) {
-    return <div className="indicators-panel">Loading…</div>;
-  }
-
-  // -------------------------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------------------------
+  if (!ready || !indicators) return <div className="im-panel">Loading…</div>;
 
   return (
-    <div className="indicators-panel">
-      <div className="indicators-grid">
+    <div className="im-panel">
+      <div className="im-grid">
 
-        {/* HEADER */}
-        <div className="indicator-label">Indicateurs</div>
+        {/* HEADER ROW */}
+        <div className="im-row-label" />
         {TFS.map(tf => (
-          <div key={tf} className="indicator-header">{tf}</div>
+          <div key={tf} className="im-header">{tf}</div>
         ))}
 
-        {/* ROWS */}
-        {ROWS.map(row => (
-          <React.Fragment key={row.key}>
+        {/* SIGNAL */}
+        <div className="im-row-label">Signal</div>
+        {TFS.map(tf => {
+          const d   = tfMap[tf] ?? {};
+          const sig = IndicatorsEngine.getTradeSignal({ slope: d.slope, rsi: d.rsi });
+          return <HeatCell key={tf} bg="transparent" color={signalColor(sig)} value={sig ?? "—"} />;
+        })}
 
-            <div className="indicator-label">{row.label}</div>
+        {/* RSI */}
+        <div className="im-row-label">RSI</div>
+        {TFS.map(tf => {
+          const v = tfMap[tf]?.rsi;
+          return <HeatCell key={tf} bg={rsiBg(v)} color={rsiColor(v)} value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+        })}
 
-            {TFS.map(tf => {
-              const d = tfMap[tf] ?? {};
+        {/* RSI ZONE */}
+        <div className="im-row-label">RSI Zone</div>
+        {TFS.map(tf => {
+          const d    = tfMap[tf] ?? {};
+          const zone = IndicatorsEngine.getRsiZone?.(d.rsi) ?? { zone: "—", cls: "" };
+          return <HeatCell key={tf} bg="transparent" color={signalColor(zone.zone)} value={zone.zone} />;
+        })}
 
-              const atrSpread =
-                Number.isFinite(d.atr) && validSpread
-                  ? d.atr / spread
-                  : null;
+        {/* SLOPE */}
+        <div className="im-row-label">Slope</div>
+        {TFS.map(tf => {
+          const v = tfMap[tf]?.slope;
+          return <HeatCell key={tf} bg="transparent" color={slopeColor(v)} value={fmt(v, 1)} />;
+        })}
 
-              const rangeSpread =
-                Number.isFinite(d.range) && validSpread
-                  ? d.range / spread
-                  : null;
+        {/* DIRECTION */}
+        <div className="im-row-label">Direction</div>
+        {TFS.map(tf => {
+          const d   = tfMap[tf] ?? {};
+          const dir = IndicatorsEngine.classifySlope(d.slope);
+          return <HeatCell key={tf} bg="transparent" color={signalColor(dir.signal)} value={dir.signal ?? "—"} />;
+        })}
 
-              const deltaSpread =
-                Number.isFinite(atrSpread) && Number.isFinite(rangeSpread)
-                  ? atrSpread - rangeSpread
-                  : null;
+        {/* ATR / SPREAD */}
+        <div className="im-row-label">ATR/Spread</div>
+        {TFS.map(tf => {
+          const d = tfMap[tf] ?? {};
+          const v = Number.isFinite(d.atr) && validSpread ? d.atr / spread : null;
+          return <HeatCell key={tf} bg="transparent" color="#ffff" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+        })}
 
-              // ================= SIGNAL =================
-              if (row.key === "signal") {
-                const sig = IndicatorsEngine.getTradeSignal({
-                  slope: d.slope,
-                  rsi: d.rsi
-                });
+        {/* RANGE / SPREAD */}
+        <div className="im-row-label">Range/Spread</div>
+        {TFS.map(tf => {
+          const d = tfMap[tf] ?? {};
+          const v = Number.isFinite(d.range) && validSpread ? d.range / spread : null;
+          return <HeatCell key={tf} bg="transparent" color="#ffff" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+        })}
 
-                const cls =
-                  sig === "Strong Buy"  ? "signal-strong-buy" :
-                  sig === "Buy"         ? "signal-buy" :
-                  sig === "Sell"        ? "signal-sell" :
-                  sig === "Strong Sell" ? "signal-strong-sell" :
-                                           "signal-neutral";
+        {/* DELTA RANGE */}
+        <div className="im-row-label">Delta Range</div>
+        {TFS.map(tf => {
+          const d   = tfMap[tf] ?? {};
+          const atr = Number.isFinite(d.atr)   && validSpread ? d.atr   / spread : null;
+          const rng = Number.isFinite(d.range)  && validSpread ? d.range / spread : null;
+          const v   = Number.isFinite(atr) && Number.isFinite(rng) ? atr - rng : null;
+          return <HeatCell key={tf} bg={deltaBg(v)} color={deltaColor(v)} value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+        })}
 
-                return (
-                  <div key={tf} className={`indicator-cell ${cls}`}>
-                    {sig}
-                  </div>
-                );
-              }
+        {/* HIGH */}
+        <div className="im-row-label">High</div>
+        {TFS.map(tf => {
+          const v = tfMap[tf]?.high;
+          return <HeatCell key={tf} bg="transparent" color="#ffff" value={fmt(v, 2)} />;
+        })}
 
-              // ================= DIRECTION =================
-              if (row.key === "direction") {
-                const { signal } =
-                  IndicatorsEngine.classifySlope(d.slope);
-
-                return (
-                  <div key={tf} className="indicator-cell">
-                    {signal ?? "—"}
-                  </div>
-                );
-              }
-
-              // ================= RSI ZONE =================
-              if (row.key === "rsiZone") {
-                const zone =
-                  IndicatorsEngine.getRsiZone?.(d.rsi) ??
-                  { zone: "—", cls: "" };
-
-                return (
-                  <div key={tf} className={`indicator-cell ${zone.cls}`}>
-                    {zone.zone}
-                  </div>
-                );
-              }
-
-              // ================= NUMERIC =================
-              let value;
-              switch (row.key) {
-                case "atrSpread":   value = atrSpread; break;
-                case "rangeSpread": value = rangeSpread; break;
-                case "deltaSpread": value = deltaSpread; break;
-                case "high":        value = d.high; break;
-                case "low":         value = d.low; break;
-                default:            value = d[row.key];
-              }
-
-              const isNegativeDelta =
-                row.key === "deltaSpread" &&
-                Number.isFinite(value) &&
-                value < 0;
-
-              return (
-                <div
-                  key={tf}
-                  className={`indicator-cell ${isNegativeDelta ? "delta-negative" : ""}`}
-                >
-{row.key === "rsi"
-  ? (Number.isFinite(value) ? Math.round(value) : "—")
-  : (row.key === "atrSpread" ||
-     row.key === "rangeSpread" ||
-     row.key === "deltaSpread")
-      ? (Number.isFinite(value) ? Math.round(value) : "—")
-      : (row.key === "high" || row.key === "low")
-          ? fmt(value, 2)
-          : fmt(value, 1)}
-
-                </div>
-              );
-            })}
-
-          </React.Fragment>
-        ))}
+        {/* LOW */}
+        <div className="im-row-label">Low</div>
+        {TFS.map(tf => {
+          const v = tfMap[tf]?.low;
+          return <HeatCell key={tf} bg="transparent" color="#ffff" value={fmt(v, 2)} />;
+        })}
 
       </div>
     </div>

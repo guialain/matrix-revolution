@@ -48,6 +48,7 @@ export function sendCloseToMT5(close) {
     body: JSON.stringify({
       ticket: close.ticket,
       volume: close.volume ?? null,
+      userId: "NeoTrader",
       source: "NEO_MATRIX",
       timestamp: Date.now()
     })

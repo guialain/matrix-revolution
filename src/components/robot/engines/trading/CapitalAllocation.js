@@ -23,9 +23,9 @@ export const CLASS_WEIGHTS = {
   INDEX:   0.30, // Indices
   AGRI:    0.05, // Agriculture
   OIL_GAS: 0.08, // Oil & Gas
-  METAL:   0.15, // Métaux
+  METAL:   0.20, // Métaux
   FX:      0.22, // Forex
-  CRYPTO:  0.20  // Crypto
+  CRYPTO:  0.15  // Crypto
 };
 
 // ============================================================================

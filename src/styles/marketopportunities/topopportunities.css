@@ -1,0 +1,166 @@
+/* =========================================================
+   TOP OPPORTUNITIES — STYLES
+   ========================================================= */
+
+/* ─── TITLES ─────────────────────────────────────────────── */
+
+.neo-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #f5c26b;
+  margin-bottom: 8px;
+}
+
+.neo-title-section {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 200, 120, 0.15);
+}
+
+.neo-muted {
+  font-size: 11px;
+  color: #555;
+  padding: 8px 0;
+}
+
+/* ─── OPPORTUNITY LIST ───────────────────────────────────── */
+
+.neo-op-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.neo-op-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 200, 120, 0.12);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.neo-op-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.neo-op-symbol {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffe9c2;
+  min-width: 70px;
+}
+
+.neo-op-side {
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 36px;
+}
+
+.neo-op-side.buy  { color: #60a5fa; }
+.neo-op-side.sell { color: #f472b6; }
+
+.neo-op-score {
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 36px;
+  text-align: right;
+}
+
+.neo-op-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 10px;
+}
+
+.neo-op-type {
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+.neo-op-type-continuation {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+.neo-op-type-reversal {
+  background: rgba(192, 132, 252, 0.15);
+  color: #c084fc;
+}
+
+.neo-op-phase {
+  color: #ffe9c2;
+  font-size: 10px;
+}
+
+/* ─── INTRADAY ───────────────────────────────────────────── */
+
+.neo-intraday {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.intraday-pos  { color: #4ade80; }
+.intraday-neg  { color: #f87171; }
+.intraday-zero { color: #666; }
+
+/* ─── SCORE ──────────────────────────────────────────────── */
+
+.score-pos  { color: #4ade80; }
+.score-neg  { color: #f87171; }
+.score-zero { color: #888; }
+.score-na   { color: #555; }
+
+/* ─── BREAKDOWN BARS ─────────────────────────────────────── */
+
+.neo-op-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bk-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bk-label {
+  font-size: 9px;
+  color: #888;
+  width: 32px;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+.bk-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bk-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.bk-fill.bk-pos { background: #4ade80; }
+.bk-fill.bk-neg { background: #f87171; }
+
+.bk-val {
+  font-size: 9px;
+  font-weight: 600;
+  width: 28px;
+  text-align: right;
+}

@@ -6,7 +6,7 @@
 
 import { useMemo, Fragment } from "react";
 import useMT5Data from "../../hooks/useMT5Data";
-import "../../styles/stylesmatrixanalysis/topmovers.css";
+import "../../styles/marketopportunities/marketwatch.css";
 
 // ============================================================================
 // CONFIG
@@ -75,7 +75,7 @@ function clsSlope(v) {
 // COMPONENT
 // ============================================================================
 
-export default function TopMoversPanel({ onSwitchSymbol }) {
+export default function MarketWatch({ onSwitchSymbol }) {
 
   const { data, ready } = useMT5Data();
 

@@ -1,5 +1,5 @@
 // ============================================================================
-// NeoRobot.jsx
+// ConvergenceMultiTF.jsx
 // Rôle : UI NEO (lecture pure des signaux multi-TF + scanner)
 // ============================================================================
 
@@ -33,9 +33,9 @@ function NeoLine({ label, align, signal }) {
 }
 
 /* =====================================================
-   MAIN COMPONENT — NeoRobot
+   MAIN COMPONENT — ConvergenceMultiTF
    ===================================================== */
-export default function NeoRobot({ snapshot }) {
+export default function ConvergenceMultiTF({ snapshot }) {
   const core = useRobotCore(snapshot);
 
   if (!core) {
@@ -50,8 +50,6 @@ export default function NeoRobot({ snapshot }) {
   }
 
   const {
-    finalDecision,
-
     // === ASSET (AssetSignals) ===
     structureSignal,
     structureAlign,
@@ -111,23 +109,6 @@ export default function NeoRobot({ snapshot }) {
           align="Global"
           signal={macroRegime === "RISK_ON" ? "Up" : "Down"}
         />
-      </section>
-
-      {/* ==================================================
-          CADRE 2 — ROBOT (VERDICT GLOBAL)
-         ================================================== */}
-      <section className="neo-box neo-center neo-robot">
-        <img src="/neo.png" alt="Neo Robot" className="neo-robot-img" />
-
-        <div
-          className={`neo-robot-alert ${
-            finalDecision === "WAIT" ? "alert-wait" : "alert-ok"
-          }`}
-        >
-          {finalDecision === "WAIT"
-            ? "AUCUNE OPPORTUNITÉ"
-            : "OPPORTUNITÉS DÉTECTÉES"}
-        </div>
       </section>
 
     </div>

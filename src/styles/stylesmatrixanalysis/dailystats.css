@@ -1,0 +1,162 @@
+/* =========================================================
+   DAILY STATS — STYLES
+========================================================= */
+
+/* ─── CONTAINER ─────────────────────────────────────────── */
+
+.ds-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 8px;
+}
+
+.ds-header-title {
+  font-size: 11px;
+  color: #555;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ds-header-date {
+  font-size: 11px;
+  color: #333;
+}
+
+/* ─── KPI GRID ───────────────────────────────────────────── */
+
+.ds-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* ─── STAT BOX ───────────────────────────────────────────── */
+
+.ds-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.ds-stat-label {
+  font-size: 10px;
+  color: #ffe9c2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ds-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f5c26b;
+}
+
+.ds-stat-sub {
+  font-size: 11px;
+  color: #444;
+  margin-left: auto;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────── */
+
+.ds-table {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.ds-table-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 48px 48px 90px 68px 50px 50px 70px;
+  gap: 8px;
+  padding: 4px 8px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 4px;
+}
+
+.ds-col-label {
+  color: #f5c26b;
+}
+
+.ds-col-sort {
+  color: #f5c26b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.ds-col-sort:hover {
+  color: #ffd88a;
+}
+
+/* ─── TRADE ROW ──────────────────────────────────────────── */
+
+.ds-trade-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 48px 48px 90px 68px 50px 50px 70px;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.ds-trade-row.even {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ds-trade-rank  { color: #ffe9c2; font-size: 10px; }
+.ds-trade-symbol { color: #ffe9c2; }
+.ds-trade-lots  { color: #ffe9c2; }
+.ds-trade-open  { color: #ffe9c2; }
+.ds-trade-date  { color: #ffe9c2; font-size: 10px; }
+.ds-trade-time  { color: #ffe9c2; }
+.ds-trade-side-buy  { color: #60a5fa; font-size: 11px; }
+.ds-trade-side-sell { color: #f472b6; font-size: 11px; }
+.ds-trade-swap-pos  { color: #4ade80; font-size: 10px; }
+.ds-trade-swap-neg  { color: #f87171; font-size: 10px; }
+.ds-trade-swap-zero { color: #ffe9c2; font-size: 10px; }
+.ds-trade-pnl   { font-weight: 600; text-align: right; }
+.ds-trade-pnl.pos { color: #4ade80; }
+.ds-trade-pnl.neg { color: #f87171; }
+
+/* ─── EMPTY / LOADING ────────────────────────────────────── */
+
+.ds-loading {
+  color: #444;
+  padding: 24px;
+  font-size: 13px;
+}
+
+.ds-empty {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 24px;
+  color: #444;
+  font-size: 13px;
+  text-align: center;
+}

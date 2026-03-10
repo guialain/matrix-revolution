@@ -15,9 +15,9 @@ import "../../styles/stylesmatrixanalysis/accountlevels.css";
 function getStage(label, value, balance = null) {
   switch (label) {
     case "Margin Level":
-      if (value < 350) return "Danger - Tu n'as plus de marge";
-      if (value < 750) return "Medium - Attention à la marge";
-      return "Safe - Marge confortable";
+      if (value < 350) return "Danger - Plus de marge";
+      if (value < 750) return "Medium - Attention";
+      return "Marge confortable";
 
     case "PnL":
       if (balance !== null && value <= balance * -0.3)
@@ -26,9 +26,9 @@ function getStage(label, value, balance = null) {
       return "Profit";
 
     case "Leverage":
-      if (value > 30) return "Danger - Levier trop haut";
-      if (value > 15) return "Medium - Attention au levier";
-      return "Safe - Levier optimal";
+      if (value > 30) return "Danger - Trop Eleve";
+      if (value > 15) return "Medium - Attention ";
+      return "Safe - Optimal";
 
     default:
       return "";

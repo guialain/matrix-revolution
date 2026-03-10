@@ -11,7 +11,7 @@ export const TIMING_CONFIG = {
   // Bloque les nouvelles entrées hors fenêtre (les trades ouverts continuent d'être gérés)
   // Override optionnel par symbol ; sinon default s'applique
   tradingHours: {
-    default: { start: "05:00", end: "19:30" },
+    default: { start: "08:00", end: "19:30" },
     // EURUSD: { start: "08:00", end: "20:00" },
   },
 
@@ -32,8 +32,8 @@ export const TIMING_CONFIG = {
       slopeAbs:  6.0,
       dslopeAbs: 4.0,
       drsiAbs:   8.0,
-      rsiMax:    65,
-      rsiMin:    35,
+      rsiMax:    63,
+      rsiMin:    37,
     },
   },
 

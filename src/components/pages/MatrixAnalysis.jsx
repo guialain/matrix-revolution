@@ -6,7 +6,8 @@ import useRobotCore from "../../hooks/useRobotCore";
 import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
 import AccountLevels from "../matrixanalysis/AccountLevels";
 import MarketTrend from "../matrixanalysis/MarketTrend";
-import NeoRobot from "../matrixanalysis/NeoRobot";
+import ConvergenceMultiTF from "../matrixanalysis/ConvergenceMultiTF";
+import DailyStats from "../matrixanalysis/DailyStats";
 
 // styles
 import "../../styles/stylespages/matrixanalysis.css";
@@ -59,28 +60,23 @@ export default function MatrixAnalysis() {
  return (
     <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
 
-      {/* ==================================================
-         ROW 1 — ROBOT (FULL WIDTH)
-      ================================================== */}
-      <div className="p-4">
-        <NeoRobot snapshot={snapshot} robot={robotData} />
-      </div>
+      <div className="matrix-layout">
 
-      {/* ==================================================
-         ROW 2 — MAIN CONTENT (2 COLUMNS)
-      ================================================== */}
-<div className="flex-1 flex flex-col gap-4 px-4 pb-4 overflow-hidden min-h-0">
-
-          {/* --- INDICATORS (TOP) --- */}
+        <div className="matrix-col">
+          <ConvergenceMultiTF snapshot={snapshot} robot={robotData} />
           <IndicatorsMatrix snapshot={snapshot} />
-
-          {/* --- RISK + TREND (BOTTOM, SIDE BY SIDE) --- */}
           <div className="grid grid-cols-2 gap-4">
             <AccountLevels snapshot={snapshot} />
             <MarketTrend snapshot={snapshot} />
           </div>
+        </div>
+
+        <div className="matrix-col">
+          <DailyStats account={snapshot?.account} />
+        </div>
 
       </div>
+
     </div>
   );
 }

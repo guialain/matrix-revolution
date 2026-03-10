@@ -35,7 +35,8 @@ const FILES = {
   indicators:    "neo_indicators.csv",
   macro:         "neo_macro.csv",
   scan:          "neo_market_scan.csv",
-  openpositions: "neo_openpositions.csv"
+  openpositions: "neo_openpositions.csv",
+  closedtrades:  "neo_closedtrades.csv",
 };
 
 // ============================================================================
@@ -43,13 +44,14 @@ const FILES = {
 // ============================================================================
 
 const CACHE = {
-  account: null,
-  asset: null,
-  indicators: null,
-  macro: null,
-  scan: [],
-  openpositions: [],
-  lastUpdate: 0
+  account:      null,
+  asset:        null,
+  indicators:   null,
+  macro:        null,
+  scan:         [],
+  openpositions:[],
+  closedtrades: [],
+  lastUpdate:   0
 };
 
 // ============================================================================
@@ -136,21 +138,21 @@ function readAllRowsCSV(filePath) {
 
 function updateCache() {
 
-  const accountRaw = readLastRowCSV(path.join(MT5_DIR, FILES.account));
-  const assetRaw   = readLastRowCSV(path.join(MT5_DIR, FILES.asset));
-  const indiRaw    = readLastRowCSV(path.join(MT5_DIR, FILES.indicators));
-  const macroRaw   = readLastRowCSV(path.join(MT5_DIR, FILES.macro));
+  const accountRaw     = readLastRowCSV(path.join(MT5_DIR, FILES.account));
+  const assetRaw       = readLastRowCSV(path.join(MT5_DIR, FILES.asset));
+  const indiRaw        = readLastRowCSV(path.join(MT5_DIR, FILES.indicators));
+  const macroRaw       = readLastRowCSV(path.join(MT5_DIR, FILES.macro));
+  const scanRaw        = readAllRowsCSV(path.join(MT5_DIR, FILES.scan));
+  const openPosRaw     = readAllRowsCSV(path.join(MT5_DIR, FILES.openpositions));
+  const closedRaw      = readAllRowsCSV(path.join(MT5_DIR, FILES.closedtrades));
 
-  const scanRaw    = readAllRowsCSV(path.join(MT5_DIR, FILES.scan));
-  const openPosRaw = readAllRowsCSV(path.join(MT5_DIR, FILES.openpositions));
-
-  if (accountRaw) CACHE.account = accountRaw;
-  if (assetRaw) CACHE.asset = assetRaw;
-  if (indiRaw) CACHE.indicators = indiRaw;
-  if (macroRaw) CACHE.macro = macroRaw;
-
-  if (scanRaw?.length) CACHE.scan = scanRaw;
+  if (accountRaw)        CACHE.account      = accountRaw;
+  if (assetRaw)          CACHE.asset        = assetRaw;
+  if (indiRaw)           CACHE.indicators   = indiRaw;
+  if (macroRaw)          CACHE.macro        = macroRaw;
+  if (scanRaw?.length)   CACHE.scan         = scanRaw;
   if (openPosRaw?.length) CACHE.openpositions = openPosRaw;
+  if (closedRaw?.length) CACHE.closedtrades = closedRaw;
 
   CACHE.lastUpdate = Date.now();
 }
@@ -216,62 +218,44 @@ app.get("/api/mt5data", (req, res) => {
 
       openPositions: openPosRaw.map(p => {
 
-        const spread = num(p.spread);
+        const spread  = num(p.spread);
         const pnl_pts = num(p.pnl_pts);
-
-        const atr_h1 = num(p.atr_h1);
-        const atr_h4 = num(p.atr_h4);
-        const atr_d1 = num(p.atr_d1);
+        const atr_h1  = num(p.atr_h1);
+        const atr_h4  = num(p.atr_h4);
+        const atr_d1  = num(p.atr_d1);
 
         return {
-
-          ticket: num(p.ticket),
-          magic: num(p.magic),
-
-          symbol: p.symbol,
-          side: p.side,
-
+          ticket:   num(p.ticket),
+          magic:    num(p.magic),
+          symbol:   p.symbol,
+          side:     p.side,
           open_time: p.open_time,
-
           intraday_change: num(p.intraday_change),
-
-          lots: num(p.lots),
-
+          lots:     num(p.lots),
           contract_size: num(p.contract_size),
-
           profit_currency: p.profit_currency,
-
           eur_rate: num(p.eur_rate),
-
           notional: num(p.notional),
           notional_eur: num(p.notional_eur),
-
-          pnl_eur: num(p.pnl_eur),
+          pnl_eur:  num(p.pnl_eur),
           pnl_pts,
-
           spread,
-
           atr_h1,
           atr_h4,
           atr_d1,
-
-          rsi_h1: num(p.rsi_h1),
-
+          rsi_h1:   num(p.rsi_h1),
           pnl_spread:
             spread && spread > 0
               ? Math.round(pnl_pts / spread)
               : null,
-
           pnl_atr_h1:
             atr_h1 && atr_h1 > 0
               ? Number((pnl_pts / atr_h1).toFixed(2))
               : null,
-
           pnl_atr_h4:
             atr_h4 && atr_h4 > 0
               ? Number((pnl_pts / atr_h4).toFixed(2))
               : null,
-
           pnl_atr_d1:
             atr_d1 && atr_d1 > 0
               ? Number((pnl_pts / atr_d1).toFixed(2))
@@ -280,55 +264,38 @@ app.get("/api/mt5data", (req, res) => {
       }),
 
       asset: assetRaw && {
-
-        symbol: assetRaw.symbol,
-
-        asset_class: assetRaw.assetclass ?? assetRaw.asset_class ?? null,
-
-        digits: num(assetRaw.digits),
-
-        bid: num(assetRaw.bid),
-        ask: num(assetRaw.ask),
-
-        spread: num(assetRaw.spread),
-
+        symbol:       assetRaw.symbol,
+        asset_class:  assetRaw.assetclass ?? assetRaw.asset_class ?? null,
+        digits:       num(assetRaw.digits),
+        bid:          num(assetRaw.bid),
+        ask:          num(assetRaw.ask),
+        spread:       num(assetRaw.spread),
         intraday_change: num(assetRaw.intraday_change),
-
         atr_m15_weighted: num(assetRaw.atr_m15_weighted),
-
-        volume_min: num(assetRaw.volume_min),
-        volume_max: num(assetRaw.volume_max),
-        volume_step: num(assetRaw.volume_step),
-
+        volume_min:   num(assetRaw.volume_min),
+        volume_max:   num(assetRaw.volume_max),
+        volume_step:  num(assetRaw.volume_step),
         contract_size: num(assetRaw.contract_size),
-
-        tick_size: num(assetRaw.tick_size),
-        tick_value: num(assetRaw.tick_value),
-
-        stops_level: num(assetRaw.stops_level),
-
-        ts: assetRaw.ts,
-        ms: num(assetRaw.ms)
+        tick_size:    num(assetRaw.tick_size),
+        tick_value:   num(assetRaw.tick_value),
+        stops_level:  num(assetRaw.stops_level),
+        ts:           assetRaw.ts,
+        ms:           num(assetRaw.ms)
       },
 
       indicators: indiRaw && {
-
-        rsi: mapTF(indiRaw, "rsi"),
+        rsi:      mapTF(indiRaw, "rsi"),
         rsiSlope: mapTF(indiRaw, "rsislope"),
-
-        atr: mapTF(indiRaw, "atr"),
-
-        range: mapTF(indiRaw, "range"),
-
-        high: mapTF(indiRaw, "high"),
-        low: mapTF(indiRaw, "low")
+        atr:      mapTF(indiRaw, "atr"),
+        range:    mapTF(indiRaw, "range"),
+        high:     mapTF(indiRaw, "high"),
+        low:      mapTF(indiRaw, "low")
       },
 
       macro: macroRaw && {
-
         slots: Array.from({ length: 6 }, (_, i) => ({
-          symbol: macroRaw[`symbol_${i}`],
-          bid: num(macroRaw[`bid_${i}`]),
+          symbol:          macroRaw[`symbol_${i}`],
+          bid:             num(macroRaw[`bid_${i}`]),
           intraday_change: num(macroRaw[`intraday_change_${i}`])
         }))
       },
@@ -362,12 +329,36 @@ app.get("/api/mt5data", (req, res) => {
     res.json(matrix);
 
   } catch (err) {
-
     console.error(err);
+    res.status(500).json({ error: "MATRIX_API_ERROR" });
+  }
+});
 
-    res.status(500).json({
-      error: "MATRIX_API_ERROR"
-    });
+// ============================================================================
+// CLOSED TRADES API
+// ============================================================================
+
+app.get("/api/closedtrades", (req, res) => {
+  try {
+    const raw = CACHE.closedtrades ?? [];
+
+    const trades = raw.map(t => ({
+      ticket:     num(t.ticket),
+      symbol:     t.symbol,
+      side:       t.side,
+      lots:       num(t.lots),
+      open_price: num(t.open_price),
+      pnl_eur:    num(t.pnl_eur),
+      commission: num(t.commission),
+      swap:       num(t.swap),
+      close_time: t.close_time,
+    }));
+
+    res.json({ trades });
+
+  } catch (err) {
+    console.error("CLOSED TRADES API ERROR:", err);
+    res.status(500).json({ error: "CLOSED_TRADES_ERROR" });
   }
 });
 
@@ -376,16 +367,12 @@ app.get("/api/mt5data", (req, res) => {
 // ============================================================================
 
 app.get("/api/debug/cache", (req, res) => {
-
   res.json({
-
-    lastUpdate: CACHE.lastUpdate,
-
-    cacheAge: Date.now() - CACHE.lastUpdate,
-
-    scanRows: CACHE.scan?.length ?? 0,
-
-    openPositions: CACHE.openpositions?.length ?? 0
+    lastUpdate:    CACHE.lastUpdate,
+    cacheAge:      Date.now() - CACHE.lastUpdate,
+    scanRows:      CACHE.scan?.length ?? 0,
+    openPositions: CACHE.openpositions?.length ?? 0,
+    closedTrades:  CACHE.closedtrades?.length ?? 0,
   });
 });
 
@@ -407,8 +394,8 @@ app.post("/api/mt5order", (req, res) => {
 
     const order = {
       symbol, side, lots, sl, tp,
-      tf: tf ?? null,
-      source: source ?? "NEO_MATRIX",
+      tf:        tf ?? null,
+      source:    source ?? "NEO_MATRIX",
       timestamp: timestamp ?? Date.now()
     };
 
@@ -436,10 +423,10 @@ app.post("/api/mt5close", (req, res) => {
     }
 
     const closeCmd = {
-      action: "CLOSE",
-      ticket: Number(ticket),
-      volume: volume ?? null,
-      source: "NEO_MATRIX",
+      action:    "CLOSE",
+      ticket:    Number(ticket),
+      volume:    volume ?? null,
+      source:    "NEO_MATRIX",
       timestamp: Date.now()
     };
 
@@ -484,8 +471,6 @@ app.post("/api/mt5switch", (req, res) => {
 // ============================================================================
 
 app.listen(3001, () => {
-
   console.log("✅ NEO MATRIX API running on http://localhost:3001");
   console.log("🔥 Background polling active (1s)");
-
 });

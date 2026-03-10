@@ -26,8 +26,9 @@
 .flex-1.grid {
   flex: 1 1 auto;
   min-height: 0;
+  max-height: 100%;
   overflow: hidden;
-  align-items: stretch;   /* IMPORTANT */
+  align-items: stretch;
 }
 
 /* =========================================================
@@ -64,39 +65,28 @@
 }
 
 /* =========================================================
-   TOP MOVERS — FIXED HEIGHT (ABSOLUTE CONTROL)
-========================================================= */
-
-/* =========================================================
-   TOP MOVERS — STRICT FIXED HEIGHT
-========================================================= */
-
-.panel-topmovers {
-  height: 650px;          /* ← HAUTEUR FIXE */
-  min-height: 600px;
-
-  display: flex;
-  flex-direction: column;
-
-  overflow: hidden;       /* coupe tout débordement */
-}
-
-/* header fixe */
-.panel-topmovers .panel-header {
-  flex: 0 0 auto;
-}
-
-/* contenu scrollable uniquement */
-.panel-topmovers .stack {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-/* =========================================================
    SAFETY FLEX FIX
 ========================================================= */
 
 .flex-1.grid > div {
   min-height: 0;
+}
+
+.matrix-layout {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.matrix-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
 }

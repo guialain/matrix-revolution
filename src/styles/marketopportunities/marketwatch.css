@@ -120,7 +120,7 @@
   font-size: 0.73rem;
   font-weight: 300;
   color: #ffe9c2;
- line-height: 0.9;
+  line-height: 0.9;
   font-family: "JetBrains Mono", monospace;
   font-variant-numeric: tabular-nums;
 }
@@ -183,8 +183,10 @@ td.sym {
 .mw-table td.mw-neg      { color: #ff4444; }
 .mw-table td.mw-rsi-high { color: #ff4444; }
 .mw-table td.mw-rsi-low  { color: #00cc66; }
-.mw-table td.mw-z-high   { color: #ff8800; }
-.mw-table td.mw-z-low    { color: #44aaff; }
+.mw-table td.mw-z-high    { color: #ff8800; }
+.mw-table td.mw-z-low     { color: #44aaff; }
+.mw-table td.mw-slope-up  { color: #00cc66; }
+.mw-table td.mw-slope-down { color: #ff4444; }
 
 /* ============================================================
    EMPTY

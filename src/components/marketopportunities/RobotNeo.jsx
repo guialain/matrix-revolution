@@ -1,9 +1,9 @@
 // ============================================================================
-// RobotCenter.jsx — Robot image + Wait opportunities + Not Eligible
+// RobotNeo.jsx — Robot image + Wait opportunities + Not Eligible
 // ============================================================================
 
 import { fmtScore } from "./TopOpportunities";
-import "../../styles/marketopportunities/robotcenter.css";
+import "../../styles/marketopportunities/robotneo.css";
 
 /* ─── WaitSection ─────────────────────────────────────────────────────────── */
 
@@ -90,9 +90,9 @@ function NotEligibleSection({ blocked }) {
   );
 }
 
-/* ─── RobotCenter ─────────────────────────────────────────────────────────── */
+/* ─── RobotNeo ────────────────────────────────────────────────────────────── */
 
-export default function RobotCenter({ waitOpportunities, blocked }) {
+export default function RobotNeo({ waitOpportunities, blocked }) {
   return (
     <div className="rc-container">
       <section className="mo-section rc-robot">

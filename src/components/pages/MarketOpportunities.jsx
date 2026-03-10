@@ -8,7 +8,7 @@ import useMT5Data from "../../hooks/useMT5Data";
 import useRobotCore from "../../hooks/useRobotCore";
 import MarketWatch from "../marketopportunities/MarketWatch";
 import TopOpportunities from "../marketopportunities/TopOpportunities";
-import RobotCenter from "../marketopportunities/RobotCenter";
+import RobotNeo from "../marketopportunities/RobotNeo";
 import { sendSwitchSymbol } from "../../utilitaires/sendMT5Instructions";
 import "../../styles/stylespages/marketopportunities.css";
 
@@ -66,7 +66,7 @@ export default function MarketOpportunities() {
       </section>
 
       {/* ====== CENTER (20%) — Robot + Wait + Not Eligible ====== */}
-      <RobotCenter
+      <RobotNeo
         waitOpportunities={waitOpportunities}
         blocked={blocked}
       />

@@ -1,115 +1,123 @@
 // ============================================================================
-// ConvergenceMultiTF.jsx
-// Rôle : UI NEO (lecture pure des signaux multi-TF + scanner)
+// ConvergenceMultiTF.jsx — UI redesign
 // ============================================================================
 
 import React from "react";
-import "../../styles/stylesmatrixanalysis/neorobot.css";
-
+import "../../styles/stylesmatrixanalysis/convergencemultiTF.css";
 import useRobotCore from "../../hooks/useRobotCore";
 
+// ─── signal → config ─────────────────────────────────────────────────────────
 
-/* =====================================================
-   UTILS — signal → css class
-   ===================================================== */
-function signalClass(signal) {
-  if (!signal) return "neo-neutral";
-  return `neo-${signal.toLowerCase().replace(" ", "-")}`;
+function getSignalConfig(signal) {
+  if (!signal) return { color: "#555", icon: "●", strength: 0, label: "NEUTRAL" };
+  const s = signal.toUpperCase().replace(" ", "_");
+  const map = {
+    STRONG_UP:   { color: "#22c55e", icon: "▲▲", strength: 1.0,  label: "STRONG UP" },
+    UP:          { color: "#4ade80", icon: "▲",  strength: 0.6,  label: "UP" },
+    NEUTRAL:     { color: "#eab308", icon: "●",  strength: 0.3,  label: "NEUTRAL" },
+    DOWN:        { color: "#f97316", icon: "▼",  strength: 0.6,  label: "DOWN" },
+    STRONG_DOWN: { color: "#ef4444", icon: "▼▼", strength: 1.0,  label: "STRONG DOWN" },
+  };
+  return map[s] ?? { color: "#555", icon: "●", strength: 0.2, label: signal.toUpperCase() };
 }
 
-/* =====================================================
-   SOUS-COMPONENT — NeoLine
-   ===================================================== */
-function NeoLine({ label, align, signal }) {
+// ─── SignalCard ───────────────────────────────────────────────────────────────
+
+function SignalCard({ label, sublabel, align, signal }) {
+  const cfg = getSignalConfig(signal);
+
   return (
-    <div className="neo-line neo-3cols">
-      <span className="neo-col neo-label">{label}</span>
-      <span className="neo-col neo-align">{align ?? "Unknown"}</span>
-      <span className={`neo-col neo-signal ${signalClass(signal)}`}>
-        {signal ?? "Neutral"}
-      </span>
+    <div className="cmtf-card">
+      <div className="cmtf-card-left">
+        <span className="cmtf-card-icon" style={{ color: cfg.color }}>{cfg.icon}</span>
+        <div className="cmtf-card-text">
+          <span className="cmtf-card-label">{label}</span>
+          {sublabel && <span className="cmtf-card-sublabel">{sublabel}</span>}
+        </div>
+      </div>
+      <div className="cmtf-card-right">
+        <div className="cmtf-bar-track">
+          <div
+            className="cmtf-bar-fill"
+            style={{ width: `${cfg.strength * 100}%`, background: cfg.color }}
+          />
+        </div>
+        <span className="cmtf-card-align">{align ?? "—"}</span>
+        <span className="cmtf-card-signal" style={{ color: cfg.color }}>{cfg.label}</span>
+      </div>
     </div>
   );
 }
 
-/* =====================================================
-   MAIN COMPONENT — ConvergenceMultiTF
-   ===================================================== */
+// ─── main ─────────────────────────────────────────────────────────────────────
+
 export default function ConvergenceMultiTF({ snapshot }) {
   const core = useRobotCore(snapshot);
 
   if (!core) {
     return (
-      <div className="neo-row">
-        <div className="neo-box">
-          <div className="neo-title">NEO</div>
-          Initialisation du moteur…
-        </div>
+      <div className="cmtf-container">
+        <div className="cmtf-loading">Initialisation…</div>
       </div>
     );
   }
 
   const {
-    // === ASSET (AssetSignals) ===
-    structureSignal,
-    structureAlign,
-
-    dominantSignal,
-    dominantAlign,
-
-    timingSignal,
-    timingAlign,
-
+    structureSignal, structureAlign,
+    dominantSignal,  dominantAlign,
+    timingSignal,    timingAlign,
     noiseLevel,
-    macroRegime
+    macroRegime,
   } = core;
 
+  const noiseSignal = noiseLevel != null && noiseLevel > 0.6 ? "Strong Down" : "Neutral";
+  const noiseAlign  = noiseLevel != null && noiseLevel > 0.6 ? "High" : "Low";
+  const macroSignal = macroRegime === "RISK_ON" ? "Up" : "Down";
+
+  const symbol = snapshot?.asset?.symbol ?? "—";
+
   return (
-    <div className="neo-row">
+    <div className="cmtf-container">
 
-      {/* ==================================================
-          CADRE 1 — ASSET ANALYSIS (MULTI-TF)
-         ================================================== */}
-      <section className="neo-box neo-asset">
+      {/* HEADER */}
+      <div className="cmtf-header">
+        <span className="cmtf-header-title">Multi-Timeframe Analysis</span>
+        <span className="cmtf-header-symbol">{symbol}</span>
+      </div>
 
-        <div className="neo-title neo-title-split">
-          <span className="neo-title-context">MULTI-TIMEFRAME ANALYSIS</span>
-          <span className="neo-title-sep">:</span>
-          <span className="neo-title-symbol">
-            {snapshot?.asset?.symbol ?? "—"}
-          </span>
-        </div>
-
-        <NeoLine
+      {/* CARDS */}
+      <div className="cmtf-cards">
+        <SignalCard
           label="Tendance structurelle"
+          sublabel="WEEK · MONTH"
           align={structureAlign}
           signal={structureSignal}
         />
-
-        <NeoLine
+        <SignalCard
           label="Tendance directionnelle"
+          sublabel="DAY · H4"
           align={dominantAlign}
           signal={dominantSignal}
         />
-
-        <NeoLine
+        <SignalCard
           label="Timing / Momentum"
+          sublabel="M15 · H1"
           align={timingAlign}
           signal={timingSignal}
         />
-
-        <NeoLine
+        <SignalCard
           label="Perturbation / Bruit"
-          align={noiseLevel != null && noiseLevel > 0.6 ? "High" : "Low"}
-          signal={noiseLevel != null && noiseLevel > 0.6 ? "Strong Down" : "Neutral"}
+          sublabel="M1 · M5"
+          align={noiseAlign}
+          signal={noiseSignal}
         />
-
-        <NeoLine
-          label="Contexte macro"
-          align="Global"
-          signal={macroRegime === "RISK_ON" ? "Up" : "Down"}
+        <SignalCard
+          label="Contexte Macro"
+          sublabel="Global"
+          align="Macro"
+          signal={macroSignal}
         />
-      </section>
+      </div>
 
     </div>
   );

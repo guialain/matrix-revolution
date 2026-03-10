@@ -39,33 +39,25 @@ export default function MatrixAnalysis() {
   // STATES
   // ==================================================
   if (error) {
-    return (
-      <div className="h-screen flex items-center justify-center text-red-500 bg-black">
-        MT5 connection error
-      </div>
-    );
+    return <div className="ma-state ma-state-error">MT5 connection error</div>;
   }
 
   if (!ready || !data) {
-    return (
-      <div className="h-screen flex items-center justify-center text-gray-500 bg-black">
-        Waiting for MT5 snapshot…
-      </div>
-    );
+    return <div className="ma-state ma-state-loading">Waiting for MT5 snapshot…</div>;
   }
 
   // ==================================================
   // PAGE
   // ==================================================
- return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+  return (
+    <div className="ma-page">
 
       <div className="matrix-layout">
 
         <div className="matrix-col">
           <ConvergenceMultiTF snapshot={snapshot} robot={robotData} />
           <IndicatorsMatrix snapshot={snapshot} />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="matrix-bottom-row">
             <AccountLevels snapshot={snapshot} />
             <MarketTrend snapshot={snapshot} />
           </div>

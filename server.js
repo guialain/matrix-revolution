@@ -34,6 +34,7 @@ const TOKEN_TO_USER = Object.fromEntries(
 function authMiddleware(req, res, next) {
   const key = req.headers["x-api-key"];
   const uid = TOKEN_TO_USER[key];
+  console.log("AUTH CHECK", { key, resolvedUser: uid, knownTokens: Object.keys(TOKENS) });
   if (!uid) return res.status(401).json({ error: "UNAUTHORIZED" });
   req.userId = uid;
   next();

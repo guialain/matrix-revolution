@@ -11,6 +11,7 @@
   height: calc(100vh - 80px);
   overflow: hidden;
   min-height: 0;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .mo-section {

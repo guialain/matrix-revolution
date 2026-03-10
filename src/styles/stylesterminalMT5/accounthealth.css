@@ -9,6 +9,7 @@
 .health-tubes {
   flex: 1 1 auto;
   min-height: 0;
+  font-family: 'Courier New', Courier, monospace;
 
   display: flex;
   justify-content: center;

@@ -6,6 +6,7 @@
   flex: 0 0 280px;
   padding-top: 1px;
   min-height: 220px;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 /* ================= DONUT LAYOUT ================= */
@@ -50,10 +51,10 @@
   align-items: center;
   column-gap: 14px;
 
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 0.85;
   padding: 2px 0;
-  color: #f4d990;
+  color: #ffffff;
 }
 
 .legend-dot {
@@ -75,5 +76,5 @@
   border-top: 1px solid rgba(255, 200, 80, 0.25);
   font-size: 0.9rem;
   font-weight: 700;
-  color: #ffcc66;
+  color: #ffffff;
 }

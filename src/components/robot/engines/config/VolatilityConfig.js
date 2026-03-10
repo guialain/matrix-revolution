@@ -26,7 +26,7 @@ export const VOLATILITY_CONFIG = {
   SILVER:    { lowMax: 0.002980, medMax: 0.007135, highMax: 0.016718 },
   PALLADIUM: { lowMax: 0.003537, medMax: 0.007513, highMax: 0.013093 },
   PLATINUM:  { lowMax: 0.003368, medMax: 0.007196, highMax: 0.013234 },
-  CrudeOIL:    { lowMax: 0.002042, medMax: 0.003606, highMax: 0.007565 },
+  CrudeOIL:    { lowMax: 0.002042, medMax: 0.003606, highMax: 0.015565 },
   NATURAL_GAS: { lowMax: 0.003843, medMax: 0.009045, highMax: 0.019603 },
   HEATING_OIL: { lowMax: 0.002362, medMax: 0.004057, highMax: 0.009910 },
   COCOA:    { lowMax: 0.004627, medMax: 0.008322, highMax: 0.012310 },

@@ -22,8 +22,8 @@ function getStrongMax(symbol) {
 // ============================================================================
 function scoreVolatility(symbol, atr_m15, close) {
   const regime = getVolatilityRegime(symbol, atr_m15, close);
-  if (regime === 'high')  return 10;
-  if (regime === 'med')   return  5;
+  if (regime === 'high')  return 7;
+  if (regime === 'med')   return  3;
   if (regime === 'explo') return -3;
   return 0; // low
 }
@@ -39,7 +39,7 @@ function scoreSlope(slope_h1, dslope_h1) {
 }
 
 // ============================================================================
-// COMPOSANTE — INTRADAY REVERSAL (±25)
+// COMPOSANTE — INTRADAY REVERSAL (±20)
 // Logique W : pics à ±75% strongMax, pénalité au delà de strongMax
 // ============================================================================
 function scoreIntradayReversal(symbol, intraday_change) {
@@ -47,10 +47,10 @@ function scoreIntradayReversal(symbol, intraday_change) {
   const ratio = intraday_change / sMax;
 
   const lobePos   = Math.pow(clamp( ratio / 0.75, 0, 1), 0.8)
-                  * Math.pow(clamp((1.5 - ratio) / 0.75, 0, 1), 0.8) * 25;
+                  * Math.pow(clamp((1.5 - ratio) / 0.75, 0, 1), 0.8) * 20;
   const lobeMinus = Math.pow(clamp(-ratio / 0.75, 0, 1), 0.8)
-                  * Math.pow(clamp((1.5 + ratio) / 0.75, 0, 1), 0.8) * 25;
-  const penalty   = -clamp((Math.abs(ratio) - 1.0) / 0.5, 0, 1) * 25;
+                  * Math.pow(clamp((1.5 + ratio) / 0.75, 0, 1), 0.8) * 20;
+  const penalty   = -clamp((Math.abs(ratio) - 1.0) / 0.5, 0, 1) * 20;
 
   return Math.max(lobePos, lobeMinus) + penalty;
 }
@@ -78,8 +78,8 @@ function scoreIntradayContinuation(symbol, intraday_change, side) {
 
 // ============================================================================
 // REVERSAL BUY
-// RSI(0-30) + BBZ(0-20) + Slope(±20) + DSlope(±10) + Vol(−3/+5/+10) + Intraday(±25)
-// Max théorique : +105  |  Min théorique : −53
+// RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±20)
+// Max théorique : +100  |  Min théorique : −53
 // ============================================================================
 export function scoreReversalBuy(row) {
   const {
@@ -118,7 +118,7 @@ export function scoreReversalBuy(row) {
 
 // ============================================================================
 // REVERSAL SELL
-// RSI(0-30) + BBZ(0-20) + Slope(±20) + DSlope(±10) + Vol(−3/+5/+10) + Intraday(±25)
+// RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±20)
 // ============================================================================
 export function scoreReversalSell(row) {
   const {
@@ -157,7 +157,7 @@ export function scoreReversalSell(row) {
 
 // ============================================================================
 // CONTINUATION BUY
-// RSI(0-30) + BBZ(0-20) + Slope(±20) + DSlope(±10) + Vol(−3/+5/+10) + Intraday(±25)
+// RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±25)
 // ============================================================================
 export function scoreContinuationBuy(row) {
   const {
@@ -199,7 +199,7 @@ export function scoreContinuationBuy(row) {
 
 // ============================================================================
 // CONTINUATION SELL
-// RSI(0-30) + BBZ(0-20) + Slope(±20) + DSlope(±10) + Vol(−3/+5/+10) + Intraday(±25)
+// RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±25)
 // ============================================================================
 export function scoreContinuationSell(row) {
   const {

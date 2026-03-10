@@ -57,7 +57,6 @@ export default function CapitalAllocationPanel({ allocation = [] }) {
   value={used}
   displayValue={`${pct}%`}
   color={getAllocationColor(used, row.empty)}
-  maxHeightRatio={row.heightRatio}   // 👈 ICI
 />
 
             </div>

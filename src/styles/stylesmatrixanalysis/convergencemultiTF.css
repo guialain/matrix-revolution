@@ -5,13 +5,14 @@
 .cmtf-container {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid rgba(255, 200, 120, 0.25);
+  border: 1px solid rgba(0, 200, 100, 0.15);
   border-radius: 10px;
-  background: radial-gradient(circle at top, rgba(255, 215, 140, 0.06), rgba(0,0,0,0.92));
-  padding: 10px 14px;
+  background: #020508;
+  padding: 8px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 /* ─── HEADER ─────────────────────────────────────────────── */
@@ -20,22 +21,22 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 200, 120, 0.12);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 200, 100, 0.15);
 }
 
 .cmtf-header-title {
   font-size: 10px;
   font-weight: 700;
-  color: #f5c26b;
+  color: #00ff88;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.15em;
 }
 
 .cmtf-header-symbol {
   font-size: 12px;
   font-weight: 800;
-  color: #ffff;
+  color: #00ff88;
   letter-spacing: 0.08em;
 }
 
@@ -51,7 +52,7 @@
   display: grid;
   grid-template-columns: 1fr 1.4fr;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 2px 8px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.02);
@@ -90,13 +91,13 @@
 .cmtf-card-label {
   font-size: 12px;
   font-weight: 600;
-  color: #ffff;
+  color: #c8d8e8;
   white-space: nowrap;
 }
 
 .cmtf-card-sublabel {
   font-size: 9px;
-  color: rgba(245, 194, 107, 0.45);
+  color: rgba(255, 255, 255, 0.3);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -107,7 +108,7 @@
   display: grid;
   grid-template-columns: 1fr 56px 100px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cmtf-bar-track {
@@ -125,7 +126,7 @@
 
 .cmtf-card-align {
   font-size: 11px;
-  color: #ffff;
+  color: rgba(255, 255, 255, 0.5);
   text-align: center;
 }
 

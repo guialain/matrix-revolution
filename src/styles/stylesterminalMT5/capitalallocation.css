@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 /* ============================================================================
@@ -15,9 +16,9 @@
 .allocation-tubes {
   flex: 1;
   display: flex;
-  align-items: flex-end;              /* 🔒 sol commun */
+  align-items: flex-end;
   justify-content: space-around;
-  gap: 14px;
+  gap: 8px;
   padding: 6px 18px;
 }
 
@@ -70,22 +71,12 @@
    (agit sur le SVG, pas sur le socle)
 ============================================================================ */
 
-.tube-wrapper[data-class="INDEX"] .vertical-tube {
-  transform-origin: bottom;
-  transform: scaleY(1);              /* dominante */
-}
-
-.tube-wrapper[data-class="FX"] .vertical-tube {
-  transform-origin: bottom;
-  transform: scaleY(0.85);
-}
-
 /* ============================================================================
    VERTICAL TUBE (SVG)
 ============================================================================ */
 
 .vertical-tube {
-  width: 100%;
-  max-width: 100%;
+  width: 90px;
+  height: 250px;
   display: block;
 }

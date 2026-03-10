@@ -5,7 +5,6 @@ export default function VerticalTube({
   color = "#ffffff",
   inverse = false,
   valueState = null,
-  maxHeightRatio = 1
 }) {
   const VIEWBOX_WIDTH = 90;
   const VIEWBOX_HEIGHT = 250;
@@ -28,10 +27,6 @@ export default function VerticalTube({
       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
       preserveAspectRatio="xMidYMid meet"
       className="vertical-tube"
-      style={{
-        transform: `scaleY(${maxHeightRatio})`,
-        transformOrigin: "bottom"
-      }}
       role="img"
     >
       {displayValue !== null && (
@@ -40,6 +35,7 @@ export default function VerticalTube({
           y={14}
           textAnchor="middle"
           className={`tube-value ${valueState ?? ""}`}
+          fontFamily="'Courier New', Courier, monospace"
         >
           {displayValue}
         </text>
@@ -51,8 +47,8 @@ export default function VerticalTube({
         width={TUBE_WIDTH}
         height={TUBE_HEIGHT}
         rx={TUBE_RADIUS}
-        fill="rgba(255,255,255,0.12)"
-        stroke="rgba(255,215,120,0.35)"
+        fill="rgba(255,255,255,0.04)"
+        stroke="rgba(0,200,100,0.2)"
       />
 
       <rect
@@ -79,9 +75,10 @@ export default function VerticalTube({
         x={VIEWBOX_WIDTH / 2}
         y={TUBE_TOP + TUBE_HEIGHT + 18}
         textAnchor="middle"
-        fill="#f5c26b"
+        fill="#c8d8e8"
         fontSize="11"
         fontWeight="600"
+        fontFamily="'Courier New', Courier, monospace"
       >
         {label}
       </text>

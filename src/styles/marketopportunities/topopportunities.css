@@ -130,13 +130,15 @@
 .bk-item {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .bk-label {
   font-size: 9px;
   color: #888;
-  width: 32px;
+  width: 70px;
+  min-width: 70px;
+  flex-shrink: 0;
   text-align: right;
   letter-spacing: 0.04em;
 }

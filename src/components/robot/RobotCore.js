@@ -187,7 +187,7 @@ const RobotCore = {
         }
       };
 
-      if (eligibility?.eligible) {
+      if (eligibility?.eligible && (op.score + volBonus) >= 30) {
         tradableMarket.push(enriched);
       } else {
         notTradableMarket.push(enriched);

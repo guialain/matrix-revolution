@@ -22,9 +22,9 @@ const num = v => {
 // ============================================================================
 
 const TOKENS = {
-  userA: "tokenA",
-  userB: "tokenB",
-  userC: "tokenC",
+  LeloupTrader: "neo-leloup-x7k9m2",
+  EricTrader:   "neo-eric-p4q8n1",
+  NeoTrader:    "neo-neotrader-z3w6j5"
 };
 
 const TOKEN_TO_USER = Object.fromEntries(

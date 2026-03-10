@@ -45,6 +45,18 @@ function authMiddleware(req, res, next) {
 
 const STORE = {};
 
+function ensureStore(userId) {
+  if (!STORE[userId]) {
+    STORE[userId] = {
+      account: null, asset: null, indicators: null, macro: null,
+      scan: [], openpositions: [], closedtrades: [],
+      pendingOrder: [], pendingClose: [], pendingSwitch: [],
+      lastUpdate: 0,
+    };
+  }
+  return STORE[userId];
+}
+
 // ============================================================================
 // MT5 LOCAL FILES (only if MT5_DIR exists on disk)
 // ============================================================================
@@ -235,19 +247,18 @@ app.post("/api/push/:userId", authMiddleware, (req, res) => {
     }
 
     const { account, asset, indicators, macro, scan, openpositions, closedtrades } = req.body;
+    const store = ensureStore(userId);
 
-    STORE[userId] = {
-      account:       account ?? null,
-      asset:         asset ?? null,
-      indicators:    indicators ?? null,
-      macro:         macro ?? null,
-      scan:          scan ?? [],
-      openpositions: openpositions ?? [],
-      closedtrades:  closedtrades ?? [],
-      lastUpdate:    Date.now(),
-    };
+    store.account       = account ?? null;
+    store.asset         = asset ?? null;
+    store.indicators    = indicators ?? null;
+    store.macro         = macro ?? null;
+    store.scan          = scan ?? [];
+    store.openpositions = openpositions ?? [];
+    store.closedtrades  = closedtrades ?? [];
+    store.lastUpdate    = Date.now();
 
-    res.json({ status: "OK", userId, ts: STORE[userId].lastUpdate });
+    res.json({ status: "OK", userId, ts: store.lastUpdate });
 
   } catch (err) {
     console.error("PUSH API ERROR:", err);
@@ -450,14 +461,12 @@ app.get("/api/debug/cache", (req, res) => {
 });
 
 // ============================================================================
-// MT5 ORDER EXECUTION (local only)
+// MT5 ORDER EXECUTION (queued for local agent)
 // ============================================================================
 
 app.post("/api/mt5order", (req, res) => {
   try {
-    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
-
-    const { symbol, side, lots, sl, tp, tf, source, timestamp } = req.body ?? {};
+    const { symbol, side, lots, sl, tp, tf, source, timestamp, userId } = req.body ?? {};
 
     if (!symbol || !side || !Number.isFinite(lots) || !Number.isFinite(sl) || !Number.isFinite(tp)) {
       return res.status(400).json({ error: "INVALID_ORDER_PAYLOAD", payload: req.body });
@@ -474,10 +483,11 @@ app.post("/api/mt5order", (req, res) => {
       timestamp: timestamp ?? Date.now()
     };
 
-    const filePath = path.join(MT5_DIR, "neo_order.json");
-    fs.writeFileSync(filePath, JSON.stringify(order, null, 2), "utf8");
+    const uid = userId ?? "NeoTrader";
+    const store = ensureStore(uid);
+    store.pendingOrder.push(order);
 
-    res.json({ status: "OK", message: "Order forwarded to MT5", order });
+    res.json({ status: "OK", message: "Order queued", order });
 
   } catch (err) {
     console.error("MT5 ORDER API ERROR:", err);
@@ -486,14 +496,12 @@ app.post("/api/mt5order", (req, res) => {
 });
 
 // ============================================================================
-// MT5 CLOSE POSITION (local only)
+// MT5 CLOSE POSITION (queued for local agent)
 // ============================================================================
 
 app.post("/api/mt5close", (req, res) => {
   try {
-    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
-
-    const { ticket, symbol, volume } = req.body ?? {};
+    const { ticket, symbol, volume, userId } = req.body ?? {};
 
     if (!ticket) {
       return res.status(400).json({ error: "INVALID_CLOSE_PAYLOAD", reason: "Missing ticket", payload: req.body });
@@ -509,10 +517,11 @@ app.post("/api/mt5close", (req, res) => {
 
     if (symbol) closeCmd.symbol = symbol;
 
-    const filePath = path.join(MT5_DIR, "neo_close.json");
-    fs.writeFileSync(filePath, JSON.stringify(closeCmd, null, 2), "utf8");
+    const uid = userId ?? "NeoTrader";
+    const store = ensureStore(uid);
+    store.pendingClose.push(closeCmd);
 
-    res.json({ status: "OK", message: "Close command forwarded to MT5", closeCmd });
+    res.json({ status: "OK", message: "Close queued", closeCmd });
 
   } catch (err) {
     console.error("MT5 CLOSE API ERROR:", err);
@@ -521,27 +530,54 @@ app.post("/api/mt5close", (req, res) => {
 });
 
 // ============================================================================
-// MT5 SYMBOL SWITCH (local only)
+// MT5 SYMBOL SWITCH (queued for local agent)
 // ============================================================================
 
 app.post("/api/mt5switch", (req, res) => {
   try {
-    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
-
-    const { symbol } = req.body ?? {};
+    const { symbol, userId } = req.body ?? {};
 
     if (!symbol || typeof symbol !== "string") {
       return res.status(400).json({ error: "INVALID_SYMBOL", payload: req.body });
     }
 
-    const filePath = path.join(MT5_DIR, "neo_symbol.txt");
-    fs.writeFileSync(filePath, symbol.trim(), "utf8");
+    const uid = userId ?? "NeoTrader";
+    const store = ensureStore(uid);
+    store.pendingSwitch.push({ symbol: symbol.trim(), timestamp: Date.now() });
 
-    res.json({ status: "OK", message: "Symbol switch forwarded to MT5", symbol });
+    res.json({ status: "OK", message: "Switch queued", symbol });
 
   } catch (err) {
     console.error("MT5 SWITCH API ERROR:", err);
     res.status(500).json({ error: "MT5_SWITCH_ERROR" });
+  }
+});
+
+// ============================================================================
+// POLL PENDING COMMANDS (local agent pulls & drains queues)
+// ============================================================================
+
+app.get("/api/poll/:userId", authMiddleware, (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (req.userId !== userId) {
+      return res.status(403).json({ error: "FORBIDDEN", reason: "Token/userId mismatch" });
+    }
+
+    const store = ensureStore(userId);
+
+    const pending = {
+      orders:   store.pendingOrder.splice(0),
+      closes:   store.pendingClose.splice(0),
+      switches: store.pendingSwitch.splice(0),
+    };
+
+    res.json({ status: "OK", userId, pending });
+
+  } catch (err) {
+    console.error("POLL API ERROR:", err);
+    res.status(500).json({ error: "POLL_ERROR" });
   }
 });
 

@@ -29,11 +29,11 @@ export const TIMING_CONFIG = {
     // Overextended — spike terminal (reversal + continuation)
     // =========================================================
     overextended: {
-      slopeAbs:  6.0,
-      dslopeAbs: 4.0,
+      slopeAbs:  6.5,
+      dslopeAbs: 4.5,
       drsiAbs:   8.0,
-      rsiMax:    63,
-      rsiMin:    37,
+      rsiMax:    68,
+      rsiMin:    32,
     },
   },
 

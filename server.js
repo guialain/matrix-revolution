@@ -551,7 +551,7 @@ app.post("/api/mt5switch", (req, res) => {
 
 const __root = path.resolve();
 app.use(express.static(path.join(__root, "dist")));
-app.get("*", (req, res) => {
+app.get("/{*splat}", (req, res) => {
   res.sendFile(path.join(__root, "dist", "index.html"));
 });
 

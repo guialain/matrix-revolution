@@ -6,7 +6,7 @@ import path from "path";
 const app = express();
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
 // ============================================================================
 // NUM HELPER (safe number)
@@ -18,16 +18,42 @@ const num = v => {
 };
 
 // ============================================================================
-// MT5 FILES DIRECTORY
+// AUTH TOKENS
+// ============================================================================
+
+const TOKENS = {
+  userA: "tokenA",
+  userB: "tokenB",
+  userC: "tokenC",
+};
+
+const TOKEN_TO_USER = Object.fromEntries(
+  Object.entries(TOKENS).map(([uid, tok]) => [tok, uid])
+);
+
+function authMiddleware(req, res, next) {
+  const key = req.headers["x-api-key"];
+  const uid = TOKEN_TO_USER[key];
+  if (!uid) return res.status(401).json({ error: "UNAUTHORIZED" });
+  req.userId = uid;
+  next();
+}
+
+// ============================================================================
+// REMOTE STORE (per-user, populated via POST /api/push/:userId)
+// ============================================================================
+
+const STORE = {};
+
+// ============================================================================
+// MT5 LOCAL FILES (only if MT5_DIR exists on disk)
 // ============================================================================
 
 const MT5_DIR =
   "C:/Users/DELL/AppData/Roaming/MetaQuotes/Terminal/" +
   "9B101088254A9C260A9790D5079A7B11/MQL5/Files";
 
-// ============================================================================
-// CSV FILES
-// ============================================================================
+const MT5_LOCAL = fs.existsSync(MT5_DIR);
 
 const FILES = {
   account:       "neo_account.csv",
@@ -40,7 +66,7 @@ const FILES = {
 };
 
 // ============================================================================
-// GLOBAL CACHE
+// GLOBAL CACHE (local MT5 only)
 // ============================================================================
 
 const CACHE = {
@@ -133,7 +159,7 @@ function readAllRowsCSV(filePath) {
 }
 
 // ============================================================================
-// CACHE UPDATE (background polling)
+// CACHE UPDATE (background polling — local MT5 only)
 // ============================================================================
 
 function updateCache() {
@@ -157,13 +183,14 @@ function updateCache() {
   CACHE.lastUpdate = Date.now();
 }
 
-// polling every second
-setInterval(updateCache, 1000);
-
-// initial load
-console.log("⏳ Loading MT5 data...");
-updateCache();
-console.log("✅ MT5 cache ready");
+if (MT5_LOCAL) {
+  setInterval(updateCache, 1000);
+  console.log("⏳ Loading MT5 data...");
+  updateCache();
+  console.log("✅ MT5 cache ready (local polling active)");
+} else {
+  console.log("ℹ️  MT5_DIR not found — local polling disabled, remote push only");
+}
 
 // ============================================================================
 // TIMEFRAME MAPPER
@@ -187,6 +214,48 @@ function mapTF(raw, key) {
 }
 
 // ============================================================================
+// DATA SOURCE RESOLVER (STORE[userId] or local CACHE)
+// ============================================================================
+
+function resolveSource(userId) {
+  if (userId && STORE[userId]) return STORE[userId];
+  return CACHE;
+}
+
+// ============================================================================
+// POST /api/push/:userId — REMOTE DATA PUSH
+// ============================================================================
+
+app.post("/api/push/:userId", authMiddleware, (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (req.userId !== userId) {
+      return res.status(403).json({ error: "FORBIDDEN", reason: "Token/userId mismatch" });
+    }
+
+    const { account, asset, indicators, macro, scan, openpositions, closedtrades } = req.body;
+
+    STORE[userId] = {
+      account:       account ?? null,
+      asset:         asset ?? null,
+      indicators:    indicators ?? null,
+      macro:         macro ?? null,
+      scan:          scan ?? [],
+      openpositions: openpositions ?? [],
+      closedtrades:  closedtrades ?? [],
+      lastUpdate:    Date.now(),
+    };
+
+    res.json({ status: "OK", userId, ts: STORE[userId].lastUpdate });
+
+  } catch (err) {
+    console.error("PUSH API ERROR:", err);
+    res.status(500).json({ error: "PUSH_ERROR" });
+  }
+});
+
+// ============================================================================
 // MAIN MATRIX API
 // ============================================================================
 
@@ -194,17 +263,18 @@ app.get("/api/mt5data", (req, res) => {
 
   try {
 
-    const accountRaw = CACHE.account;
-    const assetRaw   = CACHE.asset;
-    const indiRaw    = CACHE.indicators;
-    const macroRaw   = CACHE.macro;
-    const openPosRaw = CACHE.openpositions ?? [];
+    const src        = resolveSource(req.query.userId);
+    const accountRaw = src.account;
+    const assetRaw   = src.asset;
+    const indiRaw    = src.indicators;
+    const macroRaw   = src.macro;
+    const openPosRaw = src.openpositions ?? [];
 
     const matrix = {
 
       time: {
         timestamp: num(accountRaw?.ms),
-        cacheAge: Date.now() - CACHE.lastUpdate
+        cacheAge: Date.now() - (src.lastUpdate || 0)
       },
 
       account: accountRaw && {
@@ -300,7 +370,7 @@ app.get("/api/mt5data", (req, res) => {
         }))
       },
 
-      marketWatch: (CACHE.scan ?? [])
+      marketWatch: (src.scan ?? [])
         .filter(r => r.symbol)
         .map(r => ({
           symbol:          r.symbol,
@@ -340,7 +410,8 @@ app.get("/api/mt5data", (req, res) => {
 
 app.get("/api/closedtrades", (req, res) => {
   try {
-    const raw = CACHE.closedtrades ?? [];
+    const src = resolveSource(req.query.userId);
+    const raw = src.closedtrades ?? [];
 
     const trades = raw.map(t => ({
       ticket:     num(t.ticket),
@@ -367,21 +438,25 @@ app.get("/api/closedtrades", (req, res) => {
 // ============================================================================
 
 app.get("/api/debug/cache", (req, res) => {
+  const src = resolveSource(req.query.userId);
   res.json({
-    lastUpdate:    CACHE.lastUpdate,
-    cacheAge:      Date.now() - CACHE.lastUpdate,
-    scanRows:      CACHE.scan?.length ?? 0,
-    openPositions: CACHE.openpositions?.length ?? 0,
-    closedTrades:  CACHE.closedtrades?.length ?? 0,
+    lastUpdate:    src.lastUpdate,
+    cacheAge:      Date.now() - (src.lastUpdate || 0),
+    scanRows:      src.scan?.length ?? 0,
+    openPositions: src.openpositions?.length ?? 0,
+    closedTrades:  src.closedtrades?.length ?? 0,
+    storeUsers:    Object.keys(STORE),
   });
 });
 
 // ============================================================================
-// MT5 ORDER EXECUTION
+// MT5 ORDER EXECUTION (local only)
 // ============================================================================
 
 app.post("/api/mt5order", (req, res) => {
   try {
+    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
+
     const { symbol, side, lots, sl, tp, tf, source, timestamp } = req.body ?? {};
 
     if (!symbol || !side || !Number.isFinite(lots) || !Number.isFinite(sl) || !Number.isFinite(tp)) {
@@ -411,11 +486,13 @@ app.post("/api/mt5order", (req, res) => {
 });
 
 // ============================================================================
-// MT5 CLOSE POSITION
+// MT5 CLOSE POSITION (local only)
 // ============================================================================
 
 app.post("/api/mt5close", (req, res) => {
   try {
+    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
+
     const { ticket, symbol, volume } = req.body ?? {};
 
     if (!ticket) {
@@ -444,11 +521,13 @@ app.post("/api/mt5close", (req, res) => {
 });
 
 // ============================================================================
-// MT5 SYMBOL SWITCH
+// MT5 SYMBOL SWITCH (local only)
 // ============================================================================
 
 app.post("/api/mt5switch", (req, res) => {
   try {
+    if (!MT5_LOCAL) return res.status(503).json({ error: "MT5_NOT_AVAILABLE" });
+
     const { symbol } = req.body ?? {};
 
     if (!symbol || typeof symbol !== "string") {
@@ -470,7 +549,9 @@ app.post("/api/mt5switch", (req, res) => {
 // SERVER START
 // ============================================================================
 
-app.listen(3001, () => {
-  console.log("✅ NEO MATRIX API running on http://localhost:3001");
-  console.log("🔥 Background polling active (1s)");
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`✅ NEO MATRIX API running on http://localhost:${PORT}`);
+  if (MT5_LOCAL) console.log("🔥 Background polling active (1s)");
 });

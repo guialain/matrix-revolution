@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 export default function useClosedTrades(intervalMs = 5000) {
   const [trades, setTrades]   = useState([]);
@@ -9,7 +10,7 @@ export default function useClosedTrades(intervalMs = 5000) {
 
     const fetch_ = async () => {
       try {
-        const res  = await fetch("https://matrix-revolution.onrender.com/api/closedtrades?userId=NeoTrader");
+        const res  = await fetch(`${API_BASE}/api/closedtrades`);
         const data = await res.json();
         if (active) {
           setTrades(data.trades ?? []);

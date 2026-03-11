@@ -3,6 +3,7 @@
 // ============================================================================
 
 import { useEffect, useMemo, useState } from "react";
+const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 import "../../styles/stylesterminalMT5/openpositions.css";
 import { sendCloseToMT5 } from "../../utilitaires/sendMT5Instructions";
@@ -25,7 +26,7 @@ export default function OpenPositions() {
   // =========================
   useEffect(() => {
     const fetchData = () => {
-      fetch("https://matrix-revolution.onrender.com/api/mt5data?userId=NeoTrader")
+      fetch(`${API_BASE}/api/mt5data`)
         .then(r => r.json())
         .then(d => setPositions(d.openPositions || []))
         .catch(() => setPositions([]));

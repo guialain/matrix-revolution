@@ -4,6 +4,7 @@
 // ============================================================================
 
 import React, { useState, useEffect, useMemo } from "react";
+const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 // hooks
 import useRobotCore from "../../hooks/useRobotCore";
@@ -24,45 +25,32 @@ import "../../styles/stylespages/terminalmt5.css";
 export default function TerminalMT5({ snapshot }) {
 
   // ==========================================================================
-  // GUARD
+  // HOOKS (must be called unconditionally, before any return)
   // ==========================================================================
-  if (!snapshot || !snapshot.account) return null;
 
-
-
-
-const exposure = useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
-
-  const account = snapshot.account;
-
-  // ==========================================================================
-  // 🧠 ROBOT CORE
-  // ==========================================================================
   const robot = useRobotCore(snapshot);
 
-  // ==========================================================================
-  // 📊 EXPOSURE (CANONICAL)
-  // ==========================================================================
   const { rows: exposureData, total: totalExposure } =
     useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
 
-  // ==========================================================================
-  // 📊 CAPITAL ALLOCATION (DERIVED)
-  // ==========================================================================
+  const account = snapshot?.account;
+
   const capitalAllocation = useMemo(
     () =>
       buildCapitalAllocation({
         account,
-        positions: snapshot.openPositions
+        positions: snapshot?.openPositions
       }),
-    [account, snapshot.openPositions]
+    [account, snapshot?.openPositions]
   );
 
-  // ==========================================================================
-  // 📝 DEAL EN COURS
-  // ==========================================================================
   const [draftDeal, setDraftDeal] = useState(null);
   const [dealLocked, setDealLocked] = useState(false);
+
+  // ==========================================================================
+  // GUARD (after all hooks)
+  // ==========================================================================
+  if (!snapshot || !account) return null;
 
   function handleSelectDeal(op) {
     if (!op?.symbol) return;
@@ -70,7 +58,7 @@ const exposure = useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
     setDraftDeal(op);
     setDealLocked(true);
 
-    fetch("https://matrix-revolution.onrender.com/api/mt5switch", {
+    fetch(`${API_BASE}/api/mt5switch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ symbol: op.symbol })

@@ -3,7 +3,9 @@
 // Rôle : envoyer des ordres OPEN et CLOSE vers MT5 via l’API Node
 // ============================================================================
 
-const API_BASE = "https://matrix-revolution.onrender.com/api";
+const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
+
+const API = `${API_BASE}/api`;
 
 // ============================================================================
 // OPEN POSITION
@@ -15,7 +17,7 @@ export function sendOrderToMT5(order) {
 
   console.log("[BRIDGE] sendOrderToMT5()", order);
 
-  return fetch(`${API_BASE}/mt5order`, {
+  return fetch(`${API}/mt5order`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -42,13 +44,12 @@ export function sendCloseToMT5(close) {
     return null;
   }
 
-  return fetch(`${API_BASE}/mt5close`, {
+  return fetch(`${API}/mt5close`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ticket: close.ticket,
       volume: close.volume ?? null,
-      userId: "NeoTrader",
       source: "NEO_MATRIX",
       timestamp: Date.now()
     })
@@ -62,7 +63,7 @@ export function sendCloseToMT5(close) {
 export function sendSwitchSymbol(symbol) {
   if (!symbol) return null;
 
-  return fetch(`${API_BASE}/mt5switch`, {
+  return fetch(`${API}/mt5switch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

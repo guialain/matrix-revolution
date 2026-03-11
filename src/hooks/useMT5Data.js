@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 // ============================================================================
 // useMT5Data — NEO MATRIX
 // Source of truth frontend
 // ============================================================================
 
-const API_URL = "https://matrix-revolution.onrender.com/api/mt5data?userId=NeoTrader";
+const API_URL = `${API_BASE}/api/mt5data`;
 const REFRESH_MS = 800;
 
 export default function useMT5Data() {

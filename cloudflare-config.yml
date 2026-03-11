@@ -1,0 +1,8 @@
+tunnel: 6fee0b19-fb8a-4c74-8dc1-13f2ce2bcd2e
+credentials-file: C:\Users\DELL\.cloudflared\6fee0b19-fb8a-4c74-8dc1-13f2ce2bcd2e.json
+ingress:
+  - hostname: neomatrix-trading.com
+    service: http://localhost:3001
+  - hostname: www.neomatrix-trading.com
+    service: http://localhost:3001
+  - service: http_status:404

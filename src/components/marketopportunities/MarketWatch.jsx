@@ -1,5 +1,5 @@
 // ============================================================================
-// TopMovers.jsx — MARKET WATCH groupé par classe d'actif
+// MARKET WATCH groupé par classe d'actif
 // Source : marketWatch complet
 // Colonnes : SYMBOL | PRICE | DAILY% | RSI H1 | ZSCORE H1 | SLOPE H1
 // ============================================================================
@@ -75,7 +75,7 @@ function clsSlope(v) {
 // COMPONENT
 // ============================================================================
 
-export default function MarketWatch({ onSwitchSymbol }) {
+export default function TopMoversPanel({ onSwitchSymbol }) {
 
   const { data, ready } = useMT5Data();
 

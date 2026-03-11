@@ -61,37 +61,37 @@ export const RISK_CONFIG = {
   UK_100: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 2.0,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 10, refPrice: 10074, baseToEUR: 1.076,
   },
   GERMANY_40: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 5.0,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 10, refPrice: 23030, baseToEUR: 1.000,
   },
   FRANCE_40: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 2.0,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 100, refPrice: 7788, baseToEUR: 1.000,
   },
   US_30: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 7.0,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 10, refPrice: 46840, baseToEUR: 0.847,
   },
   US_500: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 1.0,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 100, refPrice: 6658, baseToEUR: 0.847,
   },
   US_TECH100: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 2.25,
-    targetLeveragePerTrade: 2,
+    targetLeveragePerTrade: 3,
     contractSize: 100, refPrice: 24311, baseToEUR: 0.847,
   },
 

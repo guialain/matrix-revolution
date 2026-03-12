@@ -10,6 +10,7 @@
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
+import SignalCooldown from "./SignalCooldown";
 
 const SCORE_MIN_TRADE = 30;
 
@@ -245,9 +246,17 @@ function isM5Overextended(opp, side) {
       // reversal = everything else (REVERSAL, empty, legacy "reversal", etc.)
 
 
+      const now = Date.now();
+
       // 0. score minimum
       if ((opp?.score ?? 0) < SCORE_MIN_TRADE) {
         waitOpportunities.push({ ...opp, state: "LOW_SCORE", debugInfo: `score=${opp.score}` });
+        continue;
+      }
+
+      // 0b. cooldown M5 candle
+      if (!SignalCooldown.canEmit(opp.symbol, now)) {
+        waitOpportunities.push({ ...opp, state: "WAIT_COOLDOWN", debugInfo: "cooldown_m5" });
         continue;
       }
 
@@ -386,6 +395,7 @@ else {
   }
 }
 
+      SignalCooldown.register(opp.symbol, now);
       validOpportunities.push({
   ...opp,
   state: "VALID",

@@ -199,7 +199,7 @@ const RobotCore = {
         `[${reason}] ${op.symbol} ${op.side} ${op.type} | score=${finalScore} vol=${volatilityLevel} ratio=${volatilityRatio} reasons=${(eligibility?.reasons ?? []).join(", ")}`
       );
 
-      if (eligibility?.eligible && finalScore >= 30) {
+      if (eligibility?.eligible) {
         tradableMarket.push(enriched);
       } else {
         notTradableMarket.push(enriched);

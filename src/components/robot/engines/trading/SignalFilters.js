@@ -11,6 +11,8 @@
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
 
+const SCORE_MIN_TRADE = 30;
+
 const SignalFilters = (() => {
 
   const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
@@ -243,6 +245,12 @@ function isM5Overextended(opp, side) {
       const isContinuation = type === "CONTINUATION";
       // reversal = everything else (REVERSAL, empty, legacy "reversal", etc.)
 
+
+      // 0. score minimum
+      if ((opp?.score ?? 0) < SCORE_MIN_TRADE) {
+        waitOpportunities.push({ ...opp, state: "LOW_SCORE", debugInfo: `score=${opp.score}` });
+        continue;
+      }
 
       // 1. trading hours — EN PREMIER
       if (isOutsideTradingHours(opp)) {

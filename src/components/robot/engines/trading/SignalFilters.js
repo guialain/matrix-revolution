@@ -59,8 +59,7 @@ const SignalFilters = (() => {
 
   function isBlockedVolatility(regime) {
     if (!regime) return false;
-    if (regime === "low")   return true;
-    if (regime === "explo") return true;
+    if (regime === "low") return true;
     return false;
   }
 

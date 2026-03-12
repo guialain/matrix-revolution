@@ -10,7 +10,7 @@ export default function useClosedTrades(intervalMs = 5000) {
 
     const fetch_ = async () => {
       try {
-        const res  = await fetch(`${API_BASE}/api/closedtrades`);
+        const res  = await fetch(`${API_BASE}/api/closedtrades`, { credentials: "include" });
         const data = await res.json();
         if (active) {
           setTrades(data.trades ?? []);

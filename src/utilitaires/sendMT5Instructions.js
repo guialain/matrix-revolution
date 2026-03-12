@@ -20,6 +20,7 @@ export function sendOrderToMT5(order) {
   return fetch(`${API}/mt5order`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       symbol: order.symbol,
       side: order.side,              // BUY | SELL
@@ -47,6 +48,7 @@ export function sendCloseToMT5(close) {
   return fetch(`${API}/mt5close`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       ticket: close.ticket,
       volume: close.volume ?? null,
@@ -66,6 +68,7 @@ export function sendSwitchSymbol(symbol) {
   return fetch(`${API}/mt5switch`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       symbol,
       source: "NEO_MATRIX",

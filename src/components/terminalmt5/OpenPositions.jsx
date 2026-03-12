@@ -26,7 +26,7 @@ export default function OpenPositions() {
   // =========================
   useEffect(() => {
     const fetchData = () => {
-      fetch(`${API_BASE}/api/mt5data`)
+      fetch(`${API_BASE}/api/mt5data`, { credentials: "include" })
         .then(r => r.json())
         .then(d => setPositions(d.openPositions || []))
         .catch(() => setPositions([]));

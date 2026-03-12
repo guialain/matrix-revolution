@@ -2,10 +2,13 @@ import express from "express";
 import fs from "fs";
 import cors from "cors";
 import path from "path";
+import cookieParser from "cookie-parser";
+import { decodeJwt } from "jose";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(express.json({ limit: "2mb" }));
 
 // ============================================================================
@@ -260,20 +263,44 @@ app.get("/api/agent/orders", (req, res) => {
 // RESOLVE USER CACHE (from Cloudflare Access email header)
 // ============================================================================
 
-function resolveUserCache(req) {
-  const email = req.headers["cf-access-authenticated-user-email"];
-  if (email) {
-    const token = emailToToken(email);
-    if (token && AGENTS_CACHE[token]) {
-      return { cache: AGENTS_CACHE[token], token, email, remote: true };
+function resolveEmail(req) {
+  // 1. Cloudflare Access header (production)
+  const cfEmail = req.headers["cf-access-authenticated-user-email"];
+  if (cfEmail) return cfEmail;
+
+  // 2. Decode CF_Authorization JWT cookie (no signature verification)
+  const cfJwt = req.cookies?.CF_Authorization;
+  if (cfJwt) {
+    try {
+      const claims = decodeJwt(cfJwt);
+      if (claims.email) return claims.email;
+    } catch (err) {
+      console.error("[resolveEmail] JWT decode error:", err.message);
     }
   }
-  // Fallback to local CACHE (dev mode / owner direct access)
+
+  // 3. Test/dev fallback header
+  const devEmail = req.headers["x-user-email"];
+  if (devEmail) return devEmail;
+
+  return null;
+}
+
+function resolveUserCache(req) {
+  const email = resolveEmail(req);
+  const token = email ? emailToToken(email) : null;
+
+  if (token && AGENTS_CACHE[token]) {
+    console.log(`[resolveUser] email=${email} token=${token} → REMOTE`);
+    return { cache: AGENTS_CACHE[token], token, email, remote: true };
+  }
+
+  console.log(`[resolveUser] email=${email ?? "none"} token=${token ?? "none"} → LOCAL fallback`);
   return { cache: CACHE, token: null, email: email ?? null, remote: false };
 }
 
 function resolveUserToken(req) {
-  const email = req.headers["cf-access-authenticated-user-email"];
+  const email = resolveEmail(req);
   if (email) {
     const token = emailToToken(email);
     if (token) return { token, email };
@@ -458,6 +485,29 @@ app.get("/api/closedtrades", (req, res) => {
     console.error("CLOSED TRADES API ERROR:", err);
     res.status(500).json({ error: "CLOSED_TRADES_ERROR" });
   }
+});
+
+// ============================================================================
+// WHOAMI
+// ============================================================================
+
+app.get("/api/whoami", (req, res) => {
+  const email = resolveEmail(req);
+  const token = email ? emailToToken(email) : null;
+  const hasCache = token ? !!AGENTS_CACHE[token] : false;
+
+  res.json({
+    email:    email ?? "none",
+    token:    token ? `${token.slice(0, 12)}...` : "none",
+    source:   req.headers["cf-access-authenticated-user-email"]
+                ? "cf-header"
+                : req.cookies?.CF_Authorization
+                  ? "cf-jwt"
+                  : req.headers["x-user-email"]
+                    ? "x-user-email"
+                    : "none",
+    hasCache,
+  });
 });
 
 // ============================================================================

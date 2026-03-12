@@ -61,6 +61,7 @@ export default function TerminalMT5({ snapshot }) {
     fetch(`${API_BASE}/api/mt5switch`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body: JSON.stringify({ symbol: op.symbol })
     }).catch(() => {});
   }

@@ -19,7 +19,7 @@ export default function useMT5Data() {
 
     const fetchMT5Data = async () => {
       try {
-        const res = await fetch(API_URL, { cache: "no-store" });
+        const res = await fetch(API_URL, { cache: "no-store", credentials: "include" });
         if (!res.ok) throw new Error("API_NOT_AVAILABLE");
 
         const json = await res.json();

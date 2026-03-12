@@ -159,7 +159,7 @@ console.log(`   MT5:    ${mt5_dir}`);
 console.log(`   Server: ${server}`);
 
 setInterval(pushData, 1000);
-setInterval(pollOrders, 1000);
+setInterval(pollOrders, 200);
 
 // Initial push
 pushData();

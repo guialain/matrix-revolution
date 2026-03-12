@@ -38,7 +38,7 @@ export const VOLATILITY_CONFIG = {
   default:     { lowMax: 0.000366, medMax: 0.000700, highMax: 0.005200 },
 };
 
-export const TRADABLE_REGIMES = new Set(['med', 'high']);
+export const TRADABLE_REGIMES = new Set(['med', 'high', 'explo']);
 
 // ============================================================================
 // HELPERS

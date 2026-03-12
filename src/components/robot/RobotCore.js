@@ -187,10 +187,21 @@ const RobotCore = {
         }
       };
 
-      if (eligibility?.eligible && (op.score + volBonus) >= 30) {
+      const finalScore = op.score + volBonus;
+
+      const reason = !eligibility?.eligible
+        ? "ELIGIBILITY"
+        : finalScore < 30
+        ? "LOW_SCORE"
+        : "OK";
+
+      console.log(
+        `[${reason}] ${op.symbol} ${op.side} ${op.type} | score=${finalScore} vol=${volatilityLevel} ratio=${volatilityRatio} reasons=${(eligibility?.reasons ?? []).join(", ")}`
+      );
+
+      if (eligibility?.eligible && finalScore >= 30) {
         tradableMarket.push(enriched);
       } else {
-        console.log(`[INELIGIBLE] ${op.symbol} ${op.side} ${op.type} | eligible=${eligibility?.eligible} score=${op.score + volBonus} | reasons=${(eligibility?.reasons ?? []).join(", ")} | vol=${volatilityLevel} ratio=${volatilityRatio}`);
         notTradableMarket.push(enriched);
       }
     }

@@ -35,6 +35,7 @@ function loadUsers() {
   }
 }
 loadUsers();
+console.log(`✅ users.json loaded — ${Object.keys(USERS).length} users:`, Object.keys(USERS));
 
 // Build reverse lookup: token → email
 function tokenToEmail(token) {
@@ -45,8 +46,11 @@ function tokenToEmail(token) {
 }
 
 function emailToToken(email) {
-  return USERS[email]?.token ?? null;
+  return USERS[email.toLowerCase()]?.token ?? null;
 }
+
+// Owner email — always uses local MT5 files, never agent queue
+const OWNER_EMAIL = "guialain777@gmail.com";
 
 // ============================================================================
 // AGENTS CACHE (multi-user: keyed by token)
@@ -286,8 +290,19 @@ function resolveEmail(req) {
   return null;
 }
 
+function isOwner(email) {
+  return email && email.toLowerCase() === OWNER_EMAIL;
+}
+
 function resolveUserCache(req) {
   const email = resolveEmail(req);
+
+  // Owner always uses local CACHE
+  if (isOwner(email)) {
+    console.log(`[resolveUser] email=${email} → OWNER LOCAL`);
+    return { cache: CACHE, token: null, email, remote: false };
+  }
+
   const token = email ? emailToToken(email) : null;
 
   if (token && AGENTS_CACHE[token]) {
@@ -301,6 +316,10 @@ function resolveUserCache(req) {
 
 function resolveUserToken(req) {
   const email = resolveEmail(req);
+
+  // Owner always writes locally, never to AGENTS_QUEUE
+  if (isOwner(email)) return { token: null, email };
+
   if (email) {
     const token = emailToToken(email);
     if (token) return { token, email };
@@ -619,14 +638,16 @@ app.post("/api/mt5switch", (req, res) => {
       return res.status(400).json({ error: "INVALID_SYMBOL", payload: req.body });
     }
 
-    const { token } = resolveUserToken(req);
+    const { token, email } = resolveUserToken(req);
 
     if (token) {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "SWITCH", payload: { symbol: symbol.trim() } });
+      console.log(`[mt5switch] email=${email} token=${token} symbol=${symbol} → AGENTS_QUEUE`);
     } else {
       const filePath = path.join(MT5_DIR, "neo_symbol.txt");
       fs.writeFileSync(filePath, symbol.trim());
+      console.log(`[mt5switch] email=${email ?? "none"} token=none symbol=${symbol} → LOCAL file`);
     }
 
     res.json({ status: "OK", message: "Switch queued", symbol });

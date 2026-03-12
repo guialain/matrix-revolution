@@ -18,7 +18,42 @@ const num = v => {
 };
 
 // ============================================================================
-// MT5 LOCAL FILES
+// USERS & TOKENS
+// ============================================================================
+
+const USERS_PATH = path.join(path.resolve(), "users.json");
+let USERS = {};
+
+function loadUsers() {
+  try {
+    USERS = JSON.parse(fs.readFileSync(USERS_PATH, "utf8"));
+  } catch (err) {
+    console.error("⚠️ Failed to load users.json:", err.message);
+  }
+}
+loadUsers();
+
+// Build reverse lookup: token → email
+function tokenToEmail(token) {
+  for (const [email, u] of Object.entries(USERS)) {
+    if (u.token === token) return email;
+  }
+  return null;
+}
+
+function emailToToken(email) {
+  return USERS[email]?.token ?? null;
+}
+
+// ============================================================================
+// AGENTS CACHE (multi-user: keyed by token)
+// ============================================================================
+
+const AGENTS_CACHE = {};   // { token: { account, asset, indicators, macro, scan, openpositions, closedtrades, lastUpdate } }
+const AGENTS_QUEUE = {};   // { token: [ { action, payload } ] }
+
+// ============================================================================
+// MT5 LOCAL FILES (fallback for local dev / owner)
 // ============================================================================
 
 const MT5_DIR =
@@ -180,6 +215,73 @@ function mapTF(raw, key) {
 }
 
 // ============================================================================
+// AGENT PUSH (remote user pushes CSV data)
+// ============================================================================
+
+app.post("/api/agent/push", (req, res) => {
+  const token = req.headers["x-agent-token"];
+  if (!token || !tokenToEmail(token)) {
+    return res.status(401).json({ error: "INVALID_TOKEN" });
+  }
+
+  const { account, asset, indicators, macro, scan, openpositions, closedtrades } = req.body ?? {};
+
+  AGENTS_CACHE[token] = {
+    account:       account ?? null,
+    asset:         asset ?? null,
+    indicators:    indicators ?? null,
+    macro:         macro ?? null,
+    scan:          scan ?? [],
+    openpositions: openpositions ?? [],
+    closedtrades:  closedtrades ?? [],
+    lastUpdate:    Date.now(),
+  };
+
+  res.json({ status: "OK" });
+});
+
+// ============================================================================
+// AGENT ORDERS (remote user polls for pending commands)
+// ============================================================================
+
+app.get("/api/agent/orders", (req, res) => {
+  const token = req.query.token || req.headers["x-agent-token"];
+  if (!token || !tokenToEmail(token)) {
+    return res.status(401).json({ error: "INVALID_TOKEN" });
+  }
+
+  const orders = AGENTS_QUEUE[token] ?? [];
+  AGENTS_QUEUE[token] = [];
+
+  res.json({ orders });
+});
+
+// ============================================================================
+// RESOLVE USER CACHE (from Cloudflare Access email header)
+// ============================================================================
+
+function resolveUserCache(req) {
+  const email = req.headers["cf-access-authenticated-user-email"];
+  if (email) {
+    const token = emailToToken(email);
+    if (token && AGENTS_CACHE[token]) {
+      return { cache: AGENTS_CACHE[token], token, email, remote: true };
+    }
+  }
+  // Fallback to local CACHE (dev mode / owner direct access)
+  return { cache: CACHE, token: null, email: email ?? null, remote: false };
+}
+
+function resolveUserToken(req) {
+  const email = req.headers["cf-access-authenticated-user-email"];
+  if (email) {
+    const token = emailToToken(email);
+    if (token) return { token, email };
+  }
+  return { token: null, email: email ?? null };
+}
+
+// ============================================================================
 // MAIN MATRIX API
 // ============================================================================
 
@@ -187,17 +289,19 @@ app.get("/api/mt5data", (req, res) => {
 
   try {
 
-    const accountRaw = CACHE.account;
-    const assetRaw   = CACHE.asset;
-    const indiRaw    = CACHE.indicators;
-    const macroRaw   = CACHE.macro;
-    const openPosRaw = CACHE.openpositions ?? [];
+    const { cache } = resolveUserCache(req);
+
+    const accountRaw = cache.account;
+    const assetRaw   = cache.asset;
+    const indiRaw    = cache.indicators;
+    const macroRaw   = cache.macro;
+    const openPosRaw = cache.openpositions ?? [];
 
     const matrix = {
 
       time: {
         timestamp: num(accountRaw?.ms),
-        cacheAge: Date.now() - (CACHE.lastUpdate || 0)
+        cacheAge: Date.now() - (cache.lastUpdate || 0)
       },
 
       account: accountRaw && {
@@ -293,7 +397,7 @@ app.get("/api/mt5data", (req, res) => {
         }))
       },
 
-      marketWatch: (CACHE.scan ?? [])
+      marketWatch: (cache.scan ?? [])
         .filter(r => r.symbol)
         .map(r => ({
           symbol:          r.symbol,
@@ -333,7 +437,8 @@ app.get("/api/mt5data", (req, res) => {
 
 app.get("/api/closedtrades", (req, res) => {
   try {
-    const raw = CACHE.closedtrades ?? [];
+    const { cache } = resolveUserCache(req);
+    const raw = cache.closedtrades ?? [];
 
     const trades = raw.map(t => ({
       ticket:     num(t.ticket),
@@ -392,10 +497,19 @@ app.post("/api/mt5order", (req, res) => {
       timestamp: timestamp ?? Date.now()
     };
 
-    const filePath = path.join(MT5_DIR, "neo_order.json");
-    fs.writeFileSync(filePath, JSON.stringify(order));
+    const { token } = resolveUserToken(req);
 
-    res.json({ status: "OK", message: "Order written", order });
+    if (token) {
+      // Remote user: queue command for agent pickup
+      if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
+      AGENTS_QUEUE[token].push({ action: "ORDER", payload: order });
+    } else {
+      // Local fallback: write directly
+      const filePath = path.join(MT5_DIR, "neo_order.json");
+      fs.writeFileSync(filePath, JSON.stringify(order));
+    }
+
+    res.json({ status: "OK", message: "Order queued", order });
 
   } catch (err) {
     console.error("MT5 ORDER API ERROR:", err);
@@ -425,10 +539,17 @@ app.post("/api/mt5close", (req, res) => {
 
     if (symbol) closeCmd.symbol = symbol;
 
-    const filePath = path.join(MT5_DIR, "neo_close.json");
-    fs.writeFileSync(filePath, JSON.stringify(closeCmd));
+    const { token } = resolveUserToken(req);
 
-    res.json({ status: "OK", message: "Close written", closeCmd });
+    if (token) {
+      if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
+      AGENTS_QUEUE[token].push({ action: "CLOSE", payload: closeCmd });
+    } else {
+      const filePath = path.join(MT5_DIR, "neo_close.json");
+      fs.writeFileSync(filePath, JSON.stringify(closeCmd));
+    }
+
+    res.json({ status: "OK", message: "Close queued", closeCmd });
 
   } catch (err) {
     console.error("MT5 CLOSE API ERROR:", err);
@@ -448,10 +569,17 @@ app.post("/api/mt5switch", (req, res) => {
       return res.status(400).json({ error: "INVALID_SYMBOL", payload: req.body });
     }
 
-    const filePath = path.join(MT5_DIR, "neo_symbol.txt");
-    fs.writeFileSync(filePath, symbol.trim());
+    const { token } = resolveUserToken(req);
 
-    res.json({ status: "OK", message: "Switch written", symbol });
+    if (token) {
+      if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
+      AGENTS_QUEUE[token].push({ action: "SWITCH", payload: { symbol: symbol.trim() } });
+    } else {
+      const filePath = path.join(MT5_DIR, "neo_symbol.txt");
+      fs.writeFileSync(filePath, symbol.trim());
+    }
+
+    res.json({ status: "OK", message: "Switch queued", symbol });
 
   } catch (err) {
     console.error("MT5 SWITCH API ERROR:", err);

@@ -246,20 +246,20 @@ function isM5Overextended(opp, side) {
 
       // 1. trading hours — EN PREMIER
       if (isOutsideTradingHours(opp)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_OUTSIDE_HOURS" });
+        waitOpportunities.push({ ...opp, state: "WAIT_OUTSIDE_HOURS", debugInfo: "hours" });
         continue;
       }
 
       // 2. weekend
       if (isWeekendRisk(opp)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND" });
+        waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND", debugInfo: "weekend" });
         continue;
       }
 
       // volatility
       const regime = getRegime(opp);
       if (isBlockedVolatility(regime)) {
-        waitOpportunities.push({ ...opp, state: `WAIT_VOL_${regime}` });
+        waitOpportunities.push({ ...opp, state: `WAIT_VOL_${regime}`, debugInfo: `volatility_${regime}` });
         continue;
       }
 
@@ -269,7 +269,7 @@ if (isContinuation) {
   // M5 is contrary to H1 signal
 const m5Block = isM5Contrary(opp, side);
 if (m5Block) {
-  waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY" });
+  waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY", debugInfo: "m5contrary_cont" });
   continue;
 }
 
@@ -278,7 +278,8 @@ if (m5Block) {
 
     waitOpportunities.push({
       ...opp,
-      state: "WAIT_M5_OVEREXTENDED"
+      state: "WAIT_M5_OVEREXTENDED",
+      debugInfo: "m5overextended_cont"
     });
 
     continue;
@@ -301,11 +302,11 @@ else {
   // ZM5 EXTENSION — bloque reversal si M5 déjà trop étiré
   // =====================================================
   if (side === "BUY"  && zm5 !== null && zm5 > 0.7) {
-    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED" });
+    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED", debugInfo: `zm5_extended_buy(zm5=${zm5})` });
     continue;
   }
   if (side === "SELL" && zm5 !== null && zm5 < -0.7) {
-    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED" });
+    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED", debugInfo: `zm5_extended_sell(zm5=${zm5})` });
     continue;
   }
 
@@ -321,7 +322,8 @@ else {
     if (side === "BUY" && slopeTooBearish && noMicroTurn) {
       waitOpportunities.push({
         ...opp,
-        state: "WAIT_M5_CONFIRMATION"
+        state: "WAIT_M5_CONFIRMATION",
+        debugInfo: `m5confirm_buy(sm5=${sm5},dsm5=${dsm5})`
       });
       continue;
     }
@@ -333,7 +335,8 @@ else {
     if (side === "SELL" && slopeTooBullish && noMicroTurnSell) {
       waitOpportunities.push({
         ...opp,
-        state: "WAIT_M5_CONFIRMATION"
+        state: "WAIT_M5_CONFIRMATION",
+        debugInfo: `m5confirm_sell(sm5=${sm5},dsm5=${dsm5})`
       });
       continue;
     }
@@ -345,7 +348,8 @@ else {
   if (isM5Contrary(opp, side)) {
     waitOpportunities.push({
       ...opp,
-      state: "WAIT_MICRO"
+      state: "WAIT_MICRO",
+      debugInfo: "m5contrary_rev"
     });
     continue;
   }
@@ -356,7 +360,8 @@ else {
   if (isM5Overextended(opp, side)) {
     waitOpportunities.push({
       ...opp,
-      state: "WAIT_M5_OVEREXTENDED"
+      state: "WAIT_M5_OVEREXTENDED",
+      debugInfo: "m5overextended_rev"
     });
     continue;
   }
@@ -367,7 +372,8 @@ else {
   if (isM1Contrary(opp, side)) {
     waitOpportunities.push({
       ...opp,
-      state: "WAIT_M1_CONTRARY"
+      state: "WAIT_M1_CONTRARY",
+      debugInfo: "m1contrary"
     });
     continue;
   }

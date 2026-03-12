@@ -190,6 +190,7 @@ const RobotCore = {
       if (eligibility?.eligible && (op.score + volBonus) >= 30) {
         tradableMarket.push(enriched);
       } else {
+        console.log(`[INELIGIBLE] ${op.symbol} ${op.side} ${op.type} | eligible=${eligibility?.eligible} score=${op.score + volBonus} | reasons=${(eligibility?.reasons ?? []).join(", ")} | vol=${volatilityLevel} ratio=${volatilityRatio}`);
         notTradableMarket.push(enriched);
       }
     }
@@ -235,6 +236,10 @@ const RobotCore = {
       blockedOpportunities = []
     } = filtered ?? {};
 
+
+    if (waitOpportunities.length > 0) {
+      console.log("[WAIT]", waitOpportunities.map(w => `${w.symbol} ${w.side} ${w.type} → ${w.state} [${w.debugInfo ?? "?"}]`));
+    }
 
     const allowed = validOpportunities.length > 0;
 

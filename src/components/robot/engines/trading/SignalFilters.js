@@ -12,7 +12,7 @@
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
-import { DetectionCooldown, TradeCooldown } from "./SignalCooldown";
+import { TradeCooldown } from "./SignalCooldown";
 
 const SCORE_MIN_TRADE = 20;
 
@@ -256,22 +256,6 @@ continue;
 }
 
 // =========================================================
-// COOLDOWN M1 (1 signal VALID par bougie M1)
-// =========================================================
-
-if (!DetectionCooldown.canEmit(opp.symbol, now)) {
-
-waitOpportunities.push({
-...opp,
-state: "WAIT_COOLDOWN_M1",
-debugInfo: "cooldown_m1"
-});
-
-continue;
-
-}
-
-// =========================================================
 // COOLDOWN M5 (bloque après ordre envoyé)
 // =========================================================
 
@@ -489,8 +473,6 @@ continue;
 // =========================================================
 // VALID
 // =========================================================
-
-DetectionCooldown.register(opp.symbol, now);
 
 validOpportunities.push({
 ...opp,

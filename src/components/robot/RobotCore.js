@@ -248,10 +248,6 @@ const RobotCore = {
     } = filtered ?? {};
 
 
-    if (waitOpportunities.length > 0) {
-      console.log("[WAIT]", waitOpportunities.map(w => `${w.symbol} ${w.side} ${w.type} → ${w.state} [${w.debugInfo ?? "?"}]`));
-    }
-
     const allowed = validOpportunities.length > 0;
 
     const trinity = {

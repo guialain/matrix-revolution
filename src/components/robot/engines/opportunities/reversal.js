@@ -346,6 +346,8 @@ if (
 
     if (debug) console.info("REVERSAL REPORT", d);
 
+    console.log(`[REVERSAL] ${symbol} opps=${opps.length}`);
+
     return opps;
   }
 

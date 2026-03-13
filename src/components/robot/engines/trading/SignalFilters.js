@@ -14,7 +14,7 @@ import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
 import { DetectionCooldown, TradeCooldown } from "./SignalCooldown";
 
-const SCORE_MIN_TRADE = 25;
+const SCORE_MIN_TRADE = 20;
 
 const SignalFilters = (() => {
 

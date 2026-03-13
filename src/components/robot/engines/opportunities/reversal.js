@@ -9,6 +9,7 @@ import { getSignalConfig }     from "../config/SignalConfig.js";
 import { getSlopeConfig }      from "../config/SlopeConfig";
 import { detectReversalPhase } from "./SignalPhaseDetector";
 import { scoreReversalBuy, scoreReversalSell } from "./ScoreEngine";
+import { DetectionCooldown } from "../trading/SignalCooldown";
 
 const ReversalStrategy = (() => {
 
@@ -276,6 +277,10 @@ if (
     for (let i = 0; i < data.length; i++) {
       d.total++;
 
+      // Level 1 — M1 detection cooldown (avoid duplicate detections)
+      const now = Date.now();
+      if (!DetectionCooldown.canEmit(symbol, now)) continue;
+
       const rsiStats = getMinMaxRSI_H1(data, i, cfg.rsiWindowH1);
       if (!rsiStats) continue;
 
@@ -340,6 +345,7 @@ if (
 
       opp.score = score;
       opp.breakdown = breakdown;
+      DetectionCooldown.register(symbol, now);
       d.signals++;
       opps.push(opp);
     }

@@ -10,9 +10,9 @@
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
-import SignalCooldown from "./SignalCooldown";
+import { TradeCooldown } from "./SignalCooldown";
 
-const SCORE_MIN_TRADE = 30;
+const SCORE_MIN_TRADE = 25;
 
 const SignalFilters = (() => {
 
@@ -166,26 +166,22 @@ function isM5Overextended(opp, side) {
 
   const oe = TIMING_CONFIG.M5.overextended;
 
-
   // =====================================================
   // BUY — spike terminal haussier
   // =====================================================
 
   if (side === "BUY") {
 
-    // condition PRO : spike confirmé
-    if (
+    let score = 0;
 
-      rsi   > oe.rsiMax     ||   // NEW critical filter
-      slope > oe.slopeAbs   ||
-      dslope > oe.dslopeAbs ||
-      drsi > oe.drsiAbs
+    if (rsi   > oe.rsiMax)     score++;
+    if (slope > oe.slopeAbs)   score++;
+    if (dslope > oe.dslopeAbs) score++;
+    if (drsi > oe.drsiAbs)     score++;
 
-    )
-      return true;
+    if (score >= 2) return true;
 
   }
-
 
   // =====================================================
   // SELL — spike terminal baissier
@@ -193,18 +189,16 @@ function isM5Overextended(opp, side) {
 
   if (side === "SELL") {
 
-    if (
+    let score = 0;
 
-      rsi   < oe.rsiMin     ||   // NEW critical filter
-      slope < -oe.slopeAbs  ||
-      dslope < -oe.dslopeAbs||
-      drsi < -oe.drsiAbs
+    if (rsi   < oe.rsiMin)      score++;
+    if (slope < -oe.slopeAbs)   score++;
+    if (dslope < -oe.dslopeAbs) score++;
+    if (drsi < -oe.drsiAbs)     score++;
 
-    )
-      return true;
+    if (score >= 2) return true;
 
   }
-
 
   return false;
 
@@ -255,7 +249,7 @@ function isM5Overextended(opp, side) {
       }
 
       // 0b. cooldown M5 candle
-      if (!SignalCooldown.canEmit(opp.symbol, now)) {
+      if (!TradeCooldown.canEmit(opp.symbol, now)) {
         waitOpportunities.push({ ...opp, state: "WAIT_COOLDOWN", debugInfo: "cooldown_m5" });
         continue;
       }
@@ -395,7 +389,7 @@ else {
   }
 }
 
-      SignalCooldown.register(opp.symbol, now);
+      TradeCooldown.register(opp.symbol, now);
       validOpportunities.push({
   ...opp,
   state: "VALID",

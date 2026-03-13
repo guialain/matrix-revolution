@@ -1,9 +1,10 @@
 // ============================================================================
 // useRobotCore.js
 // Rôle : Projection UI propre du RobotCore (NEO + TRINITY)
+// ✅ validOpportunities persisté jusqu'à onOrderSent() ou nouveau signal
 // ============================================================================
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import RobotCore from "../components/robot/RobotCore";
 
 // ---------------------------------------------------------------------------
@@ -37,7 +38,11 @@ const EMPTY = {
 // ---------------------------------------------------------------------------
 // HOOK
 // ---------------------------------------------------------------------------
-export default function useRobotCore(snapshot) {
+export default function useRobotCore(snapshot, { clearSignal } = {}) {
+
+  // Persiste le dernier validOpportunities non-vide
+  const persistedValid = useRef([]);
+
   return useMemo(() => {
     if (!snapshot) return EMPTY;
 
@@ -74,6 +79,21 @@ export default function useRobotCore(snapshot) {
     const allowed = Boolean(trinity.allowed);
 
     // -----------------------------------------------------------------------
+    // PERSISTANCE validOpportunities
+    // - Si clearSignal=true  → reset (order envoyé)
+    // - Si nouveau valid     → remplace
+    // - Si vide (cooldown)   → garde le précédent
+    // -----------------------------------------------------------------------
+    if (clearSignal) {
+      persistedValid.current = [];
+    } else if (validOps.length > 0) {
+      persistedValid.current = validOps;
+    }
+    // si validOps.length === 0 → on garde persistedValid.current intact
+
+    const displayValid = persistedValid.current;
+
+    // -----------------------------------------------------------------------
     // PROJECTION UI
     // -----------------------------------------------------------------------
     return {
@@ -94,11 +114,11 @@ export default function useRobotCore(snapshot) {
       topOpportunities: neo.topOpportunities ?? null,
 
       allowed,
-      validOpportunities: validOps,
+      validOpportunities: displayValid,   // ✅ persisté
       waitOpportunities:  waitOps,
       closePositions:     closeOps,
 
       _raw: { neo, trinity }
     };
-  }, [snapshot]);
+  }, [snapshot, clearSignal]);
 }

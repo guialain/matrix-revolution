@@ -10,6 +10,7 @@ import { getSignalConfig }       from "../config/SignalConfig.js";
 import { getSlopeConfig }        from "../config/SlopeConfig";
 import { detectContinuationPhase } from "./SignalPhaseDetector";
 import { scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine";
+import { DetectionCooldown } from "../trading/SignalCooldown";
 
 const ContinuationStrategy = (() => {
 
@@ -177,6 +178,10 @@ return phase;
 
       const row = marketData[i];
 
+      // Level 1 — M1 detection cooldown (avoid duplicate detections)
+      const now = Date.now();
+      if (!DetectionCooldown.canEmit(symbol, now)) continue;
+
       // ✅ symbol passé pour calibration per-asset
       const phaseBuy  = detectBuy(row, cfg, symbol);
       const phaseSell = phaseBuy ? null : detectSell(row, cfg, symbol);
@@ -229,6 +234,7 @@ return phase;
       opp.score     = score;
       opp.raw_score = score;
       opp.breakdown = breakdown;
+      DetectionCooldown.register(symbol, now);
       opportunities.push(opp);
     }
 

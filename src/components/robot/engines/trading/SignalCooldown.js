@@ -1,32 +1,44 @@
 // ============================================================================
-// SignalCooldown.js — 1 signal max per M5 candle per symbol
+// SignalCooldown.js — Two-tier cooldown system
+//
+//   Level 1 — DetectionCooldown  (M1 = 60 s)  used in continuation / reversal
+//             → avoids duplicate detections on the same asset
+//
+//   Level 2 — TradeCooldown      (M5 = 300 s) used in SignalFilters
+//             → 1 tradable signal per asset per M5 candle
 // ============================================================================
 
-const COOLDOWN_MS = 5 * 60 * 1000;
+function createCooldown(intervalMs) {
+  const lastTime = new Map();
 
-const lastSignalTime = new Map();
+  function getCandleTime(now) {
+    const ms = typeof now === "number" ? now : Date.now();
+    return ms - (ms % intervalMs);
+  }
 
-function getCurrentCandleTime(now) {
-  const ms = typeof now === "number" ? now : Date.now();
-  return ms - (ms % COOLDOWN_MS);
+  function canEmit(symbol, now) {
+    const candle = getCandleTime(now);
+    const last = lastTime.get(symbol);
+    return last === undefined || candle > last;
+  }
+
+  function register(symbol, now) {
+    lastTime.set(symbol, getCandleTime(now));
+  }
+
+  function reset(symbol) {
+    lastTime.delete(symbol);
+  }
+
+  function resetAll() {
+    lastTime.clear();
+  }
+
+  return { canEmit, register, reset, resetAll };
 }
 
-function canEmit(symbol, now) {
-  const candle = getCurrentCandleTime(now);
-  const last = lastSignalTime.get(symbol);
-  return last === undefined || candle > last;
-}
+export const DetectionCooldown = createCooldown(1 * 60 * 1000);   // M1
+export const TradeCooldown     = createCooldown(5 * 60 * 1000);   // M5
 
-function register(symbol, now) {
-  lastSignalTime.set(symbol, getCurrentCandleTime(now));
-}
-
-function reset(symbol) {
-  lastSignalTime.delete(symbol);
-}
-
-function resetAll() {
-  lastSignalTime.clear();
-}
-
-export default { canEmit, register, reset, resetAll };
+// Legacy default export = TradeCooldown (backward compat)
+export default TradeCooldown;

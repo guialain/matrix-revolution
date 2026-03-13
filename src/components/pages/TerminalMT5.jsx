@@ -3,7 +3,7 @@
 // Rôle : Orchestration UI MT5
 // ============================================================================
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 // hooks
@@ -28,7 +28,15 @@ export default function TerminalMT5({ snapshot }) {
   // HOOKS (must be called unconditionally, before any return)
   // ==========================================================================
 
-  const robot = useRobotCore(snapshot);
+  const [clearSignal, setClearSignal] = useState(false);
+
+  const robot = useRobotCore(snapshot, { clearSignal });
+
+  // Reset clearSignal après un cycle
+  useEffect(() => {
+    if (!clearSignal) return;
+    setClearSignal(false);
+  }, [clearSignal]);
 
   const { rows: exposureData, total: totalExposure } =
     useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
@@ -66,6 +74,12 @@ export default function TerminalMT5({ snapshot }) {
     }).catch(() => {});
   }
 
+  function handleOrderSent() {
+    setDraftDeal(null);
+    setDealLocked(false);
+    setClearSignal(true); // ✅ efface le signal persisté
+  }
+
   // ==========================================================================
   // RENDER
   // ==========================================================================
@@ -88,7 +102,7 @@ export default function TerminalMT5({ snapshot }) {
               robot={robot}
               draftDeal={draftDeal}
               dealLocked={dealLocked}
-              onOrderSent={() => { setDraftDeal(null); setDealLocked(false); }}
+              onOrderSent={handleOrderSent}
             />
           </div>
         </div>
@@ -103,8 +117,7 @@ export default function TerminalMT5({ snapshot }) {
           </div>
 
           <div className="terminal-block exposure-distribution">
-           <ExposureDistribution exposureData={exposureData} />
-
+            <ExposureDistribution exposureData={exposureData} />
           </div>
 
         </div>

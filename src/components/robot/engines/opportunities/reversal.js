@@ -350,7 +350,6 @@ if (
 
     if (debug) console.info("REVERSAL REPORT", d);
 
-    console.log(`[REVERSAL] ${symbol} total=${d.total} structFilt=${d.structureFiltered} scoreFilt=${d.scoreFiltered} signals=${d.signals}`);
 
     return opps;
   }

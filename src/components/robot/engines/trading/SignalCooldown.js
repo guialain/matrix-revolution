@@ -1,45 +1,32 @@
 // ============================================================================
-// SignalCooldown.js — Two-tier cooldown
+// SignalCooldown.js — TradeCooldown (5 min fixed after order sent)
 //
-// DetectionCooldown (M1=60s)  — 1 signal VALID par asset par bougie M1
-//   canEmit  → checked in SignalFilters after score
-//   register → called in SignalFilters before VALID push
-//
-// TradeCooldown (M5=300s)  — bloque après ordre envoyé
-//   canEmit  → checked in SignalFilters after score
-//   register → called in TerminalMT5 handleOrderSent()
+// register(symbol) → called in TerminalMT5 handleOrderSent()
+// canEmit(symbol)  → checked in SignalFilters after score
 // ============================================================================
 
-function createCooldown(intervalMs) {
-  const lastTime = new Map();
+const COOLDOWN_MS = 5 * 60 * 1000;
 
-  function getCandleTime(now) {
-    const ms = typeof now === "number" ? now : Date.now();
-    return ms - (ms % intervalMs);
-  }
+const lastTime = new Map();
 
-  function canEmit(symbol, now) {
-    const candle = getCandleTime(now);
-    const last = lastTime.get(symbol);
-    return last === undefined || candle > last;
-  }
-
-  function register(symbol, now) {
-    lastTime.set(symbol, getCandleTime(now));
-  }
-
-  function reset(symbol) {
-    lastTime.delete(symbol);
-  }
-
-  function resetAll() {
-    lastTime.clear();
-  }
-
-  return { canEmit, register, reset, resetAll };
+function canEmit(symbol) {
+  const last = lastTime.get(symbol);
+  if (last === undefined) return true;
+  return Date.now() - last > COOLDOWN_MS;
 }
 
-export const DetectionCooldown = createCooldown(1 * 60 * 1000);   // M1
-export const TradeCooldown     = createCooldown(5 * 60 * 1000);   // M5
+function register(symbol) {
+  lastTime.set(symbol, Date.now());
+}
+
+function reset(symbol) {
+  lastTime.delete(symbol);
+}
+
+function resetAll() {
+  lastTime.clear();
+}
+
+export const TradeCooldown = { canEmit, register, reset, resetAll };
 
 export default TradeCooldown;

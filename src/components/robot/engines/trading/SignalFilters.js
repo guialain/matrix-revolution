@@ -259,7 +259,7 @@ continue;
 // COOLDOWN M5 (bloque après ordre envoyé)
 // =========================================================
 
-if (!TradeCooldown.canEmit(opp.symbol, now)) {
+if (!TradeCooldown.canEmit(opp.symbol)) {
 
 waitOpportunities.push({
 ...opp,

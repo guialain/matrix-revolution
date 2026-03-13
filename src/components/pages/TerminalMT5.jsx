@@ -76,7 +76,7 @@ export default function TerminalMT5({ snapshot }) {
   }
 
   function handleOrderSent(symbol) {
-    TradeCooldown.register(symbol, Date.now());
+    TradeCooldown.register(symbol);
     setDraftDeal(null);
     setDealLocked(false);
     setClearSignal(true);

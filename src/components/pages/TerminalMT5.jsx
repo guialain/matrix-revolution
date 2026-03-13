@@ -84,6 +84,7 @@ export default function TerminalMT5({ snapshot }) {
           <div className="terminal-block pipeline">
             <DealPipeline
               robot={robot}
+              draftDeal={draftDeal}
               onSelectDeal={handleSelectDeal}
             />
           </div>

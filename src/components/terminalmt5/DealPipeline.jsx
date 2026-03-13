@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import useTrinityVoice from "../../hooks/useTrinityVoice";
 import "../../styles/stylesterminalMT5/dealpipeline.css";
 
-export default function DealPipeline({ robot, onSelectDeal }) {
+export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
 
   // ================= EXTRACTION TRINITY =================
   const {
@@ -12,7 +12,11 @@ export default function DealPipeline({ robot, onSelectDeal }) {
     waitOpportunities  = []
   } = robot ?? {};
 
-  const hasValid = validOpportunities.length > 0;
+  const displayValid = validOpportunities.filter(
+    op => op.symbol !== draftDeal?.symbol
+  );
+
+  const hasValid = displayValid.length > 0;
   const hasWait  = waitOpportunities.length > 0;
 
   const [muted, setMuted] = useState(false);
@@ -119,7 +123,7 @@ export default function DealPipeline({ robot, onSelectDeal }) {
           <div className="pipeline-title">
             VALID
             <span className="pipeline-count">
-              {validOpportunities.length}
+              {displayValid.length}
             </span>
           </div>
 
@@ -128,7 +132,7 @@ export default function DealPipeline({ robot, onSelectDeal }) {
               No validated opportunity
             </div>
           ) : (
-            validOpportunities.slice(0, 7).map((op, i) => (
+            displayValid.slice(0, 7).map((op, i) => (
               <TrinityOpportunityLine
                 key={`${op.symbol}-${i}`}
                 op={op}

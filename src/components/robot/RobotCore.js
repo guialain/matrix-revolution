@@ -195,10 +195,6 @@ const RobotCore = {
         ? "LOW_SCORE"
         : "OK";
 
-      console.log(
-        `[${reason}] ${op.symbol} ${op.side} ${op.type} | score=${finalScore} vol=${volatilityLevel} ratio=${volatilityRatio} reasons=${(eligibility?.reasons ?? []).join(", ")}`
-      );
-
       if (eligibility?.eligible) {
         tradableMarket.push(enriched);
       } else {

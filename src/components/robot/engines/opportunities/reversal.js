@@ -134,23 +134,27 @@ const ReversalStrategy = (() => {
     // Spike filter — slope trop violent = mouvement non tradable
     if (Math.abs(slope) > slopeMax) return false;
 
-    // BUY REVERSAL
-    if (side === "BUY") {
-      const deep = cfg.rsiBuyMax  ?? 30;
-      const semi = cfg.rsiBuySemi ?? 35;
-
-      if (rsi < deep) return slope >= 0 && dslope > dslopeMin;
-      if (rsi < semi) return slope >=  slopeMin && dslope > dslopeMin;
-      return false;
-    }
-
     // SELL REVERSAL
     if (side === "SELL") {
       const deep = cfg.rsiSellMin  ?? 70;
       const semi = cfg.rsiSellSemi ?? 65;
 
-      if (rsi > deep) return slope <= 0  && dslope < -dslopeMin;
+      // Zone extrême — décélération suffit, slope peut encore être positif
+      if (rsi > deep) return dslope < -dslopeMin;
+      // Zone semi — confirmation slope requise
       if (rsi > semi) return slope <= -slopeMin && dslope < -dslopeMin;
+      return false;
+    }
+
+    // BUY REVERSAL — symétrique
+    if (side === "BUY") {
+      const deep = cfg.rsiBuyMax  ?? 30;
+      const semi = cfg.rsiBuySemi ?? 35;
+
+      // Zone extrême — décélération suffit
+      if (rsi < deep) return dslope > dslopeMin;
+      // Zone semi — confirmation slope requise
+      if (rsi < semi) return slope >= slopeMin && dslope > dslopeMin;
       return false;
     }
 

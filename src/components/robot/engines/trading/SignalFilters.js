@@ -12,7 +12,7 @@
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
-import { TradeCooldown } from "./SignalCooldown";
+import SignalFrequency from "./SignalFrequency";
 
 const SCORE_MIN_TRADE = 20;
 
@@ -239,7 +239,7 @@ continue;
 // COOLDOWN M5 (bloque après ordre envoyé)
 // =========================================================
 
-if (!TradeCooldown.canEmit(opp.symbol)) {
+if (!SignalFrequency.canEmit(opp.symbol)) {
 
 waitOpportunities.push({
 ...opp,

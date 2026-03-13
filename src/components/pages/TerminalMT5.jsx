@@ -20,7 +20,7 @@ import AccountHealth from "../terminalmt5/AccountHealth";
 import CapitalAllocationPanel from "../terminalmt5/CapitalAllocation";
 
 // styles
-import { TradeCooldown } from "../robot/engines/trading/SignalCooldown";
+import SignalFrequency from "../robot/engines/trading/SignalFrequency";
 import "../../styles/stylespages/terminalmt5.css";
 
 export default function TerminalMT5({ snapshot }) {
@@ -76,7 +76,7 @@ export default function TerminalMT5({ snapshot }) {
   }
 
   function handleOrderSent(symbol) {
-    TradeCooldown.register(symbol);
+    SignalFrequency.register(symbol);
     setDraftDeal(null);
     setDealLocked(false);
     setClearSignal(true);

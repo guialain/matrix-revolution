@@ -1,22 +1,28 @@
 // ============================================================================
-// SignalCooldown.js — TradeCooldown (5 min fixed after order sent)
+// SignalCooldown.js — TradeCooldown (M5 candle snap)
 //
 // register(symbol) → called in TerminalMT5 handleOrderSent()
 // canEmit(symbol)  → checked in SignalFilters after score
+// Blocks until next M5 candle boundary after order sent.
 // ============================================================================
 
 const COOLDOWN_MS = 5 * 60 * 1000;
 
 const lastTime = new Map();
 
+function candleSnap() {
+  const now = Date.now();
+  return now - (now % COOLDOWN_MS);
+}
+
 function canEmit(symbol) {
   const last = lastTime.get(symbol);
   if (last === undefined) return true;
-  return Date.now() - last > COOLDOWN_MS;
+  return candleSnap() > last;
 }
 
 function register(symbol) {
-  lastTime.set(symbol, Date.now());
+  lastTime.set(symbol, candleSnap());
 }
 
 function reset(symbol) {

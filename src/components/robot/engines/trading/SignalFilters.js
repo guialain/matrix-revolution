@@ -236,15 +236,15 @@ continue;
 }
 
 // =========================================================
-// COOLDOWN M5 (bloque après ordre envoyé)
+// FREQUENCY (5 min entre deux VALID sur même asset)
 // =========================================================
 
 if (!SignalFrequency.canEmit(opp.symbol)) {
 
 waitOpportunities.push({
 ...opp,
-state: "WAIT_COOLDOWN",
-debugInfo: "cooldown_5m"
+state: "WAIT_FREQUENCY",
+debugInfo: "freq_5m"
 });
 
 continue;
@@ -439,6 +439,8 @@ continue;
 // =========================================================
 // VALID
 // =========================================================
+
+SignalFrequency.register(opp.symbol);
 
 validOpportunities.push({
 ...opp,

@@ -200,26 +200,6 @@ return false;
 }
 
 // =========================================================
-// M1 MICRO CONTRARY
-// =========================================================
-function isM1Contrary(opp, side) {
-
-const rsi = num(opp?.rsi_m1);
-const drsi = num(opp?.drsi_m1);
-
-if (rsi === null || drsi === null) return false;
-
-if (side === "BUY" && rsi > 65 && drsi > 0.5)
-return true;
-
-if (side === "SELL" && rsi < 35 && drsi < -0.5)
-return true;
-
-return false;
-
-}
-
-// =========================================================
 // MAIN
 // =========================================================
 function evaluate({ opportunities } = {}) {
@@ -448,20 +428,6 @@ waitOpportunities.push({
 ...opp,
 state: "WAIT_M5_OVEREXTENDED",
 debugInfo: "m5overextended_rev"
-});
-
-continue;
-
-}
-
-// M1 SPIKE
-
-if (isM1Contrary(opp, side)) {
-
-waitOpportunities.push({
-...opp,
-state: "WAIT_M1_CONTRARY",
-debugInfo: "m1contrary"
 });
 
 continue;

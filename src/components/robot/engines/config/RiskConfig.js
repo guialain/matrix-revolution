@@ -127,25 +127,25 @@ export const RISK_CONFIG = {
   GOLD: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 1.26,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 5088, baseToEUR: 0.847,
   },
   SILVER: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 0.148,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 5000, refPrice: 84.65, baseToEUR: 0.847,
   },
   PALLADIUM: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 8.5,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 1645, baseToEUR: 0.847,
   },
   PLATINUM: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 5.0,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2144, baseToEUR: 0.847,
   },
 
@@ -175,19 +175,19 @@ export const RISK_CONFIG = {
   COCOA: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 9.0,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 10, refPrice: 3318, baseToEUR: 0.847,
   },
   COFFEE_C: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.6,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 37500, refPrice: 2.919, baseToEUR: 0.847,
   },
   WHEAT: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.75,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 5000, refPrice: 5.976, baseToEUR: 0.847,
   },
 

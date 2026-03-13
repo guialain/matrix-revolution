@@ -424,7 +424,7 @@ const sendTp = tp;
                 })
                   .then(() => {
                     setOrderStatus("OK");
-                    if (onOrderSent) onOrderSent();
+                    if (onOrderSent) onOrderSent(mt5Symbol);
                   })
                   .catch(() => setOrderStatus("ERROR"))
                   .finally(() => {

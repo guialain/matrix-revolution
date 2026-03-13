@@ -1,11 +1,13 @@
 // ============================================================================
-// SignalFilters.js — M5 MICRO CONTRARY FILTER (v2.5)
-// ✅ Compatible VolatilityConfig.js
-// Régimes : low | med | high | explo
+// SignalFilters.js — M5 MICRO CONTRARY FILTER (v2.6)
+// Compatible VolatilityConfig.js
+// Détection : M1
+// Validation : M5
+// Cooldown trade : 5 minutes
 //
-// Politique recommandée :
-//   BLOCK : low, explo
-//   ALLOW : med, high
+// Politique volatilité :
+// BLOCK : low, explo
+// ALLOW : med, high
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -16,391 +18,475 @@ const SCORE_MIN_TRADE = 25;
 
 const SignalFilters = (() => {
 
-  const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
+const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
-  // =========================================================
-  // TRADING HOURS FILTER
-  // =========================================================
-  function isOutsideTradingHours(opp) {
-    const now      = new Date();
-    const timePart = now.toTimeString().slice(0, 5); // "HH:MM"
+// =========================================================
+// TRADING HOURS
+// =========================================================
+function isOutsideTradingHours(opp) {
 
-    const symbol = String(opp?.symbol ?? "").toUpperCase();
-    const hours  = TIMING_CONFIG.tradingHours?.[symbol]
-                ?? TIMING_CONFIG.tradingHours?.default;
-    if (!hours) return false;
+const now = new Date();
+const timePart = now.toTimeString().slice(0,5);
 
-    return timePart < hours.start || timePart >= hours.end;
-  }
+const symbol = String(opp?.symbol ?? "").toUpperCase();
 
-  // =========================================================
-  // WEEKEND FILTER
-  // =========================================================
-  function isWeekendRisk(opp) {
-    const now  = new Date();
-    const day  = now.getDay();
-    const hour = now.getHours();
+const hours =
+TIMING_CONFIG.tradingHours?.[symbol] ??
+TIMING_CONFIG.tradingHours?.default;
 
-    if (day === 6 || day === 0) return true;
-    if (day === 5 && hour >= TIMING_CONFIG.weekendFridayHour) return true;
+if (!hours) return false;
 
-    return false;
-  }
+return timePart < hours.start || timePart >= hours.end;
 
-  // =========================================================
-  // VOLATILITY FILTER — MATCH VolatilityConfig
-  // =========================================================
-  function getRegime(opp) {
-    return getVolatilityRegime(
-      opp?.symbol,
-      opp?.atr_m15,
-      opp?.close
-    ); // null | low | med | high | explo
-  }
+}
 
-  function isBlockedVolatility(regime) {
-    if (!regime) return false;
-    if (regime === "low") return true;
-    return false;
-  }
+// =========================================================
+// WEEKEND
+// =========================================================
+function isWeekendRisk() {
 
+const now = new Date();
+const day = now.getDay();
+const hour = now.getHours();
 
-  // =========================================================
-  // M5 is contrary to H1 signal
-  // =========================================================
+if (day === 6 || day === 0) return true;
+
+if (day === 5 && hour >= TIMING_CONFIG.weekendFridayHour)
+return true;
+
+return false;
+
+}
+
+// =========================================================
+// VOLATILITY REGIME
+// =========================================================
+function getRegime(opp) {
+
+  return getVolatilityRegime(
+    opp?.symbol,
+    opp?.atr_m15,
+    opp?.close
+  );
+
+}
+
+function isBlockedVolatility(regime) {
+
+  if (!regime) return false;
+
+  // Bloquer uniquement la volatilité trop faible
+  if (regime === "low") return true;
+
+  return false;
+
+}
+
+// =========================================================
+// M5 CONTRARY
+// =========================================================
 function isM5Contrary(opp, side) {
 
-  const rsi    = num(opp?.rsi_m5);
-  const drsi   = num(opp?.drsi_m5);
-  const slope  = num(opp?.slope_m5);
-  const dslope = num(opp?.dslope_m5);
+const rsi = num(opp?.rsi_m5);
+const drsi = num(opp?.drsi_m5);
+const slope = num(opp?.slope_m5);
+const dslope = num(opp?.dslope_m5);
 
-  const zh1 = num(opp?.zscore_h1);
-  const zm5 = num(opp?.zscore_m5);
+const zh1 = num(opp?.zscore_h1);
+const zm5 = num(opp?.zscore_m5);
 
 const TH = TIMING_CONFIG.M5.slopeThreshold;
 
-  if (rsi === null || drsi === null || slope === null || dslope === null)
-    return false;
+if (rsi === null || drsi === null || slope === null || dslope === null)
+return false;
 
-  // =====================================================
-  // BUY
-  // =====================================================
-  if (side === "BUY") {
+// ================= BUY =================
 
-    // MTF extension block (trop tard)
-    if (zh1 !== null && zm5 !== null && zh1 > 1.9 && zm5 > 0.8)
-      return true;
+if (side === "BUY") {
 
-    // spike terminal (RSI)
-    if (rsi > 65 && drsi > 5)
-      return true;
+if (zh1 !== null && zm5 !== null && zh1 > 1.9 && zm5 > 0.8)
+return true;
 
-    // pullback actif confirmé
-    if (slope < 0 && dslope < 0 && drsi < 0)
-      return true;
+if (rsi > 65 && drsi > 5)
+return true;
 
-    // retournement momentum M5 (dslope ET drsi négatifs)
-    if (dslope < 0 && drsi < 0)
-      return true;
+if (slope < 0 && dslope < 0 && drsi < 0)
+return true;
 
-    // continuation timing insuffisant
+if (dslope < 0 && drsi < 0)
+return true;
+
 const slopeWeak = slope < TH;
 const microWeak = dslope < 0 || drsi < 0;
 
-if (slopeWeak && microWeak) {
-  return true;
+if (slopeWeak && microWeak)
+return true;
+
 }
 
-  }
+// ================= SELL =================
 
-  // =====================================================
-  // SELL
-  // =====================================================
-  if (side === "SELL") {
+if (side === "SELL") {
 
-    // MTF extension block (trop tard)
-    if (zh1 !== null && zm5 !== null && zh1 < -1.9 && zm5 < -0.8)
-      return true;
+if (zh1 !== null && zm5 !== null && zh1 < -1.9 && zm5 < -0.8)
+return true;
 
-    if (rsi < 35 && drsi < -5)
-      return true;
+if (rsi < 35 && drsi < -5)
+return true;
 
-    if (slope > 0 && dslope > 0 && drsi > 0)
-      return true;
+if (slope > 0 && dslope > 0 && drsi > 0)
+return true;
 
-    // retournement momentum M5 (dslope ET drsi positifs)
-    if (dslope > 0 && drsi > 0)
-      return true;
+if (dslope > 0 && drsi > 0)
+return true;
 
 const slopeWeak = slope > -TH;
 const microWeak = dslope > 0 || drsi > 0;
 
-if (slopeWeak && microWeak) {
-  return true;
+if (slopeWeak && microWeak)
+return true;
+
 }
 
-  }
+return false;
 
-  return false;
 }
+
 // =========================================================
 // M5 OVEREXTENDED
-// Bloque les entrées continuation trop tardives
 // =========================================================
-
 function isM5Overextended(opp, side) {
 
-  const slope  = num(opp?.slope_m5);
-  const dslope = num(opp?.dslope_m5);
-  const drsi   = num(opp?.drsi_m5);
-  const rsi    = num(opp?.rsi_m5);
+const slope = num(opp?.slope_m5);
+const dslope = num(opp?.dslope_m5);
+const drsi = num(opp?.drsi_m5);
+const rsi = num(opp?.rsi_m5);
 
-  if (
-    slope === null ||
-    dslope === null ||
-    drsi === null ||
-    rsi === null
-  )
-    return false;
+if (slope === null || dslope === null || drsi === null || rsi === null)
+return false;
 
-  const oe = TIMING_CONFIG.M5.overextended;
+const oe = TIMING_CONFIG.M5.overextended;
 
-  // =====================================================
-  // BUY — spike terminal haussier
-  // =====================================================
+// BUY
+if (side === "BUY") {
 
-  if (side === "BUY") {
+let score = 0;
 
-    let score = 0;
+if (rsi > oe.rsiMax) score++;
+if (slope > oe.slopeAbs) score++;
+if (dslope > oe.dslopeAbs) score++;
+if (drsi > oe.drsiAbs) score++;
 
-    if (rsi   > oe.rsiMax)     score++;
-    if (slope > oe.slopeAbs)   score++;
-    if (dslope > oe.dslopeAbs) score++;
-    if (drsi > oe.drsiAbs)     score++;
-
-    if (score >= 2) return true;
-
-  }
-
-  // =====================================================
-  // SELL — spike terminal baissier
-  // =====================================================
-
-  if (side === "SELL") {
-
-    let score = 0;
-
-    if (rsi   < oe.rsiMin)      score++;
-    if (slope < -oe.slopeAbs)   score++;
-    if (dslope < -oe.dslopeAbs) score++;
-    if (drsi < -oe.drsiAbs)     score++;
-
-    if (score >= 2) return true;
-
-  }
-
-  return false;
+if (score >= 2) return true;
 
 }
 
-  // =========================================================
-  // M1 CONTRARY — CLEAN RSI ONLY
-  // =========================================================
-  function isM1Contrary(opp, side) {
-    const rsi  = num(opp?.rsi_m1);
-    const drsi = num(opp?.drsi_m1);
+// SELL
+if (side === "SELL") {
 
-    if (rsi === null || drsi === null) return false;
+let score = 0;
 
-    // BUY: micro spike haussier terminal (trop tard pour BUY)
-    if (side === "BUY" && rsi > 65 && drsi > 0.5) return true;
+if (rsi < oe.rsiMin) score++;
+if (slope < -oe.slopeAbs) score++;
+if (dslope < -oe.dslopeAbs) score++;
+if (drsi < -oe.drsiAbs) score++;
 
-    // SELL: micro spike baissier terminal (trop tard pour SELL)
-    if (side === "SELL" && rsi < 35 && drsi < -0.5) return true;
+if (score >= 2) return true;
 
-    return false;
-  }
+}
 
-  // =========================================================
-  // MAIN
-  // =========================================================
-  function evaluate({ opportunities } = {}) {
-    const opps = Array.isArray(opportunities) ? opportunities : [];
+return false;
 
-    const validOpportunities = [];
-    const waitOpportunities  = [];
+}
 
-    for (const opp of opps) {
-      const side = opp?.side;
-      if (!side) continue;
+// =========================================================
+// M1 MICRO CONTRARY
+// =========================================================
+function isM1Contrary(opp, side) {
 
-      const type = String(opp?.type ?? "").toUpperCase();
-      const isContinuation = type === "CONTINUATION";
-      // reversal = everything else (REVERSAL, empty, legacy "reversal", etc.)
+const rsi = num(opp?.rsi_m1);
+const drsi = num(opp?.drsi_m1);
 
+if (rsi === null || drsi === null) return false;
 
-      const now = Date.now();
+if (side === "BUY" && rsi > 65 && drsi > 0.5)
+return true;
 
-      // 0. score minimum
-      if ((opp?.score ?? 0) < SCORE_MIN_TRADE) {
-        waitOpportunities.push({ ...opp, state: "LOW_SCORE", debugInfo: `score=${opp.score}` });
-        continue;
-      }
+if (side === "SELL" && rsi < 35 && drsi < -0.5)
+return true;
 
-      // 0b. cooldown M5 candle
-      if (!TradeCooldown.canEmit(opp.symbol, now)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_COOLDOWN", debugInfo: "cooldown_m5" });
-        continue;
-      }
+return false;
 
-      // 1. trading hours — EN PREMIER
-      if (isOutsideTradingHours(opp)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_OUTSIDE_HOURS", debugInfo: "hours" });
-        continue;
-      }
+}
 
-      // 2. weekend
-      if (isWeekendRisk(opp)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND", debugInfo: "weekend" });
-        continue;
-      }
+// =========================================================
+// MAIN
+// =========================================================
+function evaluate({ opportunities } = {}) {
 
-      // volatility
-      const regime = getRegime(opp);
-      if (isBlockedVolatility(regime)) {
-        waitOpportunities.push({ ...opp, state: `WAIT_VOL_${regime}`, debugInfo: `volatility_${regime}` });
-        continue;
-      }
+const opps = Array.isArray(opportunities) ? opportunities : [];
 
-     // continuation path
+const validOpportunities = [];
+const waitOpportunities = [];
+
+for (const opp of opps) {
+
+const side = opp?.side;
+if (!side) continue;
+
+const type = String(opp?.type ?? "").toUpperCase();
+const isContinuation = type === "CONTINUATION";
+
+const now = Date.now();
+
+// =========================================================
+// SCORE
+// =========================================================
+
+if ((opp?.score ?? 0) < SCORE_MIN_TRADE) {
+
+waitOpportunities.push({
+...opp,
+state: "LOW_SCORE",
+debugInfo: `score=${opp.score}`
+});
+
+continue;
+
+}
+
+// =========================================================
+// COOLDOWN 5 MINUTES
+// =========================================================
+
+if (!TradeCooldown.canEmit(opp.symbol, now)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_COOLDOWN",
+debugInfo: "cooldown_5m"
+});
+
+continue;
+
+}
+
+// =========================================================
+// HOURS
+// =========================================================
+
+if (isOutsideTradingHours(opp)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_OUTSIDE_HOURS",
+debugInfo: "hours"
+});
+
+continue;
+
+}
+
+// =========================================================
+// WEEKEND
+// =========================================================
+
+if (isWeekendRisk()) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_WEEKEND",
+debugInfo: "weekend"
+});
+
+continue;
+
+}
+
+// =========================================================
+// VOLATILITY
+// =========================================================
+
+const regime = getRegime(opp);
+
+if (isBlockedVolatility(regime)) {
+
+waitOpportunities.push({
+...opp,
+state: `WAIT_VOL_${regime}`,
+debugInfo: `volatility_${regime}`
+});
+
+continue;
+
+}
+
+// =========================================================
+// CONTINUATION
+// =========================================================
+
 if (isContinuation) {
 
-  // M5 is contrary to H1 signal
-const m5Block = isM5Contrary(opp, side);
-if (m5Block) {
-  waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY", debugInfo: "m5contrary_cont" });
-  continue;
+if (isM5Contrary(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M5_CONTRARY",
+debugInfo: "m5contrary_cont"
+});
+
+continue;
+
 }
 
-// M5 is overextended
-  if (isM5Overextended(opp, side)) {
+if (isM5Overextended(opp, side)) {
 
-    waitOpportunities.push({
-      ...opp,
-      state: "WAIT_M5_OVEREXTENDED",
-      debugInfo: "m5overextended_cont"
-    });
+waitOpportunities.push({
+...opp,
+state: "WAIT_M5_OVEREXTENDED",
+debugInfo: "m5overextended_cont"
+});
 
-    continue;
+continue;
 
-  }
+}
 
 }
 
 // =========================================================
-// REVERSAL PATH
+// REVERSAL
 // =========================================================
+
 else {
 
-  const TH   = TIMING_CONFIG.M5.slopeThreshold;
-  const sm5  = num(opp?.slope_m5);
-  const dsm5 = num(opp?.dslope_m5);
-  const zm5  = num(opp?.zscore_m5);   // ← zscore_m5, pas zscore_h1
+const TH = TIMING_CONFIG.M5.slopeThreshold;
+const sm5 = num(opp?.slope_m5);
+const dsm5 = num(opp?.dslope_m5);
+const zm5 = num(opp?.zscore_m5);
 
-  // =====================================================
-  // ZM5 EXTENSION — bloque reversal si M5 déjà trop étiré
-  // =====================================================
-  if (side === "BUY"  && zm5 !== null && zm5 > 0.7) {
-    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED", debugInfo: `zm5_extended_buy(zm5=${zm5})` });
-    continue;
-  }
-  if (side === "SELL" && zm5 !== null && zm5 < -0.7) {
-    waitOpportunities.push({ ...opp, state: "WAIT_ZM5_EXTENDED", debugInfo: `zm5_extended_sell(zm5=${zm5})` });
-    continue;
-  }
+// ZSCORE EXTENSION
 
-  // =====================================================
-  // M5 CONFIRMATION — transition gate
-  // =====================================================
-  if (sm5 !== null && dsm5 !== null) {
+if (side === "BUY" && zm5 !== null && zm5 > 0.7) {
 
-    // ===== BUY REVERSAL =====
-    const slopeTooBearish = sm5 < -TH;  // franchement négatif
-    const noMicroTurn     = dsm5 <= 0;    // pas d'amélioration
+waitOpportunities.push({
+...opp,
+state: "WAIT_ZM5_EXTENDED",
+debugInfo: `zm5_extended_buy(${zm5})`
+});
 
-    if (side === "BUY" && slopeTooBearish && noMicroTurn) {
-      waitOpportunities.push({
-        ...opp,
-        state: "WAIT_M5_CONFIRMATION",
-        debugInfo: `m5confirm_buy(sm5=${sm5},dsm5=${dsm5})`
-      });
-      continue;
-    }
+continue;
 
-    // ===== SELL REVERSAL =====
-    const slopeTooBullish = sm5 > TH;   // franchement positif
-    const noMicroTurnSell = dsm5 >= 0;    // pas de retournement
-
-    if (side === "SELL" && slopeTooBullish && noMicroTurnSell) {
-      waitOpportunities.push({
-        ...opp,
-        state: "WAIT_M5_CONFIRMATION",
-        debugInfo: `m5confirm_sell(sm5=${sm5},dsm5=${dsm5})`
-      });
-      continue;
-    }
-  }
-
-  // =====================================================
-  // MICRO CONTRARY
-  // =====================================================
-  if (isM5Contrary(opp, side)) {
-    waitOpportunities.push({
-      ...opp,
-      state: "WAIT_MICRO",
-      debugInfo: "m5contrary_rev"
-    });
-    continue;
-  }
-
-  // =====================================================
-  // OVEREXTENDED
-  // =====================================================
-  if (isM5Overextended(opp, side)) {
-    waitOpportunities.push({
-      ...opp,
-      state: "WAIT_M5_OVEREXTENDED",
-      debugInfo: "m5overextended_rev"
-    });
-    continue;
-  }
-
-  // =====================================================
-  // M1 MICRO SPIKE
-  // =====================================================
-  if (isM1Contrary(opp, side)) {
-    waitOpportunities.push({
-      ...opp,
-      state: "WAIT_M1_CONTRARY",
-      debugInfo: "m1contrary"
-    });
-    continue;
-  }
 }
 
-      TradeCooldown.register(opp.symbol, now);
-      validOpportunities.push({
-  ...opp,
-  state: "VALID",
-  volatilityRegime: regime ?? null
+if (side === "SELL" && zm5 !== null && zm5 < -0.7) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_ZM5_EXTENDED",
+debugInfo: `zm5_extended_sell(${zm5})`
 });
-    }
 
-    return { validOpportunities, waitOpportunities };
-  }
+continue;
 
-  return { evaluate };
+}
+
+// M5 CONFIRMATION
+
+if (sm5 !== null && dsm5 !== null) {
+
+const slopeTooBearish = sm5 < -TH;
+const noMicroTurn = dsm5 <= 0;
+
+if (side === "BUY" && slopeTooBearish && noMicroTurn) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M5_CONFIRMATION",
+debugInfo: `m5confirm_buy`
+});
+
+continue;
+
+}
+
+const slopeTooBullish = sm5 > TH;
+const noMicroTurnSell = dsm5 >= 0;
+
+if (side === "SELL" && slopeTooBullish && noMicroTurnSell) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M5_CONFIRMATION",
+debugInfo: `m5confirm_sell`
+});
+
+continue;
+
+}
+
+}
+
+// MICRO
+
+if (isM5Contrary(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_MICRO",
+debugInfo: "m5contrary_rev"
+});
+
+continue;
+
+}
+
+// OVEREXTENDED
+
+if (isM5Overextended(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M5_OVEREXTENDED",
+debugInfo: "m5overextended_rev"
+});
+
+continue;
+
+}
+
+// M1 SPIKE
+
+if (isM1Contrary(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M1_CONTRARY",
+debugInfo: "m1contrary"
+});
+
+continue;
+
+}
+
+}
+
+// =========================================================
+// VALID
+// =========================================================
+
+validOpportunities.push({
+...opp,
+state: "VALID",
+volatilityRegime: regime ?? null
+});
+
+}
+
+return { validOpportunities, waitOpportunities };
+
+}
+
+return { evaluate };
 
 })();
 

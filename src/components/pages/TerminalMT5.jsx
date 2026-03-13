@@ -20,6 +20,7 @@ import AccountHealth from "../terminalmt5/AccountHealth";
 import CapitalAllocationPanel from "../terminalmt5/CapitalAllocation";
 
 // styles
+import { TradeCooldown } from "../robot/engines/trading/SignalCooldown";
 import "../../styles/stylespages/terminalmt5.css";
 
 export default function TerminalMT5({ snapshot }) {
@@ -74,10 +75,11 @@ export default function TerminalMT5({ snapshot }) {
     }).catch(() => {});
   }
 
-  function handleOrderSent() {
+  function handleOrderSent(symbol) {
+    TradeCooldown.register(symbol, Date.now());
     setDraftDeal(null);
     setDealLocked(false);
-    setClearSignal(true); // ✅ efface le signal persisté
+    setClearSignal(true);
   }
 
   // ==========================================================================

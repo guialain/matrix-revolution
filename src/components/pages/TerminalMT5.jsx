@@ -3,7 +3,7 @@
 // Rôle : Orchestration UI MT5
 // ============================================================================
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 // hooks
@@ -20,7 +20,6 @@ import AccountHealth from "../terminalmt5/AccountHealth";
 import CapitalAllocationPanel from "../terminalmt5/CapitalAllocation";
 
 // styles
-import SignalFrequency from "../robot/engines/trading/SignalFrequency";
 import "../../styles/stylespages/terminalmt5.css";
 
 export default function TerminalMT5({ snapshot }) {
@@ -29,15 +28,7 @@ export default function TerminalMT5({ snapshot }) {
   // HOOKS (must be called unconditionally, before any return)
   // ==========================================================================
 
-  const [clearSignal, setClearSignal] = useState(false);
-
-  const robot = useRobotCore(snapshot, { clearSignal });
-
-  // Reset clearSignal après un cycle
-  useEffect(() => {
-    if (!clearSignal) return;
-    setClearSignal(false);
-  }, [clearSignal]);
+  const robot = useRobotCore(snapshot);
 
   const { rows: exposureData, total: totalExposure } =
     useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });
@@ -75,11 +66,9 @@ export default function TerminalMT5({ snapshot }) {
     }).catch(() => {});
   }
 
-  function handleOrderSent(symbol) {
-    SignalFrequency.register(symbol);
+  function handleOrderSent() {
     setDraftDeal(null);
     setDealLocked(false);
-    setClearSignal(true);
   }
 
   // ==========================================================================

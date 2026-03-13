@@ -1,11 +1,13 @@
 // ============================================================================
-// SignalCooldown.js — Two-tier cooldown system
+// SignalCooldown.js — Two-tier cooldown
 //
-//   Level 1 — DetectionCooldown  (M1 = 60 s)  used in continuation / reversal
-//             → avoids duplicate detections on the same asset
+// DetectionCooldown (M1=60s)  — 1 signal VALID par asset par bougie M1
+//   canEmit  → checked in SignalFilters after score
+//   register → called in SignalFilters before VALID push
 //
-//   Level 2 — TradeCooldown      (M5 = 300 s) used in SignalFilters
-//             → 1 tradable signal per asset per M5 candle
+// TradeCooldown (M5=300s)  — bloque après ordre envoyé
+//   canEmit  → checked in SignalFilters after score
+//   register → called in TerminalMT5 handleOrderSent()
 // ============================================================================
 
 function createCooldown(intervalMs) {
@@ -40,5 +42,4 @@ function createCooldown(intervalMs) {
 export const DetectionCooldown = createCooldown(1 * 60 * 1000);   // M1
 export const TradeCooldown     = createCooldown(5 * 60 * 1000);   // M5
 
-// Legacy default export = TradeCooldown (backward compat)
 export default TradeCooldown;

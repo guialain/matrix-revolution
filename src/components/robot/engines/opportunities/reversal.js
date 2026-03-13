@@ -188,7 +188,7 @@ const ReversalStrategy = (() => {
 
     // Position extrême requise
 const z = num(dyn?.zscore);
-if (z === null || z > -1.8) return null;
+if (z === null || z > -1.5) return null;
 
 // =========================================================
 // ✅ MATURITY BLOCK — encore en accélération baissière
@@ -212,7 +212,7 @@ if (
 
 // Position extrême requise
 const z = num(dyn?.zscore);
-if (z === null || z < 1.8) return null;
+if (z === null || z < 1.5) return null;
 
 // =========================================================
 // ✅ MATURITY BLOCK — encore en accélération haussière
@@ -236,14 +236,14 @@ if (
   // ============================================================================
   function detectBuyPhase(dyn, cfg) {
     const z = num(dyn?.zscore);
-    if (z === null || z > -1.8) return null;  // même guard que detectBuy
+    if (z === null || z > -1.5) return null;  // même guard que detectBuy
     const p = detectReversalPhase(dyn.slope, dyn.dslope, "BUY", cfg);
     return p ? `BUY_${p}` : null;
   }
 
   function detectSellPhase(dyn, cfg) {
     const z = num(dyn?.zscore);
-    if (z === null || z < 1.8) return null;   // même guard que detectSell
+    if (z === null || z < 1.5) return null;   // même guard que detectSell
     const p = detectReversalPhase(dyn.slope, dyn.dslope, "SELL", cfg);
     return p ? `SELL_${p}` : null;
   }

@@ -68,11 +68,27 @@ export default function useRobotCore(snapshot) {
     return () => { active = false; clearInterval(id); };
   }, []);
 
-  // RobotCore.run() still produces NEO + TRINITY analysis
+  // RobotCore.run() — synchrone, pure computation
   const coreResult = useMemo(() => {
     if (!snapshot) return null;
     return RobotCore.run(snapshot);
   }, [snapshot]);
+
+  // POST signals to server (fire-and-forget, outside render)
+  useEffect(() => {
+    if (!coreResult) return;
+    const trinity = coreResult.trinity ?? {};
+    const valid = trinity.validOpportunities ?? [];
+    const wait  = trinity.waitOpportunities ?? [];
+    if (!valid.length && !wait.length) return;
+
+    fetch(`${API_BASE}/api/signals/publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ validOpportunities: valid, waitOpportunities: wait }),
+    }).catch(() => {});
+  }, [coreResult]);
 
   // Merge: core analysis + server signals
   return useMemo(() => {

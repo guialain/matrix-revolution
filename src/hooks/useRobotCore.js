@@ -6,6 +6,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import RobotCore from "../components/robot/RobotCore";
+import SignalFrequency from "../components/robot/engines/trading/SignalFrequency";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
@@ -88,6 +89,11 @@ export default function useRobotCore(snapshot) {
       credentials: "include",
       body: JSON.stringify({ validOpportunities: valid, waitOpportunities: wait }),
     }).catch(() => {});
+
+    // Update local frequency cache immediately
+    valid.forEach(op => {
+      if (op.symbol) SignalFrequency._setCache(op.symbol, Date.now());
+    });
   }, [coreResult]);
 
   // Merge: core analysis + server signals

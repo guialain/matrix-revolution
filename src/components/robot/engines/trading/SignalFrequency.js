@@ -25,7 +25,10 @@ const SignalFrequency = {
     return (Date.now() - last) >= COOLDOWN_MS;
   },
   // register is handled server-side via publish
-  register() {}
+  register() {},
+  _setCache(symbol, timestamp) {
+    frequencyCache[symbol] = timestamp;
+  }
 };
 
 export default SignalFrequency;

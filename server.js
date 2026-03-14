@@ -686,7 +686,7 @@ app.post("/api/signals/publish", (req, res) => {
   const now = Date.now();
 
   // Keep only fresh signals (< 60s)
-  const fresh = validOpportunities.filter(op => op.emittedAt && (now - op.emittedAt) < 60000);
+  const fresh = validOpportunities.filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
 
   // Update frequency map for each valid signal
   for (const op of fresh) {

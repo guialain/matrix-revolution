@@ -12,6 +12,7 @@
   box-sizing: border-box;
   font-family: 'Courier New', Courier, monospace;
   overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* ─── HEADER ─────────────────────────────────────────────── */
@@ -47,14 +48,14 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 8px 16px;
+  padding: 0 16px 8px 16px;
 }
 
 /* ─── TABLE HEADER ───────────────────────────────────────── */
 
 .ct-table-header {
   display: grid;
-  grid-template-columns: 24px 1fr 48px 48px 90px 68px 50px 50px 70px;
+  grid-template-columns: 24px 1fr 44px 40px 80px 64px 44px 44px 60px;
   gap: 8px;
   padding: 4px 8px;
   font-size: 11px;
@@ -62,6 +63,7 @@
   text-transform: uppercase;
   border-bottom: 1px solid rgba(0, 200, 100, 0.08);
   margin-bottom: 4px;
+  margin-top: 0;
   position: sticky;
   top: 0;
   background: #020508;
@@ -86,7 +88,7 @@
 
 .ct-trade-row {
   display: grid;
-  grid-template-columns: 24px 1fr 48px 48px 90px 68px 50px 50px 70px;
+  grid-template-columns: 24px 1fr 44px 40px 80px 64px 44px 44px 60px;
   align-items: center;
   gap: 8px;
   padding: 3px 8px;
@@ -98,18 +100,18 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-.ct-trade-rank   { color: #e8e6e0; font-size: 11px; }
-.ct-trade-symbol { color: #e8e6e0; font-size: 11px; }
-.ct-trade-lots   { color: #e8e6e0; font-size: 11px; }
-.ct-trade-open   { color: #e8e6e0; font-size: 11px; }
-.ct-trade-date   { color: #e8e6e0; font-size: 11px; }
-.ct-trade-time   { color: #e8e6e0; font-size: 11px; }
-.ct-trade-side-buy  { color: #60a5fa; font-size: 11px; }
-.ct-trade-side-sell { color: #f472b6; font-size: 11px; }
-.ct-trade-swap-pos  { color: #4ade80; font-size: 11px; }
-.ct-trade-swap-neg  { color: #f87171; font-size: 11px; }
-.ct-trade-swap-zero { color: #e8e6e0; font-size: 11px; }
-.ct-trade-pnl   { font-weight: 600; text-align: right; font-size: 11px; }
+.ct-trade-rank   { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-symbol { color: #e8e6e0; font-size: 11px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-trade-lots   { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-open   { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-date   { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-time   { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-side-buy  { color: #60a5fa; font-size: 11px; min-width: 0; }
+.ct-trade-side-sell { color: #f472b6; font-size: 11px; min-width: 0; }
+.ct-trade-swap-pos  { color: #4ade80; font-size: 11px; min-width: 0; }
+.ct-trade-swap-neg  { color: #f87171; font-size: 11px; min-width: 0; }
+.ct-trade-swap-zero { color: #e8e6e0; font-size: 11px; min-width: 0; }
+.ct-trade-pnl   { font-weight: 600; text-align: right; font-size: 11px; min-width: 0; }
 .ct-trade-pnl.pos { color: #4ade80; }
 .ct-trade-pnl.neg { color: #f87171; }
 

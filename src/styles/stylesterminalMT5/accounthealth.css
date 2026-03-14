@@ -3,23 +3,43 @@
 ============================================================================ */
 
 /* ============================================================================
+   CARD TITLE (shared by AccountHealth, Exposure, Capital)
+============================================================================ */
+
+.dashboard-health {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.card-title {
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f5c26b;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ============================================================================
    CONTAINER
 ============================================================================ */
 
 .health-tubes {
-  flex: 1 1 auto;
+  flex: 1;
   min-height: 0;
   font-family: 'Courier New', Courier, monospace;
 
   display: flex;
-  justify-content: center;
   align-items: flex-end;
-  gap: 0;
-
-  max-width: 360px;
-  margin: 0 auto;
-  padding-top: 4px;
-   padding-bottom: 4px;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 0 18px 6px;
 }
 
 /* ============================================================================
@@ -28,15 +48,12 @@
 
 /* New structure */
 .health-tube {
-  width: 104px;
-  flex: 0 0 auto;
-
+  width: 96px;
+  height: 100%;
   display: flex;
-  justify-content: center;
-  align-items: flex-end;
-
-  margin: 0;
-  padding: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 /* Legacy compatibility (kept intentionally) */
@@ -105,5 +122,11 @@
 .tube-percent {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #fff;
+  color: #ffe9c2;
+}
+
+.dashboard-health .vertical-tube {
+  width: 90px;
+  max-height: 100%;
+  display: block;
 }

@@ -39,6 +39,9 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.7rem;
+  padding: 6px 12px;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
 }
 
 .panel-title-group h3 {

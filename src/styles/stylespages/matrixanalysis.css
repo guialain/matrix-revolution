@@ -6,6 +6,8 @@
 
 .ma-page {
   height: calc(100vh - 80px);
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -22,7 +24,7 @@
   grid-template-columns: 1fr 1fr;
   grid-template-rows: minmax(0, 1fr);
   gap: 8px;
-  padding: 10px;
+  padding: 2px 4px 4px;
   min-height: 0;
   overflow: hidden;
   align-items: start;
@@ -44,8 +46,8 @@
 
 .matrix-bottom-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 45fr 55fr;
+  gap: 8px;
   flex-shrink: 0;
 }
 

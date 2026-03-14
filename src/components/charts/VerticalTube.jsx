@@ -75,12 +75,12 @@ export default function VerticalTube({
         x={VIEWBOX_WIDTH / 2}
         y={TUBE_TOP + TUBE_HEIGHT + 18}
         textAnchor="middle"
-        fill="#c8d8e8"
+        fill="#ffe9c2"
         fontSize="11"
         fontWeight="600"
         fontFamily="'Courier New', Courier, monospace"
       >
-        {label}
+        {typeof label === "string" ? label.toUpperCase() : label}
       </text>
     </svg>
   );

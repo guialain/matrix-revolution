@@ -9,6 +9,8 @@
   position: relative;
   overflow: hidden;
   font-family: 'Courier New', Courier, monospace;
+  padding-top: 6px;
+  padding-bottom: 6px;
 
   background: #050505;
   border-bottom: 1px solid rgba(255, 200, 80, 0.25);
@@ -41,6 +43,7 @@
 .neo-header-logo {
   font-size: 16px;
   font-weight: 800;
+  color: #f5c26b;
 }
 
 .neo-header-date {
@@ -79,8 +82,9 @@
   align-items: center;
   gap: 6px;
 
-  font-weight: 600;
-  color: #ffdd8a;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f5c26b;
 
   text-shadow:
     0 0 8px rgba(255, 200, 90, 0.9),
@@ -135,14 +139,6 @@
 .asset-energy { background: #3f1d0b; color: #fbbf24; }
 .asset-stock  { background: #064e3b; color: #bbf7d0; }
 
-/* PRICES INLINE */
-
-.header-prices.inline {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .header-price {
   min-width: 88px;
   text-align: right;
@@ -163,7 +159,7 @@
 }
 
 .price-neutral {
-  color: #ffffff;
+  color: #ffe9c2;
 }
 
 /* ================= RIGHT ================= */

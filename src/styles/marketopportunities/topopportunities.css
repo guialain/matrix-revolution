@@ -14,8 +14,9 @@
 }
 
 .neo-title-section {
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 200, 120, 0.15);
+  padding: 6px 12px;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
 }
 
 .neo-muted {

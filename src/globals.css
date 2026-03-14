@@ -7,3 +7,9 @@
   --gold: #d4af37;
   --gold-soft: #f6d678;
 }
+
+/* Global scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(245, 194, 107, 0.4); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 194, 107, 0.75); }

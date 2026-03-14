@@ -151,12 +151,12 @@ const riskState =
 
   return (
     <div className="dashboard-card dashboard-health">
-      <div className="card-title">Account Health</div>
+      <div className="card-title">ACCOUNT HEALTH</div>
 
       <div className="health-tubes">
         <div className="health-tube">
           <VerticalTube
-            label="Risk Overall"
+            label="OVERALL RISK"
             value={overallRisk}
             displayValue={`${Math.round(overallRisk * 100)}%`}
             color={getRiskColor(overallRisk)}
@@ -166,7 +166,7 @@ const riskState =
 
         <div className="health-tube">
           <VerticalTube
-            label="Equity"
+            label="EQUITY"
             value={equityRatio}
             displayValue={formatEUR(equity)}
             color={getEquityColor(equityRatio)}
@@ -176,7 +176,7 @@ const riskState =
 
         <div className="health-tube">
           <VerticalTube
-            label="Margin %"
+            label="MARGIN %"
             value={marginLiquidLevel}
             displayValue={`${marginLevel.toFixed(0)}%`}
             color={getMarginColor(marginLevel)}
@@ -186,7 +186,7 @@ const riskState =
 
         <div className="health-tube">
           <VerticalTube
-            label="Leverage"
+            label="LEVERAGE"
             value={leverageRisk}
             displayValue={`x${leverageUsed.toFixed(1)}`}
             color={getLeverageColor(leverageUsed)}

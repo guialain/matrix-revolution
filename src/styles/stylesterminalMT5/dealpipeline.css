@@ -53,13 +53,15 @@
 }
 
 .trinity-advice-title {
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-  color: #ffffff;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
+  padding: 6px 12px;
   margin-bottom: 8px;
-  text-shadow: 0 0 6px rgba(120, 180, 255, 0.3);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f5c26b;
 }
 
 .trinity-advice-list {
@@ -72,9 +74,9 @@
 }
 
 .trinity-advice-list li {
-  font-size: 13px;
+  font-size: 11px;
   line-height: 1.4;
-  color: #ffffff;
+  color: #ffe9c2;
   letter-spacing: 0.2px;
 }
 
@@ -108,20 +110,28 @@
 /* ================= TITLES ================= */
 
 .box-title {
-  font-size: 12px;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
+  padding: 6px 12px;
+  font-size: 10px;
   font-weight: 700;
-  color: #ffffff;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f5c26b;
 }
 
 .pipeline-title {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 0.7rem;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
+  padding: 6px 12px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: #ffffff;
+  color: #f5c26b;
 }
 
 .pipeline-count {
@@ -130,7 +140,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
-  color: #ffffff;
+  color: #ffe9c2;
   background: rgba(255, 200, 120, 0.12);
   border: 1px solid rgba(255, 200, 120, 0.35);
 }
@@ -152,7 +162,7 @@
 /* ================= TEXT ================= */
 
 .pipeline-item span {
-  color: #ffffff;
+  color: #ffe9c2;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -237,7 +247,7 @@
 /* ================= COLUMNS ================= */
 
 .pipeline-item .sym {
-  color: #ffffff;
+  color: #ffe9c2;
   font-weight: 600;
   font-size: 13px;
 }
@@ -254,7 +264,7 @@
 .pipeline-item .tf {
   font-size: 13px;
    text-align: center;
-  color: #ffffff;
+  color: #ffe9c2;
   font-weight: 600;
 }
 

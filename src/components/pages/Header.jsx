@@ -158,17 +158,18 @@ const marketStatus = useMemo(() => {
   if (!ready) {
     return (
 
-      <header className="neo-header px-6 py-4">
+      <header className="neo-header px-6">
         Loading…
       </header>
     );
   }
 
   return (
-<header className="neo-header neo-header-grid px-6 py-4">
+<header className="neo-header neo-header-grid px-6">
 
   {/* ================= LEFT ================= */}
   <div className="neo-header-left">
+    <img src="/neo.png" alt="neo" style={{ height: "68px", width: "68px", objectFit: "contain" }} />
     <span className="neo-header-logo">NEO MATRIX</span>
 
     <span className="neo-header-date">
@@ -189,7 +190,7 @@ const marketStatus = useMemo(() => {
   <div className="neo-header-center">
     <div className="neo-header-trading">
 
-      <span className="symbol text-gold">
+      <span className="neo-header-symbol">
         {symbol}
       </span>
 

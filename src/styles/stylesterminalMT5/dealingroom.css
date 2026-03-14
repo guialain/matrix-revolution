@@ -11,10 +11,15 @@
 /* ================= TITLES & LABELS ================= */
 
 .box-title {
-  font-size: 9px;
-  font-weight: 600;
-  color: #e8d4a7;
+  background: rgba(0, 200, 100, 0.15);
+  border-bottom: 1px solid rgba(245, 194, 107, 0.4);
+  padding: 6px 12px;
   margin-bottom: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #f5c26b;
 }
 
 /* ================= ASSET READONLY ================= */

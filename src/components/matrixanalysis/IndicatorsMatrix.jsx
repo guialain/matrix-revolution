@@ -11,78 +11,61 @@ const TFS = ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN"];
 
 // ─── color helpers ───────────────────────────────────────────────────────────
 
-function signalBg(signal) {
-  if (!signal) return "transparent";
-  const s = signal.toLowerCase();
-  if (s.includes("strong buy")  || s === "strong up")   return "rgba(34,197,94,0.25)";
-  if (s.includes("buy")         || s === "up")           return "rgba(74,222,128,0.15)";
-  if (s.includes("neutral"))                             return "rgba(234,179,8,0.10)";
-  if (s.includes("sell")        || s === "down")         return "rgba(249,115,22,0.18)";
-  if (s.includes("strong sell") || s === "strong down")  return "rgba(239,68,68,0.28)";
-  return "transparent";
-}
+function signalBg() { return "transparent"; }
 
 function signalColor(signal) {
-  if (!signal) return "#888";
+  if (!signal) return "#ffe9c2";
   const s = signal.toLowerCase();
   if (s.includes("strong buy")  || s === "strong up")   return "#22c55e";
   if (s.includes("buy")         || s === "up")           return "#4ade80";
   if (s.includes("neutral"))                             return "#eab308";
   if (s.includes("sell")        || s === "down")         return "#f97316";
   if (s.includes("strong sell") || s === "strong down")  return "#ef4444";
-  return "#fff";
+  return "#ffe9c2";
 }
 
-function rsiBg(rsi) {
-  if (!Number.isFinite(rsi)) return "transparent";
-  if (rsi >= 70) return "rgba(239,68,68,0.22)";
-  if (rsi >= 60) return "rgba(249,115,22,0.15)";
-  if (rsi <= 30) return "rgba(34,197,94,0.22)";
-  if (rsi <= 40) return "rgba(74,222,128,0.12)";
-  return "rgba(234,179,8,0.08)";
-}
+function rsiBg() { return "transparent"; }
 
 function rsiColor(rsi) {
-  if (!Number.isFinite(rsi)) return "#888";
+  if (!Number.isFinite(rsi)) return "#ffe9c2";
   if (rsi >= 70) return "#ef4444";
   if (rsi >= 60) return "#f97316";
   if (rsi <= 30) return "#22c55e";
   if (rsi <= 40) return "#4ade80";
-  return "#fff";
+  return "#ffe9c2";
 }
 
-function slopeBg(slope) {
-  if (!Number.isFinite(slope)) return "transparent";
-  if (slope > 3)  return "rgba(34,197,94,0.20)";
-  if (slope > 1)  return "rgba(74,222,128,0.12)";
-  if (slope < -3) return "rgba(239,68,68,0.22)";
-  if (slope < -1) return "rgba(249,115,22,0.15)";
-  return "rgba(234,179,8,0.07)";
-}
+function slopeBg() { return "transparent"; }
 
 function slopeColor(slope) {
-  if (!Number.isFinite(slope)) return "#888";
+  if (!Number.isFinite(slope)) return "#ffe9c2";
   if (slope > 3)  return "#22c55e";
   if (slope > 1)  return "#4ade80";
   if (slope < -3) return "#ef4444";
   if (slope < -1) return "#f97316";
-  return "#ffff";
+  return "#ffe9c2";
 }
 
-function deltaBg(v) {
-  if (!Number.isFinite(v)) return "transparent";
-  if (v > 5)  return "rgba(34,197,94,0.18)";
-  if (v < -5) return "rgba(239,68,68,0.20)";
-  if (v < 0)  return "rgba(249,115,22,0.12)";
-  return "transparent";
+function deltaBg() { return "transparent"; }
+
+function rsiZoneColor(zone) {
+  if (!zone) return "#ffe9c2";
+  if (zone === "Achat extrême")  return "#ea3030";
+  if (zone === "Survente")       return "#f97316";
+  if (zone === "Basse")          return "#e47527";
+  if (zone === "Neutre")         return "#ffe9c2";
+  if (zone === "Haute")          return "#e47527";
+  if (zone === "Surachat")       return "#ec6c11";
+  if (zone === "Vente extrême")  return "#ea3030";
+  return "#ffe9c2";
 }
 
 function deltaColor(v) {
-  if (!Number.isFinite(v)) return "#888";
+  if (!Number.isFinite(v)) return "#ffe9c2";
   if (v > 5)  return "#4ade80";
   if (v < -5) return "#ef4444";
   if (v < 0)  return "#f97316";
-  return "#ffff";
+  return "#ffe9c2";
 }
 
 const fmt = (v, d = 1) =>
@@ -93,7 +76,7 @@ const fmt = (v, d = 1) =>
 
 function HeatCell({ bg, color, value }) {
   return (
-    <div className="im-cell" style={{ background: bg, color: color ?? "#ccc" }}>
+    <div className="im-cell" style={{ background: bg, color: color ?? "#ffe9c2" }}>
       {value}
     </div>
   );
@@ -155,7 +138,7 @@ export default function IndicatorsMatrix() {
         {TFS.map(tf => {
           const d    = tfMap[tf] ?? {};
           const zone = IndicatorsEngine.getRsiZone?.(d.rsi) ?? { zone: "—", cls: "" };
-          return <HeatCell key={tf} bg="transparent" color={signalColor(zone.zone)} value={zone.zone} />;
+          return <HeatCell key={tf} bg="transparent" color={rsiZoneColor(zone.zone)} value={zone.zone} />;
         })}
 
         {/* SLOPE */}
@@ -178,7 +161,7 @@ export default function IndicatorsMatrix() {
         {TFS.map(tf => {
           const d = tfMap[tf] ?? {};
           const v = Number.isFinite(d.atr) && validSpread ? d.atr / spread : null;
-          return <HeatCell key={tf} bg="transparent" color="#ffff" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+          return <HeatCell key={tf} bg="transparent" color="#ffe9c2" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
         })}
 
         {/* RANGE / SPREAD */}
@@ -186,7 +169,7 @@ export default function IndicatorsMatrix() {
         {TFS.map(tf => {
           const d = tfMap[tf] ?? {};
           const v = Number.isFinite(d.range) && validSpread ? d.range / spread : null;
-          return <HeatCell key={tf} bg="transparent" color="#ffff" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
+          return <HeatCell key={tf} bg="transparent" color="#ffe9c2" value={Number.isFinite(v) ? Math.round(v) : "—"} />;
         })}
 
         {/* DELTA RANGE */}
@@ -203,14 +186,14 @@ export default function IndicatorsMatrix() {
         <div className="im-row-label">High</div>
         {TFS.map(tf => {
           const v = tfMap[tf]?.high;
-          return <HeatCell key={tf} bg="transparent" color="#ffff" value={fmt(v, 2)} />;
+          return <HeatCell key={tf} bg="transparent" color="#ffe9c2" value={fmt(v, 2)} />;
         })}
 
         {/* LOW */}
         <div className="im-row-label">Low</div>
         {TFS.map(tf => {
           const v = tfMap[tf]?.low;
-          return <HeatCell key={tf} bg="transparent" color="#ffff" value={fmt(v, 2)} />;
+          return <HeatCell key={tf} bg="transparent" color="#ffe9c2" value={fmt(v, 2)} />;
         })}
 
       </div>

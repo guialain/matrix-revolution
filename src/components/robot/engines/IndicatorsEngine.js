@@ -14,16 +14,16 @@ const IndicatorsEngine = {
 
     const m = Math.abs(s);
 
-    if (m <= 0.2)
+    if (m <= 0.5)
       return { signal: "Neutral", strength: 0 };
 
     if (s > 0) {
-      if (m <= 1.0)  return { signal: "Up",        strength: 0.4 };
-      if (m <= 2.72) return { signal: "Up",        strength: 0.7 };
+      if (m <= 1.5)  return { signal: "Up",        strength: 0.4 };
+      if (m <= 3.5) return { signal: "Up",        strength: 0.7 };
       return          { signal: "Strong Up", strength: 1.0 };
     } else {
-      if (m <= 1.0)  return { signal: "Down",        strength: 0.4 };
-      if (m <= 2.72) return { signal: "Down",        strength: 0.7 };
+      if (m <= 1.5)  return { signal: "Down",        strength: 0.4 };
+      if (m <= 3.5) return { signal: "Down",        strength: 0.7 };
       return          { signal: "Strong Down", strength: 1.0 };
     }
   },
@@ -44,7 +44,7 @@ const IndicatorsEngine = {
     }
 
     if (rsi >= 80)
-      return { zone: "Surachat extrême", cls: "rsi-z7", bias: "SELL", strength: 1.0, extreme: true,  score: -2 };
+      return { zone: "Achat extrême", cls: "rsi-z7", bias: "SELL", strength: 1.0, extreme: true,  score: -2 };
 
     if (rsi >= 70)
       return { zone: "Surachat",         cls: "rsi-z6", bias: "SELL", strength: 0.7, extreme: false, score: -1 };
@@ -62,7 +62,7 @@ const IndicatorsEngine = {
       return { zone: "Survente",         cls: "rsi-z2", bias: "BUY", strength: 0.7, extreme: false, score: +1 };
 
     return {
-      zone: "Survente extrême",
+      zone: "Vente extrême",
       cls: "rsi-z1",
       bias: "BUY",
       strength: 1.0,
@@ -80,10 +80,10 @@ const IndicatorsEngine = {
 
     const m = Math.abs(slope);
 
-    if (m <= 0.2)
+    if (m <= 0.5)
       return "Neutral";
 
-    if (m > 2.72) {
+    if (m > 3.5) {
       if (slope > 0 && rsi <= 30) return "Strong Buy";
       if (slope < 0 && rsi >= 70) return "Strong Sell";
     }

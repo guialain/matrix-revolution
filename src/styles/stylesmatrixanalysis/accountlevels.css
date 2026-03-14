@@ -5,7 +5,7 @@
 .al-panel {
   width: 100%;
   box-sizing: border-box;
-  border: 1.5px solid rgba(0, 200, 100, 0.75);
+  border: 1px solid rgba(0, 200, 100, 0.25);
   border-radius: 10px;
   background: #020508;
   padding: 10px 14px;
@@ -62,7 +62,7 @@
 .al-label {
   font-size: 12px;
   font-weight: 600;
-  color: #c8d8e8;
+  color: #ffe9c2;
   white-space: nowrap;
 }
 
@@ -71,7 +71,7 @@
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: center;
-  color: #e8e6e0;
+  color: #ffe9c2;
 }
 
 .al-stage {

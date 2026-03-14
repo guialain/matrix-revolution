@@ -6,7 +6,7 @@
   width: 100%;
   box-sizing: border-box;
   background: #020508;
-  border: 1.5px solid rgba(0, 200, 100, 0.75);
+  border: 1px solid rgba(0, 200, 100, 0.25);
   border-radius: 8px;
   overflow: hidden;
   font-family: 'Courier New', Courier, monospace;
@@ -109,7 +109,7 @@
 .mt-asset {
   font-size: 12px;
   font-weight: 700;
-  color: #c8d8e8;
+  color: #ffe9c2;
   letter-spacing: 0.05em;
 }
 
@@ -117,7 +117,7 @@
   text-align: right;
   font-size: 12px;
   font-weight: 700;
-  color: #e8e6e0;
+  color: #ffe9c2;
   letter-spacing: 0.02em;
 }
 

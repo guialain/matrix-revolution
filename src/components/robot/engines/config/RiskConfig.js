@@ -94,6 +94,12 @@ export const RISK_CONFIG = {
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 24595, baseToEUR: 0.847,
   },
+  JAPAN_225: {
+    tpAtr: 0.45, slAtr: 1.45,
+    spread: 10.0,
+    targetLeveragePerTrade: 2,
+    contractSize: 100, refPrice: 52860, baseToEUR: 0.00613,
+  },
 
   // ── CRYPTO ────────────────────────────────────────────────────────────────
 
@@ -147,6 +153,12 @@ export const RISK_CONFIG = {
     spread: 5.0,
     targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2144, baseToEUR: 0.847,
+  },
+  COPPER: {
+    tpAtr: 0.45, slAtr: 1.45,
+    spread: 0.003,
+    targetLeveragePerTrade: 1,
+    contractSize: 25000, refPrice: 5.68, baseToEUR: 0.847,
   },
 
   // ── OIL & GAS ─────────────────────────────────────────────────────────────

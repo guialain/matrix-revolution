@@ -661,6 +661,45 @@ app.post("/api/mt5switch", (req, res) => {
 });
 
 // ============================================================================
+// SIGNALS STORE (persistent signal state)
+// ============================================================================
+
+const signalFrequency = new Map(); // symbol → timestamp ms
+const signalsStore = { validOpportunities: [], waitOpportunities: [], lastUpdate: 0 };
+
+// POST /api/signals/publish — called by RobotCore via frontend
+app.post("/api/signals/publish", (req, res) => {
+  const { validOpportunities = [], waitOpportunities = [] } = req.body;
+  const now = Date.now();
+
+  // Keep only fresh signals (< 60s)
+  const fresh = validOpportunities.filter(op => op.emittedAt && (now - op.emittedAt) < 60000);
+
+  // Update frequency map for each valid signal
+  for (const op of fresh) {
+    if (op.symbol) signalFrequency.set(op.symbol, now);
+  }
+
+  signalsStore.validOpportunities = fresh;
+  signalsStore.waitOpportunities = waitOpportunities;
+  signalsStore.lastUpdate = now;
+
+  res.json({ ok: true, valid: fresh.length, wait: waitOpportunities.length });
+});
+
+// GET /api/signals — returns current signal store
+app.get("/api/signals", (req, res) => {
+  res.json(signalsStore);
+});
+
+// GET /api/signals/frequency — returns frequency map
+app.get("/api/signals/frequency", (req, res) => {
+  const obj = {};
+  for (const [symbol, ts] of signalFrequency) obj[symbol] = ts;
+  res.json(obj);
+});
+
+// ============================================================================
 // STATIC FRONTEND (Vite build)
 // ============================================================================
 

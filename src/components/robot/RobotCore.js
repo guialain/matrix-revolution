@@ -238,11 +238,24 @@ const RobotCore = {
     });
 
     const {
-      validOpportunities   = [],
+      validOpportunities:   rawValid = [],
       waitOpportunities    = [],
       blockedOpportunities = []
     } = filtered ?? {};
 
+    // Stamp each valid with emittedAt for freshness check
+    const validOpportunities = rawValid.map(op => ({ ...op, emittedAt: Date.now() }));
+
+    // Publish signals to server (fire-and-forget)
+    const _apiBase = typeof window !== "undefined"
+      ? (window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin)
+      : "http://localhost:3001";
+    fetch(`${_apiBase}/api/signals/publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ validOpportunities, waitOpportunities }),
+    }).catch(() => {});
 
     const allowed = validOpportunities.length > 0;
 

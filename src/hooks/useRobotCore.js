@@ -1,10 +1,15 @@
 // ============================================================================
 // useRobotCore.js
 // Rôle : Projection UI propre du RobotCore (NEO + TRINITY)
+//        + fetch signals from /api/signals every 800ms
 // ============================================================================
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import RobotCore from "../components/robot/RobotCore";
+
+const API_BASE = window.location.hostname === "localhost"
+  ? "http://localhost:3001"
+  : window.location.origin;
 
 // ---------------------------------------------------------------------------
 // ÉTAT PAR DÉFAUT (SAFE UI)
@@ -39,27 +44,50 @@ const EMPTY = {
 // ---------------------------------------------------------------------------
 export default function useRobotCore(snapshot) {
 
+  const [signals, setSignals] = useState({ validOpportunities: [], waitOpportunities: [] });
+
+  // Fetch signals from server every 800ms
+  useEffect(() => {
+    let active = true;
+
+    async function poll() {
+      try {
+        const res = await fetch(`${API_BASE}/api/signals`, { credentials: "include" });
+        if (res.ok && active) {
+          const data = await res.json();
+          setSignals({
+            validOpportunities: data.validOpportunities ?? [],
+            waitOpportunities:  data.waitOpportunities ?? [],
+          });
+        }
+      } catch { /* silent */ }
+    }
+
+    poll();
+    const id = setInterval(poll, 800);
+    return () => { active = false; clearInterval(id); };
+  }, []);
+
+  // RobotCore.run() still produces NEO + TRINITY analysis
+  const coreResult = useMemo(() => {
+    if (!snapshot) return null;
+    return RobotCore.run(snapshot);
+  }, [snapshot]);
+
+  // Merge: core analysis + server signals
   return useMemo(() => {
-    if (!snapshot) return EMPTY;
+    if (!coreResult) return EMPTY;
 
-    const result = RobotCore.run(snapshot);
-    if (!result) return EMPTY;
-
-    const neo     = result.neo ?? {};
-    const trinity = result.trinity ?? {};
+    const neo     = coreResult.neo ?? {};
+    const trinity = coreResult.trinity ?? {};
     const asset   = neo.asset ?? {};
     const macro   = asset.macro ?? {};
 
     // -----------------------------------------------------------------------
-    // NORMALISATION TRINITY (SAFE – NON DESTRUCTIVE)
+    // SIGNALS FROM SERVER (authoritative)
     // -----------------------------------------------------------------------
-    const validOps = Array.isArray(trinity.validOpportunities)
-      ? trinity.validOpportunities.map(op => ({ ...op }))
-      : [];
-
-    const waitOps = Array.isArray(trinity.waitOpportunities)
-      ? trinity.waitOpportunities.map(op => ({ ...op }))
-      : [];
+    const validOps = signals.validOpportunities.map(op => ({ ...op }));
+    const waitOps  = signals.waitOpportunities.map(op => ({ ...op }));
 
     const closeOps = Array.isArray(trinity.closePositions)
       ? trinity.closePositions.map(p => ({
@@ -72,13 +100,13 @@ export default function useRobotCore(snapshot) {
         }))
       : [];
 
-    const allowed = Boolean(trinity.allowed);
+    const allowed = validOps.length > 0;
 
     // -----------------------------------------------------------------------
     // PROJECTION UI
     // -----------------------------------------------------------------------
     return {
-      finalDecision: result.finalDecision ?? "WAIT",
+      finalDecision: allowed ? "VALID" : "WAIT",
 
       structureSignal: asset.structure?.signal    ?? "Neutral",
       structureAlign:  asset.structure?.alignment ?? "Unknown",
@@ -101,5 +129,5 @@ export default function useRobotCore(snapshot) {
 
       _raw: { neo, trinity }
     };
-  }, [snapshot]);
+  }, [coreResult, signals]);
 }

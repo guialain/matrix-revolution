@@ -1,0 +1,85 @@
+/* =========================================================
+   PERFORMANCE — STYLES
+========================================================= */
+
+.perf-container {
+  flex-shrink: 0;
+  border: 1.5px solid rgba(0, 200, 100, 0.75);
+  border-radius: 8px;
+  background: #020508;
+  padding: 0 16px 12px;
+  box-sizing: border-box;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+
+.perf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: rgba(0, 200, 100, 0.15);
+  padding: 6px 12px;
+  border-bottom: 1px solid rgba(0, 200, 100, 0.75);
+  border-radius: 8px 8px 0 0;
+  margin: 0 -16px;
+  width: calc(100% + 32px);
+  box-sizing: border-box;
+}
+
+.perf-header-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #00ff88;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.perf-header-date {
+  font-size: 12px;
+  font-weight: 800;
+  color: #00ff88;
+  letter-spacing: 0.08em;
+}
+
+/* ─── KPI GRID ───────────────────────────────────────────── */
+
+.perf-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* ─── STAT BOX ───────────────────────────────────────────── */
+
+.perf-stat-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 200, 100, 0.08);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.perf-stat-label {
+  font-size: 10px;
+  color: #e8e6e0;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.perf-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e8e6e0;
+}
+
+.perf-stat-sub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-left: auto;
+}

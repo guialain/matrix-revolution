@@ -20,11 +20,11 @@
   flex: 1 1 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: minmax(0, 1fr);
   gap: 16px;
   padding: 16px;
   min-height: 0;
   overflow: hidden;
-  align-items: stretch;
 }
 
 /* ─── COLUMN ─────────────────────────────────────────────── */
@@ -34,6 +34,7 @@
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  max-height: 100%;
   overflow: hidden;
 }
 
@@ -44,6 +45,14 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   flex-shrink: 0;
+}
+
+/* ─── CLOSED TRADES SCROLL WRAPPER ───────────────────────── */
+
+.closedtrades-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* ─── ERROR / LOADING STATES ─────────────────────────────── */

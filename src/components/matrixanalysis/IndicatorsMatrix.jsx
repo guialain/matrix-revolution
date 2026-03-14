@@ -130,7 +130,7 @@ export default function IndicatorsMatrix() {
       <div className="im-grid">
 
         {/* HEADER ROW */}
-        <div className="im-row-label" />
+        <div className="im-row-label im-header">NEOMATRIX</div>
         {TFS.map(tf => (
           <div key={tf} className="im-header">{tf}</div>
         ))}

@@ -24,20 +24,29 @@
 
 .im-header {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 500;
   color: #00ff88;
   text-align: center;
-  padding: 12px 2px;
-  background: rgba(0, 200, 100, 0.04);
+  padding: 6px 12px;
+  background: rgba(0, 200, 100, 0.15);
   border-bottom: 1px solid rgba(0, 200, 100, 0.15);
   letter-spacing: 0.15em;
+}
+
+.im-row-label.im-header {
+  font-size: 12px;
+  font-weight: 500;
+  color: #00ff88;
+  letter-spacing: 0.15em;
+  background: rgba(0, 200, 100, 0.15);
+  text-align: center;
 }
 
 /* ─── ROW LABEL ──────────────────────────────────────────── */
 
 .im-row-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 400;
   color: #c8d8e8;
   padding: 3px 8px;
   display: flex;
@@ -52,7 +61,7 @@
 
 .im-cell {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 400;
   text-align: center;
   padding: 3px 2px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);

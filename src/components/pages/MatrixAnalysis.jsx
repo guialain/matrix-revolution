@@ -7,7 +7,8 @@ import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
 import AccountLevels from "../matrixanalysis/AccountLevels";
 import MarketTrend from "../matrixanalysis/MarketTrend";
 import ConvergenceMultiTF from "../matrixanalysis/ConvergenceMultiTF";
-import DailyStats from "../matrixanalysis/DailyStats";
+import Performance from "../matrixanalysis/Performance";
+import ClosedTrades from "../matrixanalysis/ClosedTrades";
 
 // styles
 import "../../styles/stylespages/matrixanalysis.css";
@@ -64,7 +65,10 @@ export default function MatrixAnalysis() {
         </div>
 
         <div className="matrix-col">
-          <DailyStats account={snapshot?.account} />
+          <Performance account={snapshot?.account} />
+          <div className="closedtrades-scroll">
+            <ClosedTrades />
+          </div>
         </div>
 
       </div>

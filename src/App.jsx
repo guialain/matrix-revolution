@@ -13,14 +13,14 @@ export default function App() {
 
   if (!ready) {
     return (
-      <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+      <div className="h-screen bg-black text-white">
         Loading MT5…
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-black text-white">
       <Header snapshot={snapshot} />
 
       <Routes>

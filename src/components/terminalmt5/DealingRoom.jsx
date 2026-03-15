@@ -5,10 +5,13 @@ import OrderController from "../robot/engines/controller/OrderController";
 import { getRiskConfig } from "../robot/engines/config/RiskConfig";
 import "../../styles/stylesterminalMT5/dealingroom.css";
 import { sendOrderToMT5 } from "../../utilitaires/sendMT5Instructions";
+import useTradingMode from "../../hooks/useTradingMode";
 
 
 
 export default function DealingRoom({ draftDeal, dealLocked, onOrderSent }) {
+
+  const { mode } = useTradingMode();
 
   // ================= STATE =================
   const [side, setSide] = useState(null);
@@ -283,21 +286,30 @@ const refreshSLTP = () => {
 
   // ================= RENDER =================
   return (
-    <div className="dealing-room">
+    <div className={`dealing-room ${mode === "AUTO" ? "dealing-room-auto" : ""}`}>
       <div className="box-title">Dealing Room</div>
 
+      {/* AUTO MODE OVERLAY */}
+      {mode === "AUTO" && (
+        <div className="dealing-auto-overlay">
+          <div className="dealing-auto-icon">⚡</div>
+          <div className="dealing-auto-label">AUTO TRADING ACTIVE</div>
+          <div className="dealing-auto-sub">Orders sent directly to MT5</div>
+        </div>
+      )}
+
       {/* EMPTY STATE */}
-      {!draftDeal && (
+      {mode !== "AUTO" && !draftDeal && (
         <div className="deal-empty">En attente d'une opportunité</div>
       )}
 
       {/* LOADING STATE */}
-      {isLoadingSymbol && (
+      {mode !== "AUTO" && isLoadingSymbol && (
         <div className="deal-empty">Chargement {draftDeal.symbol}…</div>
       )}
 
       {/* READONLY DEAL DISPLAY */}
-      {draftDeal && !isLoadingSymbol && (
+      {mode !== "AUTO" && draftDeal && !isLoadingSymbol && (
         <>
           {/* ASSET */}
           <div className="asset-readonly">
@@ -344,7 +356,7 @@ const refreshSLTP = () => {
       )}
 
 
-      {draftDeal && (
+      {mode !== "AUTO" && draftDeal && (
         <>
           {/* SEPARATOR */}
           <div className="deal-separator" />

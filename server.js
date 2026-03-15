@@ -715,6 +715,28 @@ app.get("/api/signals/frequency", (req, res) => {
 });
 
 // ============================================================================
+// TRADING MODE (MANUAL / AUTO — persisted per user)
+// ============================================================================
+
+const tradingMode = {};  // { key: "MANUAL" | "AUTO" }
+
+app.get("/api/trading-mode", (req, res) => {
+  const key = getSignalKey(req);
+  res.json({ mode: tradingMode[key] ?? "MANUAL" });
+});
+
+app.post("/api/trading-mode", (req, res) => {
+  const key = getSignalKey(req);
+  const { mode } = req.body ?? {};
+  if (mode !== "MANUAL" && mode !== "AUTO") {
+    return res.status(400).json({ error: "INVALID_MODE" });
+  }
+  tradingMode[key] = mode;
+  console.log(`[trading-mode] key=${key} → ${mode}`);
+  res.json({ mode });
+});
+
+// ============================================================================
 // STATIC FRONTEND (Vite build)
 // ============================================================================
 

@@ -10,6 +10,8 @@ const API_BASE = window.location.hostname === "localhost" ? "http://localhost:30
 import useRobotCore from "../../hooks/useRobotCore";
 import useExposureByAsset from "../../hooks/useExposureByAsset";
 import buildCapitalAllocation from "../../hooks/buildCapitalAllocation";
+import useTradingMode from "../../hooks/useTradingMode";
+import useAutoTrader from "../../hooks/useAutoTrader";
 
 // components
 import DealPipeline from "../terminalmt5/DealPipeline";
@@ -29,6 +31,8 @@ export default function TerminalMT5({ snapshot }) {
   // ==========================================================================
 
   const robot = useRobotCore(snapshot);
+  const { mode } = useTradingMode();
+  useAutoTrader(mode, robot, snapshot);
 
   const { rows: exposureData, total: totalExposure } =
     useExposureByAsset(snapshot, { topN: 7, minPct: 0.03 });

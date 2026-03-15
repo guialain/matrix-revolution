@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { NavLink } from "react-router-dom";
+import useTradingMode from "../../hooks/useTradingMode";
 import "../../styles/stylespages/header.css";
 
 // ============================================================================
@@ -25,6 +26,7 @@ const ASSET_META = {
 
 export default function Header({ snapshot }) {
 
+  const { mode } = useTradingMode();
   const data = snapshot;
   const ready = Boolean(snapshot);
 
@@ -215,6 +217,12 @@ const marketStatus = useMemo(() => {
       </span>
 
     </div>
+  </div>
+
+  {/* ================= TRADING MODE ================= */}
+  <div className={`trading-mode-badge ${mode.toLowerCase()}`}>
+    <span className={`trading-mode-dot ${mode.toLowerCase()}`} />
+    TRADING MODE: {mode}
   </div>
 
   {/* ================= RIGHT ================= */}

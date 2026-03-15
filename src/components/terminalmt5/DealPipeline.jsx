@@ -2,9 +2,22 @@
 
 import React, { useState } from "react";
 import useTrinityVoice from "../../hooks/useTrinityVoice";
+import useTradingMode from "../../hooks/useTradingMode";
 import "../../styles/stylesterminalMT5/dealpipeline.css";
 
 export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
+
+  // ================= TRADING MODE =================
+  const { mode, setMode } = useTradingMode();
+  const [showAutoConfirm, setShowAutoConfirm] = useState(false);
+
+  const handleToggleMode = () => {
+    if (mode === "MANUAL") {
+      setShowAutoConfirm(true);
+    } else {
+      setMode("MANUAL");
+    }
+  };
 
   // ================= EXTRACTION TRINITY =================
   const {
@@ -92,7 +105,43 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
         >
           {muted ? "🔇" : "🔊"}
         </button>
+
+        <div className="auto-toggle-wrapper">
+          <button
+            className={`auto-toggle-btn ${mode.toLowerCase()}`}
+            onClick={handleToggleMode}
+          >
+            <span className={`auto-toggle-label ${mode === "MANUAL" ? "active" : ""}`}>MANUAL</span>
+            <span className={`auto-toggle-label ${mode === "AUTO" ? "active" : ""}`}>AUTO</span>
+          </button>
+        </div>
       </div>
+
+      {/* ================= AUTO CONFIRM MODAL ================= */}
+      {showAutoConfirm && (
+        <div className="auto-confirm-overlay" onClick={() => setShowAutoConfirm(false)}>
+          <div className="auto-confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="auto-confirm-title">ENABLE AUTO TRADING</div>
+            <p className="auto-confirm-text">
+              Orders will be sent directly to MT5 without manual confirmation.
+            </p>
+            <div className="auto-confirm-actions">
+              <button
+                className="auto-confirm-cancel"
+                onClick={() => setShowAutoConfirm(false)}
+              >
+                CANCEL
+              </button>
+              <button
+                className="auto-confirm-ok"
+                onClick={() => { setMode("AUTO"); setShowAutoConfirm(false); }}
+              >
+                CONFIRM
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="pipeline-grid-2col">
 

@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
 import { getRiskConfig } from "../components/robot/engines/config/RiskConfig";
 import { getAssetClass } from "../components/classification/AssetClassification";
 import CapitalAllocation from "../components/robot/engines/trading/CapitalAllocation";
+import SignalFrequency from "../components/robot/engines/trading/SignalFrequency";
 import { sendOrderToMT5 } from "../utilitaires/sendMT5Instructions";
 
 // ============================================================================
@@ -283,7 +284,14 @@ export default function useAutoTrader(mode, robot, snapshot) {
       if (lastSent && (now - lastSent) < DEDUP_WINDOW_MS) continue;
 
       // ==================================================================
-      // GUARD G7 — Asset class known (CapitalAllocation prerequisite)
+      // GUARD G7 — Frequency cooldown (5 min per symbol after trade)
+      // ==================================================================
+      if (!SignalFrequency.canEmit(op.symbol)) {
+        continue;
+      }
+
+      // ==================================================================
+      // GUARD G8 — Asset class known (CapitalAllocation prerequisite)
       // ==================================================================
       const assetClass = getAssetClass(op.symbol);
       if (!assetClass) {
@@ -292,7 +300,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       }
 
       // ==================================================================
-      // GUARD G8 — ValidateSize: price + atr valid
+      // GUARD G9 — ValidateSize: price + atr valid
       // ==================================================================
       const price = Number(op.close);
       const atr   = Number(op.atr_h1);
@@ -302,7 +310,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       const cfg = getRiskConfig(op.symbol);
 
       // ==================================================================
-      // GUARD G9 — ValidateSize: contractSize valid
+      // GUARD G10 — ValidateSize: contractSize valid
       // ==================================================================
       if (!Number.isFinite(cfg.contractSize) || cfg.contractSize <= 0) {
         console.log(`[AUTO-TRADER] SKIP ${op.symbol} — invalid contractSize`);
@@ -329,7 +337,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       }
 
       // ==================================================================
-      // GUARD G10 — ValidateAllocation + CapitalAllocation.checkTrade
+      // GUARD G11 — ValidateAllocation + CapitalAllocation.checkTrade
       // ==================================================================
       const allocResult = validateAllocation(
         op.symbol, lots, notional, equity, openPositions, cfg
@@ -361,7 +369,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       }
 
       // ==================================================================
-      // GUARD G11 — ValidateTPSL: sense check (SL/TP correct side of price)
+      // GUARD G12 — ValidateTPSL: sense check (SL/TP correct side of price)
       // ==================================================================
       if (!validateTPSL(op.side, price, sltp.sl, sltp.tp)) {
         console.log(
@@ -399,6 +407,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       sendOrderToMT5(order)
         .then(() => {
           console.log(`[AUTO-TRADER] OK — ${order.side} ${order.symbol}`);
+          SignalFrequency._setCache(order.symbol, Date.now());
         })
         .catch(err => {
           console.error(`[AUTO-TRADER] FAIL — ${order.side} ${order.symbol}:`, err);

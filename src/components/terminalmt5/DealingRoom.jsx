@@ -6,6 +6,7 @@ import { getRiskConfig } from "../robot/engines/config/RiskConfig";
 import "../../styles/stylesterminalMT5/dealingroom.css";
 import { sendOrderToMT5 } from "../../utilitaires/sendMT5Instructions";
 import useTradingMode from "../../hooks/useTradingMode";
+import SignalFrequency from "../robot/engines/trading/SignalFrequency";
 
 
 
@@ -436,6 +437,7 @@ const sendTp = tp;
                 })
                   .then(() => {
                     setOrderStatus("OK");
+                    SignalFrequency._setCache(mt5Symbol, Date.now());
                     if (onOrderSent) onOrderSent(mt5Symbol);
                   })
                   .catch(() => setOrderStatus("ERROR"))

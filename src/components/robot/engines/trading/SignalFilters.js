@@ -1,18 +1,18 @@
 // ============================================================================
-// SignalFilters.js — M5 MICRO CONTRARY FILTER (v2.6)
+// SignalFilters.js — M5 MICRO CONTRARY FILTER (v2.7)
 // Compatible VolatilityConfig.js
 // Détection : M1
 // Validation : M5
-// Cooldown trade : 5 minutes
 //
 // Politique volatilité :
-// BLOCK : low, explo
-// ALLOW : med, high
+// BLOCK : low
+// ALLOW : med, high, explo
+//
+// Cooldown : géré au moment du SEND (DealingRoom + useAutoTrader)
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
-import SignalFrequency from "./SignalFrequency";
 
 const SCORE_MIN_TRADE = 20;
 
@@ -217,8 +217,6 @@ if (!side) continue;
 const type = String(opp?.type ?? "").toUpperCase();
 const isContinuation = type === "CONTINUATION";
 
-const now = Date.now();
-
 // =========================================================
 // SCORE
 // =========================================================
@@ -229,22 +227,6 @@ waitOpportunities.push({
 ...opp,
 state: "LOW_SCORE",
 debugInfo: `score=${opp.score}`
-});
-
-continue;
-
-}
-
-// =========================================================
-// FREQUENCY (5 min entre deux VALID sur même asset)
-// =========================================================
-
-if (!SignalFrequency.canEmit(opp.symbol)) {
-
-waitOpportunities.push({
-...opp,
-state: "WAIT_FREQUENCY",
-debugInfo: "freq_5m"
 });
 
 continue;
@@ -439,8 +421,6 @@ continue;
 // =========================================================
 // VALID
 // =========================================================
-
-SignalFrequency.register(opp.symbol);
 
 validOpportunities.push({
 ...opp,

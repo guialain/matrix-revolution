@@ -103,10 +103,27 @@ export default function useRobotCore(snapshot) {
     // -----------------------------------------------------------------------
     // SIGNALS FROM SERVER (authoritative)
     // -----------------------------------------------------------------------
-    const validOps = signals.validOpportunities
-      .filter(op => SignalFrequency.canEmit(`${op.symbol}_${op.side}`))
-      .map(op => ({ ...op }));
-    const waitOps  = signals.waitOpportunities.map(op => ({ ...op }));
+    const validOps = [];
+    const cooldownOps = [];
+
+    signals.validOpportunities.forEach(op => {
+      const key = `${op.symbol}_${op.side}`;
+      if (SignalFrequency.canEmit(key)) {
+        validOps.push({ ...op });
+      } else {
+        cooldownOps.push({
+          ...op,
+          state: "WAIT_COOLDOWN",
+          waitReason: "COOLDOWN",
+          cooldownRemaining: SignalFrequency.getCooldownRemaining(key)
+        });
+      }
+    });
+
+    const waitOps = [
+      ...signals.waitOpportunities.map(op => ({ ...op })),
+      ...cooldownOps
+    ];
 
     const closeOps = Array.isArray(trinity.closePositions)
       ? trinity.closePositions.map(p => ({

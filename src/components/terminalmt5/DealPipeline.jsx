@@ -57,7 +57,12 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
     const type      = String(op.type ?? "").toUpperCase();          // CONTINUATION | REVERSAL
     const typeShort = type === "CONTINUATION" ? "CONT" : type === "REVERSAL" ? "REV" : type;
     const phase     = op.signalPhase ?? op.signalType ?? "";        // e.g. STRONG_UP / BUY_RSI_LOW
-    const waitState = String(op.state ?? "").replace(/^WAIT_/, ""); // e.g. M5_CONTRARY
+    const waitRaw   = String(op.state ?? "").replace(/^WAIT_/, ""); // e.g. M5_CONTRARY
+    const cdMs      = Number(op.cooldownRemaining);
+    const cdLabel   = cdMs > 0
+      ? `${Math.floor(cdMs / 60000)}m ${Math.floor((cdMs % 60000) / 1000)}s`
+      : "";
+    const waitState = cdLabel ? `${waitRaw} ${cdLabel}` : waitRaw;
 
     return (
       <div

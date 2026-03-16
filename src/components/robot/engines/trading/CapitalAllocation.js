@@ -20,8 +20,8 @@ const LEVERAGE_MAX = 20;
 // Poids par classe — alignés STRICTEMENT avec AssetClassification.js
 export const CLASS_WEIGHTS = {
 
-  INDEX:   0.40, // Indices
-  AGRI:    0.01, // Agriculture
+  INDEX:   0.43, // Indices
+  AGRI:    0.00, // Agriculture (disabled for testing)
   OIL_GAS: 0.08, // Oil & Gas
   METAL:   0.10, // Métaux
   FX:      0.25, // Forex

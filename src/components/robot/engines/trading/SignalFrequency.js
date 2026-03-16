@@ -25,6 +25,15 @@ const SignalFrequency = {
     return (Date.now() - last) >= COOLDOWN_MS;
   },
 
+  // Returns remaining cooldown in ms (0 if expired or unknown)
+  getCooldownRemaining(key) {
+    refreshFrequency();
+    const last = frequencyCache[key];
+    if (!last) return 0;
+    const remaining = COOLDOWN_MS - (Date.now() - last);
+    return remaining > 0 ? remaining : 0;
+  },
+
   // Record cooldown after real trade execution (local + server)
   recordCooldown(key) {
     frequencyCache[key] = Date.now();

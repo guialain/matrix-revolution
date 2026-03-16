@@ -18,7 +18,7 @@ const ValidateMargin = {
     const marginUsed  = Number(account?.marginUsed ?? 0);
 
     // Seuil TRINITY — CONSERVATEUR
-    const MIN_MARGIN_LEVEL = 550; // %
+    const MIN_MARGIN_LEVEL = 200; // %
 
     // ------------------------------------------------------------------------
     // Données manquantes

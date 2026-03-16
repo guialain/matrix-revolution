@@ -6,6 +6,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import RobotCore from "../components/robot/RobotCore";
+import SignalFrequency from "../components/robot/engines/trading/SignalFrequency";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
@@ -102,7 +103,9 @@ export default function useRobotCore(snapshot) {
     // -----------------------------------------------------------------------
     // SIGNALS FROM SERVER (authoritative)
     // -----------------------------------------------------------------------
-    const validOps = signals.validOpportunities.map(op => ({ ...op }));
+    const validOps = signals.validOpportunities
+      .filter(op => SignalFrequency.canEmit(`${op.symbol}_${op.side}`))
+      .map(op => ({ ...op }));
     const waitOps  = signals.waitOpportunities.map(op => ({ ...op }));
 
     const closeOps = Array.isArray(trinity.closePositions)

@@ -104,7 +104,7 @@ return false;
 
 if (side === "BUY") {
 
-if (zh1 !== null && zm5 !== null && zh1 > 1.9 && zm5 > 0.8)
+if (zh1 !== null && zm5 !== null && zh1 > 1.8 && zm5 > 1.6)
 return true;
 
 if (rsi > 65 && drsi > 5)
@@ -128,7 +128,7 @@ return true;
 
 if (side === "SELL") {
 
-if (zh1 !== null && zm5 !== null && zh1 < -1.9 && zm5 < -0.8)
+if (zh1 !== null && zm5 !== null && zh1 < -1.8 && zm5 < -1.6)
 return true;
 
 if (rsi < 35 && drsi < -5)
@@ -147,6 +147,23 @@ if (slopeWeak && microWeak)
 return true;
 
 }
+
+return false;
+
+}
+
+// =========================================================
+// M1 CONTRARY (micro spike — backtest v2.5)
+// =========================================================
+function isM1Contrary(opp, side) {
+
+const rsi  = num(opp?.rsi_m1);
+const drsi = num(opp?.drsi_m1);
+
+if (rsi === null || drsi === null) return false;
+
+if (side === "BUY"  && rsi > 65 && drsi > 0.5) return true;
+if (side === "SELL" && rsi < 35 && drsi < -0.5) return true;
 
 return false;
 
@@ -313,6 +330,18 @@ continue;
 
 }
 
+if (isM1Contrary(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M1_CONTRARY",
+debugInfo: "m1contrary_cont"
+});
+
+continue;
+
+}
+
 }
 
 // =========================================================
@@ -410,6 +439,20 @@ waitOpportunities.push({
 ...opp,
 state: "WAIT_M5_OVEREXTENDED",
 debugInfo: "m5overextended_rev"
+});
+
+continue;
+
+}
+
+// M1 MICRO SPIKE
+
+if (isM1Contrary(opp, side)) {
+
+waitOpportunities.push({
+...opp,
+state: "WAIT_M1_CONTRARY",
+debugInfo: "m1contrary_rev"
 });
 
 continue;

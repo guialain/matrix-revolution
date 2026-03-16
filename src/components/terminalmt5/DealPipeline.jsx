@@ -1,8 +1,9 @@
 // src/components/terminalmt5/DealPipeline.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import useTrinityVoice from "../../hooks/useTrinityVoice";
 import useTradingMode from "../../hooks/useTradingMode";
+import SignalFrequency from "../robot/engines/trading/SignalFrequency";
 import "../../styles/stylesterminalMT5/dealpipeline.css";
 
 export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
@@ -34,6 +35,15 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
 
   const [muted, setMuted] = useState(false);
 
+  // ================= COOLDOWN TICK (1s) =================
+  const hasCooldown = waitOpportunities.some(op => op.state === "WAIT_COOLDOWN");
+  const [cdTick, setCdTick] = useState(0);
+  useEffect(() => {
+    if (!hasCooldown) return;
+    const id = setInterval(() => setCdTick(t => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [hasCooldown]);
+
   // ================= 🔊 VOICE HOOK =================
   const trinityState = useTrinityVoice({
     valid: validOpportunities.length,
@@ -58,11 +68,17 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
     const typeShort = type === "CONTINUATION" ? "CONT" : type === "REVERSAL" ? "REV" : type;
     const phase     = op.signalPhase ?? op.signalType ?? "";        // e.g. STRONG_UP / BUY_RSI_LOW
     const waitRaw   = String(op.state ?? "").replace(/^WAIT_/, ""); // e.g. M5_CONTRARY
-    const cdMs      = Number(op.cooldownRemaining);
-    const cdLabel   = cdMs > 0
-      ? `${Math.floor(cdMs / 60000)}m ${Math.floor((cdMs % 60000) / 1000)}s`
-      : "";
-    const waitState = cdLabel ? `${waitRaw} ${cdLabel}` : waitRaw;
+    const isCooldown = op.state === "WAIT_COOLDOWN";
+    let waitState = waitRaw;
+    if (isCooldown) {
+      void cdTick; // force re-eval on tick
+      const cdMs = SignalFrequency.getCooldownRemaining(`${op.symbol}_${op.side}`);
+      if (cdMs > 0) {
+        const m = Math.floor(cdMs / 60000);
+        const s = Math.floor((cdMs % 60000) / 1000);
+        waitState = `${waitRaw} ${m}m ${String(s).padStart(2, "0")}s`;
+      }
+    }
 
     return (
       <div

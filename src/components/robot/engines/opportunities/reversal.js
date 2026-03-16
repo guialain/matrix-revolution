@@ -332,6 +332,9 @@ if (
         slope_m5:  num(data[i]?.slope_m5),
         dslope_m5: num(data[i]?.dslope_m5),
         drsi_m5:   num(data[i]?.drsi_m5),
+
+        rsi_m1:    num(data[i]?.rsi_m1),
+        drsi_m1:   num(data[i]?.drsi_m1),
       };
 
       const scoreFn = side === "BUY" ? scoreReversalBuy : scoreReversalSell;

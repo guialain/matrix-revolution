@@ -104,7 +104,7 @@ return false;
 
 if (side === "BUY") {
 
-if (zh1 !== null && zm5 !== null && zh1 > 1.8 && zm5 > 1.6)
+if (zh1 !== null && zm5 !== null && zh1 > 1.8 && zm5 > 1.8)
 return true;
 
 if (rsi > 65 && drsi > 5)
@@ -128,7 +128,7 @@ return true;
 
 if (side === "SELL") {
 
-if (zh1 !== null && zm5 !== null && zh1 < -1.8 && zm5 < -1.6)
+if (zh1 !== null && zm5 !== null && zh1 < -1.8 && zm5 < -1.8)
 return true;
 
 if (rsi < 35 && drsi < -5)
@@ -159,11 +159,10 @@ function isM1Contrary(opp, side) {
 
 const rsi  = num(opp?.rsi_m1);
 const drsi = num(opp?.drsi_m1);
-
 if (rsi === null || drsi === null) return false;
 
-if (side === "BUY"  && rsi > 65 && drsi > 0.5) return true;
-if (side === "SELL" && rsi < 35 && drsi < -0.5) return true;
+if (side === "BUY"  && rsi > 68 && drsi > 0.5) return true;
+if (side === "SELL" && rsi < 32 && drsi < -0.5) return true;
 
 return false;
 
@@ -357,7 +356,7 @@ const zm5 = num(opp?.zscore_m5);
 
 // ZSCORE EXTENSION
 
-if (side === "BUY" && zm5 !== null && zm5 > 0.7) {
+if (side === "BUY" && zm5 !== null && zm5 > 1.9) {
 
 waitOpportunities.push({
 ...opp,
@@ -369,7 +368,7 @@ continue;
 
 }
 
-if (side === "SELL" && zm5 !== null && zm5 < -0.7) {
+if (side === "SELL" && zm5 !== null && zm5 < -1.9) {
 
 waitOpportunities.push({
 ...opp,

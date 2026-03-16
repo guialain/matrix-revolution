@@ -462,6 +462,8 @@ app.get("/api/mt5data", (req, res) => {
           dslope_m5:       num(r.dslope_m5),
           zscore_m5:       num(r.zscore_m5),
           drsi_m5:         num(r.drsi_m5),
+          rsi_m1:          num(r.rsi_m1),
+          drsi_m1:         num(r.drsi_m1),
           rsi_h1_min5:     num(r.rsi_h1_min5),
           rsi_h1_max5:     num(r.rsi_h1_max5),
           atr_m15:         num(r.atr_m15),
@@ -684,9 +686,16 @@ app.post("/api/signals/publish", (req, res) => {
 
   const { validOpportunities = [], waitOpportunities = [] } = req.body;
   const now = Date.now();
+  const existing = signalsStore[key].validOpportunities;
 
-  // Keep only fresh signals (< 60s)
-  const fresh = validOpportunities.filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
+  // Preserve original emittedAt — don't reset on re-publish
+  const fresh = validOpportunities.map(op => {
+    const prev = existing.find(e => e.symbol === op.symbol && e.side === op.side);
+    return {
+      ...op,
+      emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
+    };
+  }).filter(op => op.emittedAt && (now - op.emittedAt) < 15000);
 
   signalsStore[key].validOpportunities = fresh;
   signalsStore[key].waitOpportunities = waitOpportunities;

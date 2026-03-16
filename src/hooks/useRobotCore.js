@@ -4,13 +4,18 @@
 //        + fetch signals from /api/signals every 800ms
 // ============================================================================
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import RobotCore from "../components/robot/RobotCore";
 import SignalFrequency from "../components/robot/engines/trading/SignalFrequency";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
   : window.location.origin;
+
+// ---------------------------------------------------------------------------
+// PUBLISH THROTTLE — 15s per symbol to avoid flooding /api/signals/publish
+// ---------------------------------------------------------------------------
+const PUBLISH_COOLDOWN_MS = 15_000;
 
 // ---------------------------------------------------------------------------
 // ÉTAT PAR DÉFAUT (SAFE UI)
@@ -46,6 +51,8 @@ const EMPTY = {
 export default function useRobotCore(snapshot) {
 
   const [signals, setSignals] = useState({ validOpportunities: [], waitOpportunities: [] });
+  const lastPublishRef = useRef({});    // { "SYMBOL_SIDE": timestampMs }
+  const persistedValid = useRef({});    // { "SYMBOL_SIDE": { op, expiresAt } }
 
   // Fetch signals from server every 800ms
   useEffect(() => {
@@ -75,7 +82,7 @@ export default function useRobotCore(snapshot) {
     return RobotCore.run(snapshot);
   }, [snapshot]);
 
-  // POST signals to server (fire-and-forget, outside render)
+  // POST signals to server (fire-and-forget, throttled per symbol)
   useEffect(() => {
     if (!coreResult) return;
     const trinity = coreResult.trinity ?? {};
@@ -83,11 +90,24 @@ export default function useRobotCore(snapshot) {
     const wait  = trinity.waitOpportunities ?? [];
     if (!valid.length && !wait.length) return;
 
+    const now = Date.now();
+    const last = lastPublishRef.current;
+
+    const throttledValid = valid.filter(op => {
+      const key = `${op.symbol}_${op.side}`;
+      if (last[key] && (now - last[key]) < PUBLISH_COOLDOWN_MS) return false;
+      last[key] = now;
+      return true;
+    });
+
+    // Always publish wait ops (lightweight), but only fresh valid ops
+    if (!throttledValid.length && !wait.length) return;
+
     fetch(`${API_BASE}/api/signals/publish`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ validOpportunities: valid, waitOpportunities: wait }),
+      body: JSON.stringify({ validOpportunities: throttledValid, waitOpportunities: wait }),
     }).catch(() => {});
   }, [coreResult]);
 
@@ -125,6 +145,30 @@ export default function useRobotCore(snapshot) {
       ...cooldownOps
     ];
 
+    // -----------------------------------------------------------------------
+    // PERSIST VALID OPS (survive 15s between cycles)
+    // -----------------------------------------------------------------------
+    const now = Date.now();
+
+    for (const op of validOps) {
+      const key = `${op.symbol}_${op.side}`;
+      if (!persistedValid.current[key]) {
+        persistedValid.current[key] = { op, expiresAt: now + 15000 };
+      } else {
+        persistedValid.current[key].op = op; // update data, keep original expiry
+      }
+    }
+
+    const finalValidOps = Object.values(persistedValid.current)
+      .filter(({ expiresAt }) => expiresAt > now)
+      .map(({ op }) => op);
+
+    for (const key of Object.keys(persistedValid.current)) {
+      if (persistedValid.current[key].expiresAt <= now) {
+        delete persistedValid.current[key];
+      }
+    }
+
     const closeOps = Array.isArray(trinity.closePositions)
       ? trinity.closePositions.map(p => ({
           symbol:     p.symbol,
@@ -136,7 +180,7 @@ export default function useRobotCore(snapshot) {
         }))
       : [];
 
-    const allowed = validOps.length > 0;
+    const allowed = finalValidOps.length > 0;
 
     // -----------------------------------------------------------------------
     // PROJECTION UI
@@ -159,7 +203,7 @@ export default function useRobotCore(snapshot) {
       topOpportunities: neo.topOpportunities ?? null,
 
       allowed,
-      validOpportunities: validOps,
+      validOpportunities: finalValidOps,
       waitOpportunities:  waitOps,
       closePositions:     closeOps,
 

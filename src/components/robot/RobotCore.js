@@ -82,6 +82,8 @@ const RobotCore = {
       zscore_m5:   row.zscore_m5    ?? null,
       drsi_m5:     row.drsi_m5      ?? null,
       rsi_m5:      row.rsi_m5       ?? null,
+      rsi_m1:      row.rsi_m1       ?? null,
+      drsi_m1:     row.drsi_m1      ?? null,
       rsi_h1_min5: row.rsi_h1_min5  ?? null,
       rsi_h1_max5: row.rsi_h1_max5  ?? null,
       intraday_change: row.intraday_change ?? null,
@@ -170,6 +172,8 @@ const RobotCore = {
         slope_h1: rawRow?.slope_h1 ?? null,
         rsi_m5:   rawRow?.rsi_m5   ?? null,
         slope_m5: rawRow?.slope_m5 ?? null,
+        rsi_m1:   rawRow?.rsi_m1   ?? null,
+        drsi_m1:  rawRow?.drsi_m1  ?? null,
 
 
         eligibility,
@@ -243,8 +247,11 @@ const RobotCore = {
       blockedOpportunities = []
     } = filtered ?? {};
 
-    // Stamp each valid with emittedAt for freshness check
-    const validOpportunities = rawValid.map(op => ({ ...op, emittedAt: Date.now() }));
+    // Stamp each valid with emittedAt only if not already set
+    const validOpportunities = rawValid.map(op => ({
+      ...op,
+      emittedAt: op.emittedAt ?? Date.now()
+    }));
 
     const allowed = validOpportunities.length > 0;
 

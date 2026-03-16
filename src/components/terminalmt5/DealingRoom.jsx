@@ -418,9 +418,13 @@ const refreshSLTP = () => {
                   setPreview(true);
                   return;
                 }
-                // Refresh SL/TP from live price before sending
+                if (!SignalFrequency.canEmit(`${mt5Symbol}_${side}`)) {
+                  setOrderStatus("COOLDOWN");
+                  return;
+                }
+
                 const sendSl = sl;
-const sendTp = tp;
+                const sendTp = tp;
                 setSl(sendSl);
                 setTp(sendTp);
 
@@ -437,7 +441,7 @@ const sendTp = tp;
                 })
                   .then(() => {
                     setOrderStatus("OK");
-                    SignalFrequency._setCache(mt5Symbol, Date.now());
+                    SignalFrequency.recordCooldown(`${mt5Symbol}_${side}`);
                     if (onOrderSent) onOrderSent(mt5Symbol);
                   })
                   .catch(() => setOrderStatus("ERROR"))
@@ -471,7 +475,7 @@ const sendTp = tp;
 
           {orderStatus && (
             <div className={`order-status ${orderStatus.toLowerCase()}`}>
-              {orderStatus === "OK" ? "ORDER SENT ✔" : "ORDER FAILED ✖"}
+              {orderStatus === "OK" ? "ORDER SENT ✔" : orderStatus === "COOLDOWN" ? "COOLDOWN — wait 5 min" : "ORDER FAILED ✖"}
             </div>
           )}
         </>

@@ -688,11 +688,6 @@ app.post("/api/signals/publish", (req, res) => {
   // Keep only fresh signals (< 60s)
   const fresh = validOpportunities.filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
 
-  // Update frequency map for each valid signal
-  for (const op of fresh) {
-    if (op.symbol) signalFrequency[key][op.symbol] = now;
-  }
-
   signalsStore[key].validOpportunities = fresh;
   signalsStore[key].waitOpportunities = waitOpportunities;
   signalsStore[key].lastUpdate = now;
@@ -712,6 +707,16 @@ app.get("/api/signals/frequency", (req, res) => {
   const key = getSignalKey(req);
   ensureSignalBuckets(key);
   res.json(signalFrequency[key]);
+});
+
+// POST /api/signals/cooldown — record trade cooldown after real execution
+app.post("/api/signals/cooldown", (req, res) => {
+  const key = getSignalKey(req);
+  ensureSignalBuckets(key);
+  const { symbol } = req.body ?? {};
+  if (!symbol) return res.status(400).json({ error: "MISSING_SYMBOL" });
+  signalFrequency[key][symbol] = Date.now();
+  res.json({ ok: true, symbol });
 });
 
 // ============================================================================

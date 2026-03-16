@@ -4,7 +4,7 @@ const API_BASE = typeof window !== "undefined"
 
 const COOLDOWN_MS = 5 * 60 * 1000;
 
-let frequencyCache = {};   // symbol → timestamp
+let frequencyCache = {};   // key → timestamp
 let lastFetch = 0;
 
 function refreshFrequency() {
@@ -18,16 +18,22 @@ function refreshFrequency() {
 }
 
 const SignalFrequency = {
-  canEmit(symbol) {
+  canEmit(key) {
     refreshFrequency(); // fire-and-forget, uses cached data
-    const last = frequencyCache[symbol];
+    const last = frequencyCache[key];
     if (!last) return true;
     return (Date.now() - last) >= COOLDOWN_MS;
   },
-  // register is handled server-side via publish
-  register() {},
-  _setCache(symbol, timestamp) {
-    frequencyCache[symbol] = timestamp;
+
+  // Record cooldown after real trade execution (local + server)
+  recordCooldown(key) {
+    frequencyCache[key] = Date.now();
+    fetch(`${API_BASE}/api/signals/cooldown`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ symbol: key })
+    }).catch(() => {});
   }
 };
 

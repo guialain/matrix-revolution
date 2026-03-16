@@ -286,7 +286,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // ==================================================================
       // GUARD G7 — Frequency cooldown (5 min per symbol after trade)
       // ==================================================================
-      if (!SignalFrequency.canEmit(op.symbol)) {
+      if (!SignalFrequency.canEmit(`${op.symbol}_${op.side}`)) {
         continue;
       }
 
@@ -407,7 +407,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       sendOrderToMT5(order)
         .then(() => {
           console.log(`[AUTO-TRADER] OK — ${order.side} ${order.symbol}`);
-          SignalFrequency._setCache(order.symbol, Date.now());
+          SignalFrequency.recordCooldown(`${order.symbol}_${order.side}`);
         })
         .catch(err => {
           console.error(`[AUTO-TRADER] FAIL — ${order.side} ${order.symbol}:`, err);

@@ -468,6 +468,8 @@ app.get("/api/mt5data", (req, res) => {
           rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),
           atr_m15:         num(r.atr_m15),
           spread:          num(r.spread),
+          tick_size:       num(r.tick_size),
+          digits:          num(r.digits),
         }))
     };
 
@@ -553,7 +555,7 @@ app.get("/api/debug/cache", (req, res) => {
 
 app.post("/api/mt5order", (req, res) => {
   try {
-    const { symbol, side, lots, sl, tp, tf, source, timestamp } = req.body ?? {};
+    const { symbol, side, lots, sl, tp, slDist, tpDist, tf, source, timestamp } = req.body ?? {};
 
     if (!symbol || !side || !Number.isFinite(lots) || !Number.isFinite(sl) || !Number.isFinite(tp)) {
       return res.status(400).json({ error: "INVALID_ORDER_PAYLOAD", payload: req.body });
@@ -565,6 +567,8 @@ app.post("/api/mt5order", (req, res) => {
 
     const order = {
       symbol, side, lots, sl, tp,
+      slDist:    Number.isFinite(slDist) ? slDist : null,
+      tpDist:    Number.isFinite(tpDist) ? tpDist : null,
       tf:        tf ?? null,
       source:    source ?? "NEO_MATRIX",
       timestamp: timestamp ?? Date.now()

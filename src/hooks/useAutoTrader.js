@@ -127,7 +127,7 @@ function validateAllocation(symbol, lots, notional, equity, openPositions, cfg) 
 // 4. COMPUTE SL / TP (mirrors DealingRoom.computeSLTP)
 // ============================================================================
 
-function computeSLTP(op, cfg) {
+function computeSLTP(op, cfg, snapshot) {
   const price = Number(op.close);
   const atr   = Number(op.atr_h1);
   if (!Number.isFinite(price) || price <= 0) return null;
@@ -136,21 +136,33 @@ function computeSLTP(op, cfg) {
   const slDist = atr * cfg.slAtr;
   const tpDist = atr * cfg.tpAtr;
 
+  // Spread buffer from live scan
+  const scanRow = snapshot?.marketWatch?.find(r => r.symbol === op.symbol);
+  const spread  = Number(scanRow?.spread ?? 0);
+
   let sl, tp;
   if (op.side === "BUY") {
-    sl = price - slDist;
-    tp = price + tpDist;
+    sl = price - slDist - spread;
+    tp = price + tpDist + spread;
   } else {
-    sl = price + slDist;
-    tp = price - tpDist;
+    sl = price + slDist + spread;
+    tp = price - tpDist - spread;
   }
 
-  // Round to reasonable precision (mirrors DealingRoom digits logic)
-  const digits = Math.max(2, Math.ceil(-Math.log10(atr)) + 2);
-  sl = Number(sl.toFixed(digits));
-  tp = Number(tp.toFixed(digits));
+  // Normalize like DealingRoom.normalizePrice — use tick_size + digits from scan
+  const tick    = Number(scanRow?.tick_size ?? 0);
+  const digits  = Number.isFinite(scanRow?.digits) ? scanRow.digits
+                : Math.max(0, Math.ceil(-Math.log10(atr)) + 2);
 
-  return { sl, tp };
+  if (tick > 0) {
+    sl = Number((Math.round(sl / tick) * tick).toFixed(digits));
+    tp = Number((Math.round(tp / tick) * tick).toFixed(digits));
+  } else {
+    sl = Number(sl.toFixed(digits));
+    tp = Number(tp.toFixed(digits));
+  }
+
+  return { sl, tp, slDist, tpDist };
 }
 
 // ============================================================================
@@ -250,17 +262,8 @@ export default function useAutoTrader(mode, robot, snapshot) {
       return;
     }
 
-    // ====================================================================
-    // GUARD G3 — Max open positions
-    // ====================================================================
-    if (openPositions.length >= MAX_OPEN_POSITIONS) {
-      console.log(
-        `[AUTO-TRADER] BLOCKED — ${openPositions.length} open (max ${MAX_OPEN_POSITIONS})`
-      );
-      return;
-    }
+    // (G3 max positions + G5 duplicate symbol removed — cooldown is the constraint)
 
-    const openSymbols = new Set(openPositions.map(p => p.symbol));
     const now = Date.now();
 
     for (const op of validOps) {
@@ -270,11 +273,6 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // ==================================================================
       if (!op.symbol || !op.side || !op.emittedAt) continue;
       if (op.side !== "BUY" && op.side !== "SELL") continue;
-
-      // ==================================================================
-      // GUARD G5 — No duplicate symbol in open positions
-      // ==================================================================
-      if (openSymbols.has(op.symbol)) continue;
 
       // ==================================================================
       // GUARD G6 — Dedup: same symbol+side within cooldown window
@@ -362,7 +360,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // ==================================================================
       // STEP 3 — Compute SL / TP (mirrors DealingRoom.computeSLTP)
       // ==================================================================
-      const sltp = computeSLTP(op, cfg);
+      const sltp = computeSLTP(op, cfg, snapshot);
       if (!sltp) {
         console.log(`[AUTO-TRADER] SKIP ${op.symbol} — SL/TP computation failed`);
         continue;
@@ -388,6 +386,8 @@ export default function useAutoTrader(mode, robot, snapshot) {
         lots,
         sl:       sltp.sl,
         tp:       sltp.tp,
+        slDist:   sltp.slDist,
+        tpDist:   sltp.tpDist,
         signalTF: "H1"
       };
 

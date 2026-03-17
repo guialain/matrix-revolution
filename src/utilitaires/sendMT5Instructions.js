@@ -27,6 +27,8 @@ export function sendOrderToMT5(order) {
       lots: order.lots,
       sl: order.sl,
       tp: order.tp,
+      slDist: order.slDist ?? null,
+      tpDist: order.tpDist ?? null,
       tf: order.signalTF ?? null,
       source: "NEO_MATRIX",
       timestamp: Date.now()

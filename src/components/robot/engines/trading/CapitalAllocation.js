@@ -22,10 +22,10 @@ export const CLASS_WEIGHTS = {
 
   INDEX:   0.43, // Indices
   AGRI:    0.00, // Agriculture (disabled for testing)
-  OIL_GAS: 0.08, // Oil & Gas
+  OIL_GAS: 0.05, // Oil & Gas
   METAL:   0.10, // Métaux
-  FX:      0.25, // Forex
-  CRYPTO:  0.14  // Crypto
+  FX:      0.30, // Forex
+  CRYPTO:  0.12  // Crypto
 };
 
 // ============================================================================

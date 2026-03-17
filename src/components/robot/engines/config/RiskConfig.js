@@ -113,25 +113,25 @@ export const RISK_CONFIG = {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 70.71,
     targetLeveragePerTrade: 0.2,
-    contractSize: 1, refPrice: 63931.05, baseToEUR: 1.000,
+    contractSize: 10, refPrice: 63931.05, baseToEUR: 1.000,
   },
   BTCUSD: {
     tpAtr: 0.60, slAtr: 1.75,
     spread: 51.3,
     targetLeveragePerTrade: 0.2,
-    contractSize: 1, refPrice: 73747.20, baseToEUR: 0.847,
+    contractSize: 10, refPrice: 73747.20, baseToEUR: 0.847,
   },
   BTCJPY: {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 12942,
     targetLeveragePerTrade: 0.2,
-    contractSize: 1, refPrice: 11733376, baseToEUR: 0.00613,
+    contractSize: 10, refPrice: 11733376, baseToEUR: 0.00613,
   },
   ETHUSD: {
     tpAtr: 0.73, slAtr: 1.63,
     spread: 1.9,
     targetLeveragePerTrade: 0.2,
-    contractSize: 1, refPrice: 2318.06, baseToEUR: 0.847,
+    contractSize: 100, refPrice: 2318.06, baseToEUR: 0.847,
   },
 
   // ── METAL ─────────────────────────────────────────────────────────────────

@@ -42,15 +42,15 @@ const ALLOWED_SYMBOLS = [
   // FX
   "EURUSD", "GBPUSD", "USDJPY", "EURJPY", "GBPJPY", "AUDUSD",
   // INDEX
-  "UK_100", "GERMANY_40", "FRANCE_40", "US_30", "US_500", "US_TECH100", "JAPAN_225",
+  "UK_100", "GERMANY_40", "FRANCE_40", "US_30", "US_500", "US_TECH100",
   // CRYPTO
   "BTCEUR", "BTCUSD", "BTCJPY", "ETHUSD",
   // METAL
-  "GOLD", "SILVER", "PALLADIUM", "PLATINUM", "COPPER",
+  "GOLD", "SILVER", "PALLADIUM", "PLATINUM",
   // OIL & GAS
   "CRUDEOIL", "NATURAL_GAS", "HEATING_OIL",
   // AGRI
-  "COCOA", "COFFEE_C", "WHEAT"
+  "COCOA", "COFFEE_C"
 ];
 
 // ============================================================================

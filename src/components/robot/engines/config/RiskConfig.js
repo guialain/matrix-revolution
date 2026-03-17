@@ -65,7 +65,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.60, slAtr: 1.50,
+    tpAtr: 0.60, slAtr: 2.00,
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 10398.5, baseToEUR: 1.076,
@@ -112,25 +112,25 @@ export const RISK_CONFIG = {
   BTCEUR: {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 70.71,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 0.2,
     contractSize: 1, refPrice: 63931.05, baseToEUR: 1.000,
   },
   BTCUSD: {
     tpAtr: 0.60, slAtr: 1.75,
     spread: 51.3,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 0.2,
     contractSize: 1, refPrice: 73747.20, baseToEUR: 0.847,
   },
   BTCJPY: {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 12942,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 0.2,
     contractSize: 1, refPrice: 11733376, baseToEUR: 0.00613,
   },
   ETHUSD: {
     tpAtr: 0.73, slAtr: 1.63,
     spread: 1.9,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 0.2,
     contractSize: 1, refPrice: 2318.06, baseToEUR: 0.847,
   },
 

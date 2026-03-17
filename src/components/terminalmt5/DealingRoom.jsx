@@ -124,6 +124,10 @@ const normalizePrice = (price) => {
     }
   }
 
+  const INDEX_SYMBOLS = ['UK_100','GERMANY_40','FRANCE_40','US_30','US_500','US_TECH100','JAPAN_225','ITALY_40'];
+  if (INDEX_SYMBOLS.includes(mt5Symbol)) {
+    return { sl: Math.round(slValue), tp: Math.round(tpValue) };
+  }
   return {
     sl: normalizePrice(slValue),
     tp: normalizePrice(tpValue)

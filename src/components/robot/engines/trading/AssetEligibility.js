@@ -39,12 +39,18 @@ function resolveMarket(assetclass) {
 }
 
 const ALLOWED_SYMBOLS = [
-  "EURUSD",
-  "GBPUSD",
-  "USDJPY",
-  "EURJPY",
-  "GBPJPY",
-  "AUDUSD"
+  // FX
+  "EURUSD", "GBPUSD", "USDJPY", "EURJPY", "GBPJPY", "AUDUSD",
+  // INDEX
+  "UK_100", "GERMANY_40", "FRANCE_40", "US_30", "US_500", "US_TECH100", "JAPAN_225",
+  // CRYPTO
+  "BTCEUR", "BTCUSD", "BTCJPY", "ETHUSD",
+  // METAL
+  "GOLD", "SILVER", "PALLADIUM", "PLATINUM", "COPPER",
+  // OIL & GAS
+  "CRUDEOIL", "NATURAL_GAS", "HEATING_OIL",
+  // AGRI
+  "COCOA", "COFFEE_C", "WHEAT"
 ];
 
 // ============================================================================

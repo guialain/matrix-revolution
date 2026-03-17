@@ -422,7 +422,7 @@ if (isM5Contrary(opp, side)) {
 
 waitOpportunities.push({
 ...opp,
-state: "WAIT_MICRO",
+state: "WAIT_M5_CONTRARY",
 debugInfo: "m5contrary_rev"
 });
 

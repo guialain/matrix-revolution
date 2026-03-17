@@ -441,6 +441,7 @@ const refreshSLTP = () => {
                 })
                   .then(() => {
                     setOrderStatus("OK");
+                    console.log(`[COOLDOWN] recording ${mt5Symbol}_${side}`);
                     SignalFrequency.recordCooldown(`${mt5Symbol}_${side}`);
                     if (onOrderSent) onOrderSent(mt5Symbol);
                   })

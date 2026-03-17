@@ -38,6 +38,15 @@ function resolveMarket(assetclass) {
   }
 }
 
+const ALLOWED_SYMBOLS = [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "EURJPY",
+  "GBPJPY",
+  "AUDUSD"
+];
+
 // ============================================================================
 // CORE
 // ============================================================================
@@ -51,6 +60,14 @@ const AssetEligibility = {
         eligible: false,
         reasons: ["Missing asset symbol"],
         context: null
+      };
+    }
+
+    if (!ALLOWED_SYMBOLS.includes(symbol)) {
+      return {
+        eligible: false,
+        reasons: [`Symbol not in allowed list`],
+        context: { symbol }
       };
     }
 

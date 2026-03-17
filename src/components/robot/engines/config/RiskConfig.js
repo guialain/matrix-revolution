@@ -146,7 +146,7 @@ export const RISK_CONFIG = {
     tpAtr: 0.60, slAtr: 1.35,
     spread: 0.148,
     targetLeveragePerTrade: 0.5,
-    contractSize: 5000, refPrice: 80.880, baseToEUR: 0.847,
+    contractSize: 10000, refPrice: 80.880, baseToEUR: 0.847,
   },
   PALLADIUM: {
     tpAtr: 0.60, slAtr: 1.25,

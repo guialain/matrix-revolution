@@ -93,8 +93,8 @@ const RobotCore = {
     for (const row of topRows) {
       if (!row.symbol) continue;
       allOpps.push(
-        ...ContinuationStrategy.evaluate([row], { scoreMin: 12 }),
-        ...ReversalStrategy.evaluate([row], { scoreMin: 12 })
+        ...ContinuationStrategy.evaluate([row], { scoreMin: 30 }),
+        ...ReversalStrategy.evaluate([row], { scoreMin: 30 })
       );
     }
 

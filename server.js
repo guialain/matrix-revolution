@@ -184,13 +184,13 @@ function updateCache() {
   const openPosRaw     = readAllRowsCSV(path.join(MT5_DIR, FILES.openpositions));
   const closedRaw      = readAllRowsCSV(path.join(MT5_DIR, FILES.closedtrades));
 
-  if (accountRaw)        CACHE.account      = accountRaw;
-  if (assetRaw)          CACHE.asset        = assetRaw;
-  if (indiRaw)           CACHE.indicators   = indiRaw;
-  if (macroRaw)          CACHE.macro        = macroRaw;
-  if (scanRaw?.length)   CACHE.scan         = scanRaw;
-  if (openPosRaw?.length) CACHE.openpositions = openPosRaw;
-  if (closedRaw?.length) CACHE.closedtrades = closedRaw;
+  CACHE.account       = accountRaw;
+  CACHE.asset         = assetRaw;
+  CACHE.indicators    = indiRaw;
+  CACHE.macro         = macroRaw;
+  CACHE.scan          = scanRaw ?? [];
+  CACHE.openpositions = openPosRaw ?? [];
+  CACHE.closedtrades  = closedRaw ?? [];
 
   CACHE.lastUpdate = Date.now();
 }

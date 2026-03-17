@@ -142,7 +142,7 @@ const ReversalStrategy = (() => {
       // Zone extrême — décélération suffit, slope peut encore être positif
       if (rsi > deep) return dslope < -dslopeMin;
       // Zone semi — confirmation slope requise
-      if (rsi > semi) return slope <= 0 && dslope < -dslopeMin;
+      if (rsi > semi) return slope < 0.5 && dslope < -dslopeMin;
       return false;
     }
 
@@ -154,7 +154,7 @@ const ReversalStrategy = (() => {
       // Zone extrême — décélération suffit
       if (rsi < deep) return dslope > dslopeMin;
       // Zone semi — confirmation slope requise
-      if (rsi < semi) return slope >= 0 && dslope > dslopeMin;
+      if (rsi < semi) return slope > -0.5 && dslope > dslopeMin;
       return false;
     }
 
@@ -198,15 +198,11 @@ if (z === null || z > -1.2) return null;
 // ✅ MATURITY BLOCK — encore en accélération baissière
 // =========================================================
 
-if (
-  dyn.zscore !== null &&
-  dyn.dbbz !== null &&
-  dyn.dslope !== null &&
-  dyn.zscore < -1.8 &&
-  dyn.dbbz < -0.2 &&
-  dyn.dslope < -3.0
-)
-  return null;
+let bearishPressure = 0;
+if (dyn.zscore !== null && dyn.zscore < -1.8)  bearishPressure++;
+if (dyn.dbbz !== null   && dyn.dbbz < -0.2)    bearishPressure++;
+if (dyn.dslope !== null && dyn.dslope < -3.0)  bearishPressure++;
+if (bearishPressure >= 2) return null;
 
     return isEarlyBuyConfirmed(dyn, cfg) ? "BUY_EARLY" : "BUY";
   }
@@ -222,15 +218,11 @@ if (z === null || z < 1.2) return null;
 // ✅ MATURITY BLOCK — encore en accélération haussière
 // =========================================================
 
-if (
-  dyn.zscore !== null &&
-  dyn.dbbz !== null &&
-  dyn.dslope !== null &&
-  dyn.zscore > 1.8 &&
-  dyn.dbbz > 0.2 &&
-  dyn.dslope > 3.0
-)
-  return null;
+let bullishPressure = 0;
+if (dyn.zscore !== null && dyn.zscore > 1.8)  bullishPressure++;
+if (dyn.dbbz !== null   && dyn.dbbz > 0.2)    bullishPressure++;
+if (dyn.dslope !== null && dyn.dslope > 3.0)  bullishPressure++;
+if (bullishPressure >= 2) return null;
 
     return isEarlySellConfirmed(dyn, cfg) ? "SELL_EARLY" : "SELL";
   }

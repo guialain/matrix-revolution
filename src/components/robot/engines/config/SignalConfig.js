@@ -20,14 +20,11 @@ export const H1_REVERSAL_DEFAULTS = {
   rsiSellSemi: 65,  // borne basse zone secondaire SELL
 
   // ── SLOPE GATE ───────────────────────────────────────────────────
-  // slopeH1Min supprimé — géré par SlopeConfig (frontière flat/weak per-asset)
-  // dslopeH1MaxAbs supprimé — géré par SlopeConfig (frontière strong/extreme per-asset)
-  dslopeH1ReversalMin: 0.5,  // dslope_h1 minimal (momentum)
+  dslopeH1ReversalMin: 0.5,
 
   // ── EARLY FLIP ───────────────────────────────────────────────────
   flipSlopeMin:    1.0,
   flipDslopeMin:   1.0,
-  earlyScoreBonus: 20,
 
   // ── BB DERIVATIVE ────────────────────────────────────────────────
   dbbzBuyMin:  0.20,
@@ -47,19 +44,13 @@ export const H1_CONTINUATION_DEFAULTS = {
   phaseMatureSlopeMax:    5.0,
   phaseAccelDslopeMin:    1.5,
 
-  // ── SLOPE GATE ───────────────────────────────────────────────────
-  // slopeH1MinAbs supprimé — géré par SlopeConfig (frontière flat/weak per-asset)
-  // dslopeH1MaxAbs supprimé — géré par SlopeConfig (frontière strong/extreme per-asset)
-
   // ── ZONE RSI ─────────────────────────────────────────────────────
   rsiContMin: 35,
   rsiContMax: 65,
 
   // ── BB ───────────────────────────────────────────────────────────
- 
   zscoreH1BuyMax:  1.8,
- 
-   };
+};
 
 // ============================================================================
 // GETTER

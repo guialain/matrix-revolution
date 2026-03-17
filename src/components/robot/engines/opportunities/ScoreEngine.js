@@ -95,12 +95,12 @@ export function scoreReversalBuy(row) {
   const lobeExtreme = Math.pow(clamp((-zscore_h1 - 1.8) / 0.7, 0, 1), 0.5) * 15;
   const lobeMid     = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
                     * Math.pow(clamp((1.5 + zscore_h1) / 0.5, 0, 1), 1.2) * 11;
-  const lobeTail    = Math.pow(clamp(zscore_h1 / 1.0, 0, 1), 0.8)
-                    * Math.pow(clamp((2.0 - zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const zscoreScore = Math.max(lobeExtreme, lobeMid, lobeTail);
+  const zscoreScore = Math.max(lobeExtreme, lobeMid);
 
   // SLOPE + DSLOPE
-  const { slopeScore, dslopeScore } = scoreSlope(slope_h1, dslope_h1);
+  const zWeight     = clamp(-zscore_h1 / 2.0, 0, 1);
+  const slopeScore  = clamp(1 - Math.abs(slope_h1) / 5.0, 0, 1) * 20 * zWeight;
+  const dslopeScore = clamp(dslope_h1 / 5.0, -1, 1) * 10;
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
@@ -134,12 +134,12 @@ export function scoreReversalSell(row) {
   const lobeExtreme = Math.pow(clamp((zscore_h1 - 1.8) / 0.7, 0, 1), 0.5) * 15;
   const lobeMid     = Math.pow(clamp(zscore_h1 / 1.0, 0, 1), 0.8)
                     * Math.pow(clamp((1.5 - zscore_h1) / 0.5, 0, 1), 1.2) * 11;
-  const lobeTail    = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
-                    * Math.pow(clamp((2.0 + zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const zscoreScore = Math.max(lobeExtreme, lobeMid, lobeTail);
+  const zscoreScore = Math.max(lobeExtreme, lobeMid);
 
-  // SLOPE + DSLOPE (sell : slope négatif = bon signal)
-  const { slopeScore, dslopeScore } = scoreSlope(-slope_h1, -dslope_h1);
+  // SLOPE + DSLOPE
+  const zWeight     = clamp(zscore_h1 / 2.0, 0, 1);
+  const slopeScore  = clamp(1 - Math.abs(slope_h1) / 5.0, 0, 1) * 20 * zWeight;
+  const dslopeScore = clamp(-dslope_h1 / 5.0, -1, 1) * 10;
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
@@ -174,11 +174,12 @@ export function scoreContinuationBuy(row) {
   const rsiScore      = Math.max(lobeHigh, lobeHighEntry, neutral);
 
   // BBZ (0-15) — deux lobes symétriques ±1
-  const lobePlus  = Math.pow(clamp( zscore_h1 / 1.0, 0, 1), 0.8)
-                  * Math.pow(clamp((2.0 - zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const lobeMinus = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
-                  * Math.pow(clamp((2.0 + zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const zscoreScore = Math.max(lobePlus, lobeMinus);
+  const zWeight     = clamp((Math.abs(zscore_h1) - 0.3) / 1.7, 0, 1);
+  const lobePlus    = Math.pow(clamp( zscore_h1 / 1.0, 0, 1), 0.8)
+                    * Math.pow(clamp((2.0 - zscore_h1) / 1.0, 0, 1), 0.8) * 15;
+  const lobeMinus   = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
+                    * Math.pow(clamp((2.0 + zscore_h1) / 1.0, 0, 1), 0.8) * 15;
+  const zscoreScore = Math.max(lobePlus, lobeMinus) * zWeight;
 
   // SLOPE + DSLOPE
   const { slopeScore, dslopeScore } = scoreSlope(slope_h1, dslope_h1);
@@ -216,11 +217,12 @@ export function scoreContinuationSell(row) {
   const rsiScore = Math.max(lobeHigh, lobeLow, neutral);
 
   // BBZ (0-15) — deux lobes symétriques ±1
-  const lobePlus  = Math.pow(clamp( zscore_h1 / 1.0, 0, 1), 0.8)
-                  * Math.pow(clamp((2.0 - zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const lobeMinus = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
-                  * Math.pow(clamp((2.0 + zscore_h1) / 1.0, 0, 1), 0.8) * 15;
-  const zscoreScore = Math.max(lobePlus, lobeMinus);
+  const zWeight     = clamp((Math.abs(zscore_h1) - 0.3) / 1.7, 0, 1);
+  const lobePlus    = Math.pow(clamp( zscore_h1 / 1.0, 0, 1), 0.8)
+                    * Math.pow(clamp((2.0 - zscore_h1) / 1.0, 0, 1), 0.8) * 15;
+  const lobeMinus   = Math.pow(clamp(-zscore_h1 / 1.0, 0, 1), 0.8)
+                    * Math.pow(clamp((2.0 + zscore_h1) / 1.0, 0, 1), 0.8) * 15;
+  const zscoreScore = Math.max(lobePlus, lobeMinus) * zWeight;
 
   // SLOPE + DSLOPE (sell : slope négatif = bon signal)
   const { slopeScore, dslopeScore } = scoreSlope(-slope_h1, -dslope_h1);

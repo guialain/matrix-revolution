@@ -66,6 +66,8 @@ const ContinuationStrategy = (() => {
     if (slope_h1 === null || dslope_h1 === null || rsi_h1 === null)
       return null;
 
+    if (zscore_h1 !== null && Math.abs(zscore_h1) < 0.3) return null;
+
     const { slopeMin, slopeMax } = getSlopeLimits("BUY", symbol);
 
     // ✅ STRUCTURE FILTER — slope minimum requis (flat/weak boundary)
@@ -118,6 +120,8 @@ if (
 
     if (slope_h1 === null || dslope_h1 === null || rsi_h1 === null)
       return null;
+
+    if (zscore_h1 !== null && Math.abs(zscore_h1) < 0.3) return null;
 
     const { slopeMin, slopeMax } = getSlopeLimits("SELL", symbol);
 

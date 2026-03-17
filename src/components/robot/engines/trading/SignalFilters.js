@@ -104,8 +104,8 @@ return false;
 
 if (side === "BUY") {
 
-if (zh1 !== null && zm5 !== null && zh1 > 1.8 && zm5 > 1.8)
-return true;
+if (zh1 !== null && zh1 > 1.8) return true;
+if (zm5 !== null && zm5 > 1.8) return true;
 
 if (rsi > 65 && drsi > 5)
 return true;
@@ -128,8 +128,8 @@ return true;
 
 if (side === "SELL") {
 
-if (zh1 !== null && zm5 !== null && zh1 < -1.8 && zm5 < -1.8)
-return true;
+if (zh1 !== null && zh1 < -1.8) return true;
+if (zm5 !== null && zm5 < -1.8) return true;
 
 if (rsi < 35 && drsi < -5)
 return true;

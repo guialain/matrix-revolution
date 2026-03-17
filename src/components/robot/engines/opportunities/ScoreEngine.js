@@ -83,13 +83,13 @@ function scoreIntradayContinuation(symbol, intraday_change, side) {
 // ============================================================================
 export function scoreReversalBuy(row) {
   const {
-    symbol, rsi_h1_min5, zscore_h1,
+    symbol, rsi_h1_previouslow3, zscore_h1,
     slope_h1, dslope_h1,
     atr_m15, close, intraday_change
   } = row;
 
   // RSI (0-30) — oversold, limite à 35, score max à RSI=10
-  const rsiScore = Math.pow(clamp((35 - rsi_h1_min5) / 25, 0, 1), 0.67) * 30;
+  const rsiScore = Math.pow(clamp((35 - rsi_h1_previouslow3) / 25, 0, 1), 0.67) * 30;
 
   // BBZ (0-15)
   const lobeExtreme = Math.pow(clamp((-zscore_h1 - 1.8) / 0.7, 0, 1), 0.5) * 15;
@@ -122,13 +122,13 @@ export function scoreReversalBuy(row) {
 // ============================================================================
 export function scoreReversalSell(row) {
   const {
-    symbol, rsi_h1_max5, zscore_h1,
+    symbol, rsi_h1_previoushigh3, zscore_h1,
     slope_h1, dslope_h1,
     atr_m15, close, intraday_change
   } = row;
 
   // RSI (0-30) — overbought, limite à 65, score max à RSI=90
-  const rsiScore = Math.pow(clamp((rsi_h1_max5 - 65) / 25, 0, 1), 0.67) * 30;
+  const rsiScore = Math.pow(clamp((rsi_h1_previoushigh3 - 65) / 25, 0, 1), 0.67) * 30;
 
   // BBZ (0-15)
   const lobeExtreme = Math.pow(clamp((zscore_h1 - 1.8) / 0.7, 0, 1), 0.5) * 15;

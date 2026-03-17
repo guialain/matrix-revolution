@@ -197,8 +197,8 @@ return phase;
         signalPhase: phase,
 
         rsi_h1:      num(row?.rsi_h1),
-        rsi_h1_min5: num(row?.rsi_h1_min5),
-        rsi_h1_max5: num(row?.rsi_h1_max5),
+        rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
+        rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
         slope_h1:    num(row?.slope_h1),
         dslope_h1:   num(row?.dslope_h1),
         dz_h1:       num(row?.dz_h1),

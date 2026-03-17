@@ -464,8 +464,8 @@ app.get("/api/mt5data", (req, res) => {
           drsi_m5:         num(r.drsi_m5),
           rsi_m1:          num(r.rsi_m1),
           drsi_m1:         num(r.drsi_m1),
-          rsi_h1_min5:     num(r.rsi_h1_min5),
-          rsi_h1_max5:     num(r.rsi_h1_max5),
+          rsi_h1_previouslow3:  num(r.rsi_h1_previouslow3),
+          rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),
           atr_m15:         num(r.atr_m15),
           spread:          num(r.spread),
         }))

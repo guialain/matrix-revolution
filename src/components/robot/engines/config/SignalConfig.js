@@ -6,7 +6,7 @@
 // ============================================================================
 
 export const H1_REVERSAL_DEFAULTS = {
-  rsiWindowH1: 5,
+  rsiWindowH1: 3,
 
   // ── ZONES RSI ────────────────────────────────────────────────────
   //   rsi < rsiBuyMax              → zone principale BUY  (extrême bas)

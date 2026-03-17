@@ -84,8 +84,8 @@ const RobotCore = {
       rsi_m5:      row.rsi_m5       ?? null,
       rsi_m1:      row.rsi_m1       ?? null,
       drsi_m1:     row.drsi_m1      ?? null,
-      rsi_h1_min5: row.rsi_h1_min5  ?? null,
-      rsi_h1_max5: row.rsi_h1_max5  ?? null,
+      rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,
+      rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
       intraday_change: row.intraday_change ?? null,
     }));
 

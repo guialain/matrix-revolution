@@ -36,12 +36,12 @@ const ReversalStrategy = (() => {
   // ============================================================================
   // RSI WINDOW H1
   // ============================================================================
-  function getMinMaxRSI_H1(rows, i, bars = 5) {
+  function getMinMaxRSI_H1(rows, i, bars = 3) {
     const row = rows[i];
 
     // ── MODE LIVE : champs pré-calculés par MQL5 ──────────────────────────
-    const preMin  = num(row?.rsi_h1_min5);
-    const preMax  = num(row?.rsi_h1_max5);
+    const preMin  = num(row?.rsi_h1_previouslow3);
+    const preMax  = num(row?.rsi_h1_previoushigh3);
     const current = num(row?.rsi_h1);
 
     if (preMin !== null && preMax !== null && current !== null) {
@@ -142,7 +142,7 @@ const ReversalStrategy = (() => {
       // Zone extrême — décélération suffit, slope peut encore être positif
       if (rsi > deep) return dslope < -dslopeMin;
       // Zone semi — confirmation slope requise
-      if (rsi > semi) return slope <= -slopeMin && dslope < -dslopeMin;
+      if (rsi > semi) return slope <= 0 && dslope < -dslopeMin;
       return false;
     }
 
@@ -154,7 +154,7 @@ const ReversalStrategy = (() => {
       // Zone extrême — décélération suffit
       if (rsi < deep) return dslope > dslopeMin;
       // Zone semi — confirmation slope requise
-      if (rsi < semi) return slope >= slopeMin && dslope > dslopeMin;
+      if (rsi < semi) return slope >= 0 && dslope > dslopeMin;
       return false;
     }
 
@@ -192,7 +192,7 @@ const ReversalStrategy = (() => {
 
     // Position extrême requise
 const z = num(dyn?.zscore);
-if (z === null || z > -1.5) return null;
+if (z === null || z > -1.2) return null;
 
 // =========================================================
 // ✅ MATURITY BLOCK — encore en accélération baissière
@@ -216,7 +216,7 @@ if (
 
 // Position extrême requise
 const z = num(dyn?.zscore);
-if (z === null || z < 1.5) return null;
+if (z === null || z < 1.2) return null;
 
 // =========================================================
 // ✅ MATURITY BLOCK — encore en accélération haussière
@@ -240,14 +240,14 @@ if (
   // ============================================================================
   function detectBuyPhase(dyn, cfg) {
     const z = num(dyn?.zscore);
-    if (z === null || z > -1.5) return null;  // même guard que detectBuy
+    if (z === null || z > -1.2) return null;  // même guard que detectBuy
     const p = detectReversalPhase(dyn.slope, dyn.dslope, "BUY", cfg);
     return p ? `BUY_${p}` : null;
   }
 
   function detectSellPhase(dyn, cfg) {
     const z = num(dyn?.zscore);
-    if (z === null || z < 1.5) return null;   // même guard que detectSell
+    if (z === null || z < 1.2) return null;   // même guard que detectSell
     const p = detectReversalPhase(dyn.slope, dyn.dslope, "SELL", cfg);
     return p ? `SELL_${p}` : null;
   }
@@ -314,8 +314,8 @@ if (
         signalType,
 
         rsi_h1:      rsiStats.currentRSI,
-        rsi_h1_min5: rsiStats.minRSI,
-        rsi_h1_max5: rsiStats.maxRSI,
+        rsi_h1_previouslow3:  rsiStats.minRSI,
+        rsi_h1_previoushigh3: rsiStats.maxRSI,
         slope_h1:    dyn.slope,
         dslope_h1:   dyn.dslope,
         dz_h1:       dyn.dbbz,

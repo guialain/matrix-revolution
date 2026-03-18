@@ -52,7 +52,7 @@ export const RISK_CONFIG = {
   GBPJPY: {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 0.022,
-    targetLeveragePerTrade: 3,
+    targetLeveragePerTrade: 2,
     contractSize: 100000, refPrice: 212.116, baseToEUR: 1.076,
   },
   EURGBP: {

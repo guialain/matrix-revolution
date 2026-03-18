@@ -6,6 +6,7 @@
 
 import { getVolatilityRegime } from '../config/VolatilityConfig.js';
 import { INTRADAY_CONFIG }     from '../config/IntradayConfig.js';
+import { getSlopeConfig }      from '../config/SlopeConfig.js';
 
 // ============================================================================
 // HELPERS
@@ -15,6 +16,13 @@ const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 function getStrongMax(symbol) {
   const cfg = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
   return cfg.strongMax;
+}
+
+function getSlopeNorm(symbol) {
+  const cfg = getSlopeConfig(symbol);
+  const slopeMax = cfg.up_strong?.max ?? 5.0;
+  const slopeMin = Math.abs(cfg.down_strong?.min ?? -5.0);
+  return (slopeMax + slopeMin) / 2;
 }
 
 // ============================================================================
@@ -30,11 +38,12 @@ function scoreVolatility(symbol, atr_m15, close) {
 
 // ============================================================================
 // COMPOSANTE — SLOPE H1 (±20) + DSLOPE H1 (±10)
-// Normalisation : ±5 = max signal
+// Normalisation : up_strong/down_strong de SlopeConfig par asset
 // ============================================================================
-function scoreSlope(slope_h1, dslope_h1) {
-  const slopeScore  = clamp(slope_h1  / 5.0, -1, 1) * 20;
-  const dslopeScore = clamp(dslope_h1 / 5.0, -1, 1) * 10;
+function scoreSlope(symbol, slope_h1, dslope_h1) {
+  const norm = getSlopeNorm(symbol);
+  const slopeScore  = clamp(slope_h1  / norm, -1, 1) * 20;
+  const dslopeScore = clamp(dslope_h1 / norm, -1, 1) * 10;
   return { slopeScore, dslopeScore };
 }
 
@@ -103,9 +112,10 @@ export function scoreReversalBuy(row) {
   const zscoreScore = Math.max(lobeExtreme, lobeMid);
 
   // SLOPE + DSLOPE
+  const sNorm       = getSlopeNorm(symbol);
   const zWeight     = clamp(-zscore_h1 / 2.0, 0, 1);
-  const slopeScore  = clamp(1 - Math.abs(slope_h1) / 5.0, 0, 1) * 20 * zWeight;
-  const dslopeScore = clamp(dslope_h1 / 5.0, -1, 1) * 10;
+  const slopeScore  = clamp(1 - Math.abs(slope_h1) / sNorm, 0, 1) * 20 * zWeight;
+  const dslopeScore = clamp(dslope_h1 / sNorm, -1, 1) * 10;
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
@@ -142,9 +152,10 @@ export function scoreReversalSell(row) {
   const zscoreScore = Math.max(lobeExtreme, lobeMid);
 
   // SLOPE + DSLOPE
+  const sNorm       = getSlopeNorm(symbol);
   const zWeight     = clamp(zscore_h1 / 2.0, 0, 1);
-  const slopeScore  = clamp(1 - Math.abs(slope_h1) / 5.0, 0, 1) * 20 * zWeight;
-  const dslopeScore = clamp(-dslope_h1 / 5.0, -1, 1) * 10;
+  const slopeScore  = clamp(1 - Math.abs(slope_h1) / sNorm, 0, 1) * 20 * zWeight;
+  const dslopeScore = clamp(-dslope_h1 / sNorm, -1, 1) * 10;
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
@@ -187,7 +198,7 @@ export function scoreContinuationBuy(row) {
   const zscoreScore = Math.max(lobePlus, lobeMinus) * zWeight;
 
   // SLOPE + DSLOPE
-  const { slopeScore, dslopeScore } = scoreSlope(slope_h1, dslope_h1);
+  const { slopeScore, dslopeScore } = scoreSlope(symbol, slope_h1, dslope_h1);
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
@@ -230,7 +241,7 @@ export function scoreContinuationSell(row) {
   const zscoreScore = Math.max(lobePlus, lobeMinus) * zWeight;
 
   // SLOPE + DSLOPE (sell : slope négatif = bon signal)
-  const { slopeScore, dslopeScore } = scoreSlope(-slope_h1, -dslope_h1);
+  const { slopeScore, dslopeScore } = scoreSlope(symbol, -slope_h1, -dslope_h1);
 
   // VOLATILITY
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);

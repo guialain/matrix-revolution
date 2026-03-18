@@ -1,286 +1,355 @@
 // ============================================================================
 // SlopeConfig.js — Classification des régimes de slope H1, par actif
-// Calibration : P40/P60 (flat) — P20/P80 (weak) — P5/P95 (strong/extreme)
-// Source : données réelles M5, colonne slope_h1
+// Calibration : P40/P60 (flat) — P20/P80 (weak) — P97 (strong/extreme)
+// spike filter = P97 : au-delà → penser reversal, pas continuation
+// Source : données réelles H1, 12 mois (~6043 barres), slope RSI pondéré (period=5)
+// Recalibré le : 2026-03-18
 // ============================================================================
 
 export const SLOPE_CONFIG = {
 
-  // ── FX ────────────────────────────────────────────────────────────────────
+  // ── FX ───────────────────────────────────────────────────────────────────────
+
   EURUSD: {
-    flat:         { min: -0.8727, max:  0.7492  },
-    up_weak:      { min:  0.7492, max:  2.9089  },
-    up_strong:    { min:  2.9089, max:  5.2239  },
-    up_extreme:   { min:  5.2239, max:  Infinity },
-    down_weak:    { min: -2.9011, max: -0.8727  },
-    down_strong:  { min: -5.3606, max: -2.9011  },
-    down_extreme: { min: -Infinity, max: -5.3606 },
+    flat:         { min:  -0.6297, max:   0.7248  },
+    up_weak:      { min:   0.7248, max:   2.3453  },
+    up_strong:    { min:   2.3453, max:   5.4954  },
+    up_extreme:   { min:   5.4954, max:  Infinity },
+    down_weak:    { min:  -2.4024, max:  -0.6297  },
+    down_strong:  { min:  -4.8123, max:  -2.4024  },
+    down_extreme: { min: -Infinity, max:  -4.8123 },
   },
 
   GBPUSD: {
-    flat:         { min: -0.8141, max:  0.9241  },
-    up_weak:      { min:  0.9241, max:  2.8014  },
-    up_strong:    { min:  2.8014, max:  5.2455  },
-    up_extreme:   { min:  5.2455, max:  Infinity },
-    down_weak:    { min: -2.6866, max: -0.8141  },
-    down_strong:  { min: -5.3530, max: -2.6866  },
-    down_extreme: { min: -Infinity, max: -5.3530 },
+    flat:         { min:  -0.6039, max:   0.7441  },
+    up_weak:      { min:   0.7441, max:   2.2872  },
+    up_strong:    { min:   2.2872, max:   5.2982  },
+    up_extreme:   { min:   5.2982, max:  Infinity },
+    down_weak:    { min:  -2.3401, max:  -0.6039  },
+    down_strong:  { min:  -4.8119, max:  -2.3401  },
+    down_extreme: { min: -Infinity, max:  -4.8119 },
   },
 
   USDJPY: {
-    flat:         { min: -0.6069, max:  0.8387  },
-    up_weak:      { min:  0.8387, max:  2.3470  },
-    up_strong:    { min:  2.3470, max:  4.4481  },
-    up_extreme:   { min:  4.4481, max:  Infinity },
-    down_weak:    { min: -2.3730, max: -0.6069  },
-    down_strong:  { min: -5.0950, max: -2.3730  },
-    down_extreme: { min: -Infinity, max: -5.0950 },
+    flat:         { min:  -0.6826, max:   0.7747  },
+    up_weak:      { min:   0.7747, max:   2.3753  },
+    up_strong:    { min:   2.3753, max:   5.3799  },
+    up_extreme:   { min:   5.3799, max:  Infinity },
+    down_weak:    { min:  -2.3333, max:  -0.6826  },
+    down_strong:  { min:  -4.8714, max:  -2.3333  },
+    down_extreme: { min: -Infinity, max:  -4.8714 },
   },
 
   EURJPY: {
-    flat:         { min: -0.5644, max:  0.7899  },
-    up_weak:      { min:  0.7899, max:  2.1768  },
-    up_strong:    { min:  2.1768, max:  4.3671  },
-    up_extreme:   { min:  4.3671, max:  Infinity },
-    down_weak:    { min: -2.3464, max: -0.5644  },
-    down_strong:  { min: -5.0461, max: -2.3464  },
-    down_extreme: { min: -Infinity, max: -5.0461 },
+    flat:         { min:  -0.5967, max:   0.7816  },
+    up_weak:      { min:   0.7816, max:   2.3542  },
+    up_strong:    { min:   2.3542, max:   5.3330  },
+    up_extreme:   { min:   5.3330, max:  Infinity },
+    down_weak:    { min:  -2.3041, max:  -0.5967  },
+    down_strong:  { min:  -5.0059, max:  -2.3041  },
+    down_extreme: { min: -Infinity, max:  -5.0059 },
   },
 
   GBPJPY: {
-    flat:         { min: -0.3591, max:  0.8344  },
-    up_weak:      { min:  0.8344, max:  2.2946  },
-    up_strong:    { min:  2.2946, max:  4.6982  },
-    up_extreme:   { min:  4.6982, max:  Infinity },
-    down_weak:    { min: -2.3920, max: -0.3591  },
-    down_strong:  { min: -5.0324, max: -2.3920  },
-    down_extreme: { min: -Infinity, max: -5.0324 },
+    flat:         { min:  -0.6222, max:   0.7681  },
+    up_weak:      { min:   0.7681, max:   2.3658  },
+    up_strong:    { min:   2.3658, max:   5.1946  },
+    up_extreme:   { min:   5.1946, max:  Infinity },
+    down_weak:    { min:  -2.3072, max:  -0.6222  },
+    down_strong:  { min:  -4.7884, max:  -2.3072  },
+    down_extreme: { min: -Infinity, max:  -4.7884 },
   },
 
   EURGBP: {
-    flat:         { min: -0.7492, max:  0.6555  },
-    up_weak:      { min:  0.6555, max:  2.4912  },
-    up_strong:    { min:  2.4912, max:  5.2271  },
-    up_extreme:   { min:  5.2271, max:  Infinity },
-    down_weak:    { min: -2.6461, max: -0.7492  },
-    down_strong:  { min: -5.3868, max: -2.6461  },
-    down_extreme: { min: -Infinity, max: -5.3868 },
+    flat:         { min:  -0.6133, max:   0.6907  },
+    up_weak:      { min:   0.6907, max:   2.2317  },
+    up_strong:    { min:   2.2317, max:   5.7830  },
+    up_extreme:   { min:   5.7830, max:  Infinity },
+    down_weak:    { min:  -2.2926, max:  -0.6133  },
+    down_strong:  { min:  -4.8131, max:  -2.2926  },
+    down_extreme: { min: -Infinity, max:  -4.8131 },
   },
 
-  // ── INDEX ─────────────────────────────────────────────────────────────────
+  AUDUSD: {
+    flat:         { min:  -0.6552, max:   0.7009  },
+    up_weak:      { min:   0.7009, max:   2.3159  },
+    up_strong:    { min:   2.3159, max:   5.4661  },
+    up_extreme:   { min:   5.4661, max:  Infinity },
+    down_weak:    { min:  -2.3602, max:  -0.6552  },
+    down_strong:  { min:  -4.8322, max:  -2.3602  },
+    down_extreme: { min: -Infinity, max:  -4.8322 },
+  },
+
+  NZDUSD: {
+    flat:         { min:  -0.6893, max:   0.7721  },
+    up_weak:      { min:   0.7721, max:   2.3158  },
+    up_strong:    { min:   2.3158, max:   5.5389  },
+    up_extreme:   { min:   5.5389, max:  Infinity },
+    down_weak:    { min:  -2.4286, max:  -0.6893  },
+    down_strong:  { min:  -4.7600, max:  -2.4286  },
+    down_extreme: { min: -Infinity, max:  -4.7600 },
+  },
+
+  USDCAD: {
+    flat:         { min:  -0.6706, max:   0.6838  },
+    up_weak:      { min:   0.6838, max:   2.2972  },
+    up_strong:    { min:   2.2972, max:   5.2517  },
+    up_extreme:   { min:   5.2517, max:  Infinity },
+    down_weak:    { min:  -2.2271, max:  -0.6706  },
+    down_strong:  { min:  -4.6057, max:  -2.2271  },
+    down_extreme: { min: -Infinity, max:  -4.6057 },
+  },
+
+  // ── INDEX ────────────────────────────────────────────────────────────────────
+
   UK_100: {
-    flat:         { min: -0.6548, max:  1.0405  },
-    up_weak:      { min:  1.0405, max:  2.8842  },
-    up_strong:    { min:  2.8842, max:  5.2902  },
-    up_extreme:   { min:  5.2902, max:  Infinity },
-    down_weak:    { min: -2.7283, max: -0.6548  },
-    down_strong:  { min: -5.3923, max: -2.7283  },
-    down_extreme: { min: -Infinity, max: -5.3923 },
+    flat:         { min:  -0.6159, max:   0.7518  },
+    up_weak:      { min:   0.7518, max:   2.3065  },
+    up_strong:    { min:   2.3065, max:   5.4910  },
+    up_extreme:   { min:   5.4910, max:  Infinity },
+    down_weak:    { min:  -2.2801, max:  -0.6159  },
+    down_strong:  { min:  -4.8597, max:  -2.2801  },
+    down_extreme: { min: -Infinity, max:  -4.8597 },
   },
 
   GERMANY_40: {
-    flat:         { min: -0.6985, max:  0.8325  },
-    up_weak:      { min:  0.8325, max:  2.7191  },
-    up_strong:    { min:  2.7191, max:  5.2617  },
-    up_extreme:   { min:  5.2617, max:  Infinity },
-    down_weak:    { min: -2.4690, max: -0.6985  },
-    down_strong:  { min: -4.9954, max: -2.4690  },
-    down_extreme: { min: -Infinity, max: -4.9954 },
+    flat:         { min:  -0.5312, max:   0.7792  },
+    up_weak:      { min:   0.7792, max:   2.3590  },
+    up_strong:    { min:   2.3590, max:   5.5668  },
+    up_extreme:   { min:   5.5668, max:  Infinity },
+    down_weak:    { min:  -2.3325, max:  -0.5312  },
+    down_strong:  { min:  -5.1751, max:  -2.3325  },
+    down_extreme: { min: -Infinity, max:  -5.1751 },
   },
 
   FRANCE_40: {
-    flat:         { min: -0.5009, max:  0.9078  },
-    up_weak:      { min:  0.9078, max:  2.4026  },
-    up_strong:    { min:  2.4026, max:  4.4170  },
-    up_extreme:   { min:  4.4170, max:  Infinity },
-    down_weak:    { min: -2.0362, max: -0.5009  },
-    down_strong:  { min: -4.4933, max: -2.0362  },
-    down_extreme: { min: -Infinity, max: -4.4933 },
+    flat:         { min:  -0.6025, max:   0.7899  },
+    up_weak:      { min:   0.7899, max:   2.3815  },
+    up_strong:    { min:   2.3815, max:   5.5189  },
+    up_extreme:   { min:   5.5189, max:  Infinity },
+    down_weak:    { min:  -2.4069, max:  -0.6025  },
+    down_strong:  { min:  -4.9794, max:  -2.4069  },
+    down_extreme: { min: -Infinity, max:  -4.9794 },
   },
 
   US_30: {
-    flat:         { min: -0.7478, max:  1.1061  },
-    up_weak:      { min:  1.1061, max:  3.4252  },
-    up_strong:    { min:  3.4252, max:  6.2037  },
-    up_extreme:   { min:  6.2037, max:  Infinity },
-    down_weak:    { min: -2.9579, max: -0.7478  },
-    down_strong:  { min: -6.2404, max: -2.9579  },
-    down_extreme: { min: -Infinity, max: -6.2404 },
+    flat:         { min:  -0.6205, max:   0.6328  },
+    up_weak:      { min:   0.6328, max:   2.3113  },
+    up_strong:    { min:   2.3113, max:   6.1830  },
+    up_extreme:   { min:   6.1830, max:  Infinity },
+    down_weak:    { min:  -2.2373, max:  -0.6205  },
+    down_strong:  { min:  -5.2866, max:  -2.2373  },
+    down_extreme: { min: -Infinity, max:  -5.2866 },
   },
 
   US_500: {
-    flat:         { min: -0.6278, max:  1.1247  },
-    up_weak:      { min:  1.1247, max:  3.0888  },
-    up_strong:    { min:  3.0888, max:  5.6275  },
-    up_extreme:   { min:  5.6275, max:  Infinity },
-    down_weak:    { min: -2.6891, max: -0.6278  },
-    down_strong:  { min: -6.3245, max: -2.6891  },
-    down_extreme: { min: -Infinity, max: -6.3245 },
+    flat:         { min:  -0.5505, max:   0.8164  },
+    up_weak:      { min:   0.8164, max:   2.3997  },
+    up_strong:    { min:   2.3997, max:   5.5217  },
+    up_extreme:   { min:   5.5217, max:  Infinity },
+    down_weak:    { min:  -2.3360, max:  -0.5505  },
+    down_strong:  { min:  -5.2664, max:  -2.3360  },
+    down_extreme: { min: -Infinity, max:  -5.2664 },
   },
 
   US_TECH100: {
-    flat:         { min: -0.5502, max:  0.9580  },
-    up_weak:      { min:  0.9580, max:  3.0687  },
-    up_strong:    { min:  3.0687, max:  5.6138  },
-    up_extreme:   { min:  5.6138, max:  Infinity },
-    down_weak:    { min: -2.8780, max: -0.5502  },
-    down_strong:  { min: -6.6421, max: -2.8780  },
-    down_extreme: { min: -Infinity, max: -6.6421 },
+    flat:         { min:  -0.5345, max:   0.8321  },
+    up_weak:      { min:   0.8321, max:   2.3957  },
+    up_strong:    { min:   2.3957, max:   5.6057  },
+    up_extreme:   { min:   5.6057, max:  Infinity },
+    down_weak:    { min:  -2.3265, max:  -0.5345  },
+    down_strong:  { min:  -5.3371, max:  -2.3265  },
+    down_extreme: { min: -Infinity, max:  -5.3371 },
   },
 
-  // ── CRYPTO ────────────────────────────────────────────────────────────────
+  // ── CRYPTO ───────────────────────────────────────────────────────────────────
+
   BTCEUR: {
-    flat:         { min: -0.6778, max:  0.8229  },
-    up_weak:      { min:  0.8229, max:  2.6232  },
-    up_strong:    { min:  2.6232, max:  4.9469  },
-    up_extreme:   { min:  4.9469, max:  Infinity },
-    down_weak:    { min: -2.4728, max: -0.6778  },
-    down_strong:  { min: -5.3654, max: -2.4728  },
-    down_extreme: { min: -Infinity, max: -5.3654 },
+    flat:         { min:  -0.6215, max:   0.7071  },
+    up_weak:      { min:   0.7071, max:   2.3029  },
+    up_strong:    { min:   2.3029, max:   5.5756  },
+    up_extreme:   { min:   5.5756, max:  Infinity },
+    down_weak:    { min:  -2.2888, max:  -0.6215  },
+    down_strong:  { min:  -4.8784, max:  -2.2888  },
+    down_extreme: { min: -Infinity, max:  -4.8784 },
   },
 
   BTCUSD: {
-    flat:         { min: -0.6673, max:  0.7623  },
-    up_weak:      { min:  0.7623, max:  2.6187  },
-    up_strong:    { min:  2.6187, max:  4.8835  },
-    up_extreme:   { min:  4.8835, max:  Infinity },
-    down_weak:    { min: -2.5489, max: -0.6673  },
-    down_strong:  { min: -5.4614, max: -2.5489  },
-    down_extreme: { min: -Infinity, max: -5.4614 },
+    flat:         { min:  -0.6363, max:   0.7134  },
+    up_weak:      { min:   0.7134, max:   2.2917  },
+    up_strong:    { min:   2.2917, max:   5.5545  },
+    up_extreme:   { min:   5.5545, max:  Infinity },
+    down_weak:    { min:  -2.2675, max:  -0.6363  },
+    down_strong:  { min:  -4.8930, max:  -2.2675  },
+    down_extreme: { min: -Infinity, max:  -4.8930 },
   },
 
   BTCJPY: {
-    flat:         { min: -0.7849, max:  0.7097  },
-    up_weak:      { min:  0.7097, max:  2.3641  },
-    up_strong:    { min:  2.3641, max:  4.7224  },
-    up_extreme:   { min:  4.7224, max:  Infinity },
-    down_weak:    { min: -2.4761, max: -0.7849  },
-    down_strong:  { min: -5.4165, max: -2.4761  },
-    down_extreme: { min: -Infinity, max: -5.4165 },
+    flat:         { min:  -0.6244, max:   0.7333  },
+    up_weak:      { min:   0.7333, max:   2.2825  },
+    up_strong:    { min:   2.2825, max:   5.6010  },
+    up_extreme:   { min:   5.6010, max:  Infinity },
+    down_weak:    { min:  -2.3052, max:  -0.6244  },
+    down_strong:  { min:  -4.9474, max:  -2.3052  },
+    down_extreme: { min: -Infinity, max:  -4.9474 },
   },
 
   ETHUSD: {
-    flat:         { min: -0.6048, max:  0.7997  },
-    up_weak:      { min:  0.7997, max:  2.5253  },
-    up_strong:    { min:  2.5253, max:  4.6848  },
-    up_extreme:   { min:  4.6848, max:  Infinity },
-    down_weak:    { min: -2.3895, max: -0.6048  },
-    down_strong:  { min: -5.1627, max: -2.3895  },
-    down_extreme: { min: -Infinity, max: -5.1627 },
+    flat:         { min:  -0.6126, max:   0.7313  },
+    up_weak:      { min:   0.7313, max:   2.3126  },
+    up_strong:    { min:   2.3126, max:   5.3113  },
+    up_extreme:   { min:   5.3113, max:  Infinity },
+    down_weak:    { min:  -2.2117, max:  -0.6126  },
+    down_strong:  { min:  -5.0708, max:  -2.2117  },
+    down_extreme: { min: -Infinity, max:  -5.0708 },
   },
 
-  // ── METAL ─────────────────────────────────────────────────────────────────
+  // ── METAL ────────────────────────────────────────────────────────────────────
+
   GOLD: {
-    flat:         { min: -0.5691, max:  0.6381  },
-    up_weak:      { min:  0.6381, max:  2.0572  },
-    up_strong:    { min:  2.0572, max:  4.7547  },
-    up_extreme:   { min:  4.7547, max:  Infinity },
-    down_weak:    { min: -2.1552, max: -0.5691  },
-    down_strong:  { min: -5.2890, max: -2.1552  },
-    down_extreme: { min: -Infinity, max: -5.2890 },
+    flat:         { min:  -0.5971, max:   0.7883  },
+    up_weak:      { min:   0.7883, max:   2.2526  },
+    up_strong:    { min:   2.2526, max:   5.2166  },
+    up_extreme:   { min:   5.2166, max:  Infinity },
+    down_weak:    { min:  -2.2934, max:  -0.5971  },
+    down_strong:  { min:  -4.8774, max:  -2.2934  },
+    down_extreme: { min: -Infinity, max:  -4.8774 },
   },
 
   SILVER: {
-    flat:         { min: -0.5747, max:  0.7607  },
-    up_weak:      { min:  0.7607, max:  2.3079  },
-    up_strong:    { min:  2.3079, max:  4.1789  },
-    up_extreme:   { min:  4.1789, max:  Infinity },
-    down_weak:    { min: -2.3355, max: -0.5747  },
-    down_strong:  { min: -5.0464, max: -2.3355  },
-    down_extreme: { min: -Infinity, max: -5.0464 },
+    flat:         { min:  -0.5078, max:   0.8514  },
+    up_weak:      { min:   0.8514, max:   2.2906  },
+    up_strong:    { min:   2.2906, max:   5.0937  },
+    up_extreme:   { min:   5.0937, max:  Infinity },
+    down_weak:    { min:  -2.3017, max:  -0.5078  },
+    down_strong:  { min:  -5.0079, max:  -2.3017  },
+    down_extreme: { min: -Infinity, max:  -5.0079 },
   },
 
   PALLADIUM: {
-    flat:         { min: -0.5453, max:  0.9336  },
-    up_weak:      { min:  0.9336, max:  2.5272  },
-    up_strong:    { min:  2.5272, max:  4.8608  },
-    up_extreme:   { min:  4.8608, max:  Infinity },
-    down_weak:    { min: -2.2494, max: -0.5453  },
-    down_strong:  { min: -5.1773, max: -2.2494  },
-    down_extreme: { min: -Infinity, max: -5.1773 },
+    flat:         { min:  -0.6269, max:   0.7646  },
+    up_weak:      { min:   0.7646, max:   2.3834  },
+    up_strong:    { min:   2.3834, max:   5.3881  },
+    up_extreme:   { min:   5.3881, max:  Infinity },
+    down_weak:    { min:  -2.3367, max:  -0.6269  },
+    down_strong:  { min:  -4.9580, max:  -2.3367  },
+    down_extreme: { min: -Infinity, max:  -4.9580 },
   },
 
   PLATINUM: {
-    flat:         { min: -0.4540, max:  0.8661  },
-    up_weak:      { min:  0.8661, max:  2.3753  },
-    up_strong:    { min:  2.3753, max:  4.3182  },
-    up_extreme:   { min:  4.3182, max:  Infinity },
-    down_weak:    { min: -2.2272, max: -0.4540  },
-    down_strong:  { min: -4.9364, max: -2.2272  },
-    down_extreme: { min: -Infinity, max: -4.9364 },
+    flat:         { min:  -0.5922, max:   0.7513  },
+    up_weak:      { min:   0.7513, max:   2.2387  },
+    up_strong:    { min:   2.2387, max:   5.4935  },
+    up_extreme:   { min:   5.4935, max:  Infinity },
+    down_weak:    { min:  -2.3093, max:  -0.5922  },
+    down_strong:  { min:  -4.8433, max:  -2.3093  },
+    down_extreme: { min: -Infinity, max:  -4.8433 },
   },
 
-  // ── OIL & GAS ─────────────────────────────────────────────────────────────
+  COPPER: {
+    flat:         { min:  -0.5965, max:   0.6848  },
+    up_weak:      { min:   0.6848, max:   2.3032  },
+    up_strong:    { min:   2.3032, max:   5.5518  },
+    up_extreme:   { min:   5.5518, max:  Infinity },
+    down_weak:    { min:  -2.4228, max:  -0.5965  },
+    down_strong:  { min:  -4.7794, max:  -2.4228  },
+    down_extreme: { min: -Infinity, max:  -4.7794 },
+  },
+
+  // ── OIL & GAS ────────────────────────────────────────────────────────────────
+
   CrudeOIL: {
-    flat:         { min: -0.5558, max:  1.2456  },
-    up_weak:      { min:  1.2456, max:  3.2372  },
-    up_strong:    { min:  3.2372, max:  5.8287  },
-    up_extreme:   { min:  5.8287, max:  Infinity },
-    down_weak:    { min: -2.7134, max: -0.5558  },
-    down_strong:  { min: -6.0513, max: -2.7134  },
-    down_extreme: { min: -Infinity, max: -6.0513 },
+    flat:         { min:  -0.6228, max:   0.7153  },
+    up_weak:      { min:   0.7153, max:   2.3925  },
+    up_strong:    { min:   2.3925, max:   5.6883  },
+    up_extreme:   { min:   5.6883, max:  Infinity },
+    down_weak:    { min:  -2.3554, max:  -0.6228  },
+    down_strong:  { min:  -5.1228, max:  -2.3554  },
+    down_extreme: { min: -Infinity, max:  -5.1228 },
   },
 
   NATURAL_GAS: {
-    flat:         { min: -0.5498, max:  1.1298  },
-    up_weak:      { min:  1.1298, max:  3.0534  },
-    up_strong:    { min:  3.0534, max:  5.8242  },
-    up_extreme:   { min:  5.8242, max:  Infinity },
-    down_weak:    { min: -2.6255, max: -0.5498  },
-    down_strong:  { min: -5.2601, max: -2.6255  },
-    down_extreme: { min: -Infinity, max: -5.2601 },
+    flat:         { min:  -0.6156, max:   0.6364  },
+    up_weak:      { min:   0.6364, max:   2.2567  },
+    up_strong:    { min:   2.2567, max:   6.1134  },
+    up_extreme:   { min:   6.1134, max:  Infinity },
+    down_weak:    { min:  -2.2782, max:  -0.6156  },
+    down_strong:  { min:  -5.1049, max:  -2.2782  },
+    down_extreme: { min: -Infinity, max:  -5.1049 },
   },
 
   HEATING_OIL: {
-    flat:         { min: -0.6546, max:  1.3410  },
-    up_weak:      { min:  1.3410, max:  3.1815  },
-    up_strong:    { min:  3.1815, max:  5.4413  },
-    up_extreme:   { min:  5.4413, max:  Infinity },
-    down_weak:    { min: -2.6871, max: -0.6546  },
-    down_strong:  { min: -5.8286, max: -2.6871  },
-    down_extreme: { min: -Infinity, max: -5.8286 },
+    flat:         { min:  -0.6849, max:   0.7001  },
+    up_weak:      { min:   0.7001, max:   2.4313  },
+    up_strong:    { min:   2.4313, max:   5.7824  },
+    up_extreme:   { min:   5.7824, max:  Infinity },
+    down_weak:    { min:  -2.3410, max:  -0.6849  },
+    down_strong:  { min:  -5.0690, max:  -2.3410  },
+    down_extreme: { min: -Infinity, max:  -5.0690 },
   },
 
-  // ── AGRI ──────────────────────────────────────────────────────────────────
+  GASOLINE: {
+    flat:         { min:  -0.7381, max:   0.7456  },
+    up_weak:      { min:   0.7456, max:   2.4146  },
+    up_strong:    { min:   2.4146, max:   5.7238  },
+    up_extreme:   { min:   5.7238, max:  Infinity },
+    down_weak:    { min:  -2.3368, max:  -0.7381  },
+    down_strong:  { min:  -5.1724, max:  -2.3368  },
+    down_extreme: { min: -Infinity, max:  -5.1724 },
+  },
+
+  // ── AGRI ─────────────────────────────────────────────────────────────────────
+
   COCOA: {
-    flat:         { min: -0.6942, max:  0.6855  },
-    up_weak:      { min:  0.6855, max:  2.4605  },
-    up_strong:    { min:  2.4605, max:  4.8873  },
-    up_extreme:   { min:  4.8873, max:  Infinity },
-    down_weak:    { min: -2.4971, max: -0.6942  },
-    down_strong:  { min: -4.6902, max: -2.4971  },
-    down_extreme: { min: -Infinity, max: -4.6902 },
+    flat:         { min:  -0.5926, max:   0.8003  },
+    up_weak:      { min:   0.8003, max:   2.4499  },
+    up_strong:    { min:   2.4499, max:   5.5477  },
+    up_extreme:   { min:   5.5477, max:  Infinity },
+    down_weak:    { min:  -2.4047, max:  -0.5926  },
+    down_strong:  { min:  -5.0776, max:  -2.4047  },
+    down_extreme: { min: -Infinity, max:  -5.0776 },
   },
 
   COFFEE_C: {
-    flat:         { min: -0.7883, max:  0.7619  },
-    up_weak:      { min:  0.7619, max:  2.4912  },
-    up_strong:    { min:  2.4912, max:  4.9593  },
-    up_extreme:   { min:  4.9593, max:  Infinity },
-    down_weak:    { min: -2.5248, max: -0.7883  },
-    down_strong:  { min: -5.1265, max: -2.5248  },
-    down_extreme: { min: -Infinity, max: -5.1265 },
+    flat:         { min:  -0.7308, max:   0.7671  },
+    up_weak:      { min:   0.7671, max:   2.5409  },
+    up_strong:    { min:   2.5409, max:   5.5753  },
+    up_extreme:   { min:   5.5753, max:  Infinity },
+    down_weak:    { min:  -2.4444, max:  -0.7308  },
+    down_strong:  { min:  -5.0665, max:  -2.4444  },
+    down_extreme: { min: -Infinity, max:  -5.0665 },
   },
 
   WHEAT: {
-    flat:         { min: -0.7854, max:  1.0560  },
-    up_weak:      { min:  1.0560, max:  2.9483  },
-    up_strong:    { min:  2.9483, max:  5.7452  },
-    up_extreme:   { min:  5.7452, max:  Infinity },
-    down_weak:    { min: -2.9696, max: -0.7854  },
-    down_strong:  { min: -5.9408, max: -2.9696  },
-    down_extreme: { min: -Infinity, max: -5.9408 },
+    flat:         { min:  -0.6697, max:   0.6886  },
+    up_weak:      { min:   0.6886, max:   2.3308  },
+    up_strong:    { min:   2.3308, max:   5.9316  },
+    up_extreme:   { min:   5.9316, max:  Infinity },
+    down_weak:    { min:  -2.4089, max:  -0.6697  },
+    down_strong:  { min:  -4.9683, max:  -2.4089  },
+    down_extreme: { min: -Infinity, max:  -4.9683 },
+  },
+
+  COTTON_2: {
+    flat:         { min:  -0.7487, max:   0.6026  },
+    up_weak:      { min:   0.6026, max:   2.3828  },
+    up_strong:    { min:   2.3828, max:   5.9066  },
+    up_extreme:   { min:   5.9066, max:  Infinity },
+    down_weak:    { min:  -2.3749, max:  -0.7487  },
+    down_strong:  { min:  -4.9242, max:  -2.3749  },
+    down_extreme: { min: -Infinity, max:  -4.9242 },
   },
 
   // ── DEFAULT ───────────────────────────────────────────────────────────────
+
   default: {
-    flat:         { min: -0.65,   max:  0.90   },
-    up_weak:      { min:  0.90,   max:  2.60   },
-    up_strong:    { min:  2.60,   max:  5.00   },
-    up_extreme:   { min:  5.00,   max:  Infinity },
-    down_weak:    { min: -2.60,   max: -0.65   },
-    down_strong:  { min: -5.00,   max: -2.60   },
-    down_extreme: { min: -Infinity, max: -5.00 },
+    flat:         { min:  -0.6262, max:   0.7383  },
+    up_weak:      { min:   0.7383, max:   2.3406  },
+    up_strong:    { min:   2.3406, max:   5.5526  },
+    up_extreme:   { min:   5.5526, max:  Infinity },
+    down_weak:    { min:  -2.3311, max:  -0.6262  },
+    down_strong:  { min:  -4.9677, max:  -2.3311  },
+    down_extreme: { min: -Infinity, max:  -4.9677 },
   },
 
 };
@@ -290,12 +359,10 @@ export const SLOPE_CONFIG = {
 // ============================================================================
 export function getSlopeClass(slope, symbol) {
   const cfg = getSlopeConfig(symbol);
-
   for (const [regime, { min, max }] of Object.entries(cfg)) {
     if (slope > min && slope <= max) return regime;
   }
-
-  return "unknown";
+  return 'unknown';
 }
 
 export function getSlopeConfig(symbol) {

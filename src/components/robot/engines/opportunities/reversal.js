@@ -99,19 +99,21 @@ const ReversalStrategy = (() => {
   // slopeMax  = frontière strong/extreme (P95)
   //           → spike filter, au-delà le mouvement est trop violent
   // ============================================================================
+  // Reversal = direction OPPOSÉE à la continuation
+  // BUY reversal : prix baisse → slope négatif → seuils down_*
+  // SELL reversal : prix monte → slope positif → seuils up_*
   function getSlopeLimits(side, symbol) {
     const slopeCfg = getSlopeConfig(symbol);
 
     if (side === "BUY") {
       return {
-        slopeMin: slopeCfg.up_weak.min,              // ex: 0.7492 EURUSD
-        slopeMax: slopeCfg.up_extreme.min,            // ex: 5.2239 EURUSD
+        slopeMin: Math.abs(slopeCfg.down_weak.max),
+        slopeMax: Math.abs(slopeCfg.down_extreme.max),
       };
     } else {
       return {
-        slopeMin: Math.abs(slopeCfg.down_weak.max),   // ex: 0.8727 EURUSD
-        slopeMax: Math.abs(slopeCfg.down_extreme.max) // ex: 5.3606 EURUSD
-          || Math.abs(slopeCfg.up_extreme.min),
+        slopeMin: slopeCfg.up_weak.min,
+        slopeMax: slopeCfg.up_extreme.min,
       };
     }
   }

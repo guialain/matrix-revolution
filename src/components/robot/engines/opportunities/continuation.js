@@ -40,14 +40,13 @@ const ContinuationStrategy = (() => {
 
     if (side === "BUY") {
       return {
-        slopeMin: slopeCfg.up_weak.min,               // ex: 0.7492 EURUSD
-        slopeMax: slopeCfg.up_extreme.min,             // ex: 5.2239 EURUSD
+        slopeMin: slopeCfg.up_weak.min,
+        slopeMax: slopeCfg.up_extreme.min,
       };
     } else {
       return {
-        slopeMin: Math.abs(slopeCfg.down_weak.max),    // ex: 0.8727 EURUSD
-        slopeMax: Math.abs(slopeCfg.down_extreme.max)  // ex: 5.3606 EURUSD
-          || Math.abs(slopeCfg.up_extreme.min),
+        slopeMin: Math.abs(slopeCfg.down_weak.max),
+        slopeMax: Math.abs(slopeCfg.down_extreme.max),
       };
     }
   }

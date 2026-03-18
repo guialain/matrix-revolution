@@ -102,7 +102,7 @@ function readLastRowCSV(filePath) {
 
   try {
 
-    const content = fs.readFileSync(filePath, "utf8").trim();
+    const content = fs.readFileSync(filePath, "utf8").replace(/\0/g, "").trim();
     if (!content) return null;
 
     const lines = content.split(/\r?\n/);
@@ -142,7 +142,7 @@ function readAllRowsCSV(filePath) {
 
   try {
 
-    const content = fs.readFileSync(filePath, "utf8").trim();
+    const content = fs.readFileSync(filePath, "utf8").replace(/\0/g, "").trim();
     if (!content) return [];
 
     const lines = content.split(/\r?\n/);

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { getRiskConfig } from "../components/robot/engines/config/RiskConfig";
 
 // ============================================================================
 // Exposure Engine — EUR based
@@ -30,14 +31,12 @@ function computeExposureByAsset(positions, options = {}) {
 
   positions.forEach(pos => {
     const { symbol, side } = pos;
+    const fallback = pos.volume && pos.price && pos.contract_size
+      ? pos.volume * pos.price * Number(pos.contract_size) * (getRiskConfig(symbol)?.baseToEUR ?? 1)
+      : 0;
     const expo = Math.abs(
-  Number(
-    pos.notional_eur ??
-    pos.notional ??
-    pos.exposure ??
-    (pos.volume && pos.price ? pos.volume * pos.price : 0)
-  )
-);
+      Number(pos.notional_eur ?? pos.notional ?? pos.exposure ?? fallback)
+    );
 
     if (!symbol || !side || expo <= 0) return;
 

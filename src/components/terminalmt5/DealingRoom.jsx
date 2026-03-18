@@ -200,11 +200,12 @@ const refreshSLTP = () => {
     side === "SELL" ? bid :
     null;
 
+  const baseToEUR = getRiskConfig(mt5Symbol)?.baseToEUR ?? 1;
   const notional_eur =
     Number.isFinite(lots) &&
     Number.isFinite(price) &&
     Number.isFinite(asset?.contract_size)
-      ? lots * price * asset.contract_size
+      ? lots * price * asset.contract_size * baseToEUR
       : null;
 
   // ================= ORDER CONTROLLER =================

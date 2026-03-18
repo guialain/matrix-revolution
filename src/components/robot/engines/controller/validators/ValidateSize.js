@@ -5,6 +5,8 @@
 // - propose auto-fix (lots) si besoin
 // ============================================================================
 
+import { getRiskConfig } from "../../config/RiskConfig";
+
 function roundToStepDown(value, step) {
   return Math.floor(value / step) * step;
 }
@@ -56,10 +58,12 @@ const ValidateSize = {
       issues.push({ level: "WARN", code: "LOTS_ADJUSTED_TO_BROKER", message: "Lots ajustés aux contraintes broker" });
     }
 
-    const notional = fixedLots * cs * price;
+    const b2e = getRiskConfig(draft.symbol)?.baseToEUR ?? 1;
+    const notional = fixedLots * cs * price * b2e;
 
     metrics.price = price;
     metrics.contractSize = cs;
+    metrics.baseToEUR = b2e;
     metrics.notional_eur = notional;
     metrics.lots = fixedLots;
 

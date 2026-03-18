@@ -11,6 +11,7 @@ import ValidateSize from "./validators/ValidateSize";
 import ValidateAllocation from "./validators/ValidateAllocation";
 import ValidateTPSL from "./validators/ValidateTPSL";
 import ValidateMargin from "./validators/ValidateMargin";
+import { getRiskConfig } from "../config/RiskConfig";
 
 // ============================================================================
 // UTILS
@@ -29,7 +30,7 @@ function summarize(issues) {
   return "OK";
 }
 
-function computeMaxLots({ allowedNotional, price, contractSize, volumeStep }) {
+function computeMaxLots({ allowedNotional, price, contractSize, baseToEUR, volumeStep }) {
   if (
     !Number.isFinite(allowedNotional) ||
     !Number.isFinite(price) ||
@@ -37,7 +38,8 @@ function computeMaxLots({ allowedNotional, price, contractSize, volumeStep }) {
     !Number.isFinite(volumeStep)
   ) return null;
 
-  const rawLots = allowedNotional / (price * contractSize);
+  const b2e = Number.isFinite(baseToEUR) && baseToEUR > 0 ? baseToEUR : 1;
+  const rawLots = allowedNotional / (price * contractSize * b2e);
 
   // broker-safe (arrondi vers le bas)
   return Math.floor(rawLots / volumeStep) * volumeStep;
@@ -76,8 +78,9 @@ const OrderController = {
     const ctx2draft = { ...ctx.draft, ...(suggestedPatch ?? {}) };
     const price2 = ctx2draft.side === "BUY" ? Number(ctx.asset?.ask) : Number(ctx.asset?.bid);
     const cs2 = Number(ctx.asset?.contract_size);
+    const b2e = getRiskConfig(ctx.draft?.symbol)?.baseToEUR ?? 1;
     if (Number.isFinite(price2) && Number.isFinite(cs2) && Number.isFinite(ctx2draft.lots)) {
-      const recalcNotional = ctx2draft.lots * price2 * cs2;
+      const recalcNotional = ctx2draft.lots * price2 * cs2 * b2e;
       suggestedPatch = mergePatches(suggestedPatch, { notional_eur: recalcNotional });
     }
 
@@ -106,6 +109,7 @@ const OrderController = {
         allowedNotional: alloc.allowedNotional,
         price,
         contractSize: ctx.asset?.contract_size,
+        baseToEUR: b2e,
         volumeStep: ctx.asset?.volume_step
       });
 

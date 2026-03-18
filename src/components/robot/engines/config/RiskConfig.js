@@ -65,7 +65,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.60, slAtr: 2.00,
+    tpAtr: 0.60, slAtr: 1.50,
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 10398.5, baseToEUR: 1.076,
@@ -163,7 +163,7 @@ export const RISK_CONFIG = {
   COPPER: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 0.003,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 25000, refPrice: 5.7810, baseToEUR: 0.847,
   },
 
@@ -172,19 +172,19 @@ export const RISK_CONFIG = {
   CRUDEOIL: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.04,
-    targetLeveragePerTrade: 1,
-    contractSize: 1000, refPrice: 96.80, baseToEUR: 0.847,
+    targetLeveragePerTrade: 0.5,
+    contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
   },
   NATURAL_GAS: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.011,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 10000, refPrice: 3.074, baseToEUR: 0.847,
   },
   HEATING_OIL: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.003,
-    targetLeveragePerTrade: 1,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100000, refPrice: 4.0379, baseToEUR: 0.847,
   },
 

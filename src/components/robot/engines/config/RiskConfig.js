@@ -168,6 +168,7 @@ export const RISK_CONFIG = {
     spread: 5.0,
     targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2129.9, baseToEUR: 0.847,
+    tickSize: 0.1,
   },
   COPPER: {
     tpAtr: 0.45, slAtr: 1.45,
@@ -184,6 +185,7 @@ export const RISK_CONFIG = {
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
     contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
+    tickSize: 0.01,
   },
   NATURAL_GAS: {
     tpAtr: 0.50, slAtr: 1.45,
@@ -207,12 +209,14 @@ export const RISK_CONFIG = {
     spread: 9.0,
     targetLeveragePerTrade: 0.5,
     contractSize: 10, refPrice: 3394, baseToEUR: 0.847,
+    tickSize: 1.0,
   },
   COFFEE_C: {
     tpAtr: 0.60, slAtr: 1.25,
     spread: 0.6,
     targetLeveragePerTrade: 0.5,
     contractSize: 37500, refPrice: 297.10, baseToEUR: 0.847,
+    tickSize: 0.05,
   },
   WHEAT: {
     tpAtr: 0.50, slAtr: 1.45,

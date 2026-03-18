@@ -40,40 +40,45 @@ function scoreSlope(slope_h1, dslope_h1) {
 
 // ============================================================================
 // COMPOSANTE — INTRADAY REVERSAL (±20)
-// Logique W : pics à ±75% strongMax, pénalité au delà de strongMax
+// Zone normale  (ratio 0.0 → 0.6) : pénalité forte  (-20 → -10)
+// Zone limite   (ratio 0.6 → 1.0) : pénalité faible (-10 → 0)
+// Zone excès    (ratio > 1.0)     : score positif   (0 → +20)
 // ============================================================================
-function scoreIntradayReversal(symbol, intraday_change) {
+function scoreIntradayReversal(symbol, intraday_change, side) {
   const sMax  = getStrongMax(symbol);
-  const ratio = intraday_change / sMax;
+  const dir   = side === 'BUY' ? -1 : 1; // BUY veut baisse, SELL veut hausse
+  const ratio = (intraday_change * dir) / sMax;
 
-  const lobePos   = Math.pow(clamp( ratio / 0.75, 0, 1), 0.8)
-                  * Math.pow(clamp((1.5 - ratio) / 0.75, 0, 1), 0.8) * 20;
-  const lobeMinus = Math.pow(clamp(-ratio / 0.75, 0, 1), 0.8)
-                  * Math.pow(clamp((1.5 + ratio) / 0.75, 0, 1), 0.8) * 20;
-  const penalty   = -clamp((Math.abs(ratio) - 1.0) / 0.5, 0, 1) * 20;
-
-  return Math.max(lobePos, lobeMinus) + penalty;
+  if (ratio < 0.6) {
+    return -20 + (ratio / 0.6) * 10;
+  } else if (ratio < 1.0) {
+    return -10 + ((ratio - 0.6) / 0.4) * 10;
+  } else {
+    return Math.min(((ratio - 1.0) / 0.5) * 20, 20);
+  }
 }
 
 // ============================================================================
 // COMPOSANTE — INTRADAY CONTINUATION (±25)
-// Bonne direction  : rampe +25 de 0 → strongMax
-// Mauvaise direction : pénalité -15 dès ratio < 0, max à -strongMax
+// Sens opposé        (ratio < 0)          : pénalité -25 → 0
+// Bon sens           (ratio 0 → 0.75)     : score    0 → +25
+// Limite             (ratio 0.75 → 1.0)   : score    +25 → +10
+// Excès              (ratio > 1.0)        : pénalité +10 → -10
 // ============================================================================
 function scoreIntradayContinuation(symbol, intraday_change, side) {
   const sMax  = getStrongMax(symbol);
   const dir   = side === 'BUY' ? 1 : -1;
   const ratio = (intraday_change * dir) / sMax;
-  // ratio > 0 = bonne direction (BUY quand hausse, SELL quand baisse)
-  // ratio < 0 = mauvaise direction (BUY quand hausse pour SELL, baisse pour BUY)
 
-  // Bonne direction : rampe de 0 à +15
-  const lobePos    = clamp(ratio / 1.0, 0, 1) * 25;
-
-  // Mauvaise direction : pénalité dès ratio < 0, max -25 à ratio = -1
-  const penaltyNeg = -clamp(-ratio / 1.0, 0, 1) * 25;
-
-  return lobePos + penaltyNeg;
+  if (ratio < 0) {
+    return clamp(ratio / 0.6, -1, 0) * 25;
+  } else if (ratio <= 0.75) {
+    return (ratio / 0.75) * 25;
+  } else if (ratio <= 1.0) {
+    return 25 - ((ratio - 0.75) / 0.25) * 15;
+  } else {
+    return Math.max(10 - ((ratio - 1.0) / 0.5) * 20, -10);
+  }
 }
 
 // ============================================================================
@@ -106,7 +111,7 @@ export function scoreReversalBuy(row) {
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
 
   // INTRADAY
-  const intradayScore = scoreIntradayReversal(symbol, intraday_change);
+  const intradayScore = scoreIntradayReversal(symbol, intraday_change, 'BUY');
 
   const total = rsiScore + zscoreScore + slopeScore + dslopeScore + volatilityScore + intradayScore;
 
@@ -145,7 +150,7 @@ export function scoreReversalSell(row) {
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
 
   // INTRADAY
-  const intradayScore = scoreIntradayReversal(symbol, intraday_change);
+  const intradayScore = scoreIntradayReversal(symbol, intraday_change, 'SELL');
 
   const total = rsiScore + zscoreScore + slopeScore + dslopeScore + volatilityScore + intradayScore;
 

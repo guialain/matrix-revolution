@@ -38,7 +38,7 @@ export const ASSET_MARKET_CONTEXT_MAP = {
     title: "Energy",
     symbols: [
       "BRENT_OIL",
-      "CRUDE_OIL",
+      "CrudeOIL",
       "GASOLINE",
       "HEATING_OIL",
       "NATURAL_GAS",

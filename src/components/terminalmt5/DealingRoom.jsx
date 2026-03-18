@@ -124,9 +124,13 @@ const normalizePrice = (price) => {
     }
   }
 
-  const INDEX_SYMBOLS = ['UK_100','GERMANY_40','FRANCE_40','US_30','US_500','US_TECH100','JAPAN_225','ITALY_40'];
-  if (INDEX_SYMBOLS.includes(mt5Symbol)) {
-    return { sl: Math.round(slValue), tp: Math.round(tpValue) };
+  const cfgTick = getRiskConfig(mt5Symbol)?.tickSize;
+  if (cfgTick > 0) {
+    const d = Math.max(0, Math.ceil(-Math.log10(cfgTick)));
+    return {
+      sl: Number((Math.round(slValue / cfgTick) * cfgTick).toFixed(d)),
+      tp: Number((Math.round(tpValue / cfgTick) * cfgTick).toFixed(d)),
+    };
   }
   return {
     sl: normalizePrice(slValue),
@@ -146,7 +150,7 @@ const autoFillSLTP = () => {
 const handleSideSelect = (selectedSide) => {
   setSide(selectedSide);
 
-  // Auto-lots (same formula as tradeSimulator.js)
+  // Auto-lots — tick-based (broker) with canonical fallback (RiskConfig)
   const cfg = getRiskConfig(mt5Symbol);
   const ref = selectedSide === "BUY" ? ask : bid;
   const tickSize = Number(asset?.tick_size);
@@ -154,8 +158,10 @@ const handleSideSelect = (selectedSide) => {
   const equity = Number(account?.equity);
   const targetLev = cfg?.targetLeveragePerTrade ?? 1;
 
-  if (ref > 0 && tickSize > 0 && tickValue > 0 && equity > 0) {
-    const eurPerLot = (ref / tickSize) * tickValue;
+  if (ref > 0 && equity > 0) {
+    const eurPerLot = (tickSize > 0 && tickValue > 0)
+      ? (ref / tickSize) * tickValue
+      : ref * (cfg?.contractSize ?? 100000) * (cfg?.baseToEUR ?? 1);
     const rawSize = Math.round((equity * targetLev) / eurPerLot * 1000) / 1000;
     setLots(normalizeLots(rawSize));
   }

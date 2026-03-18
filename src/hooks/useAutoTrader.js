@@ -113,8 +113,8 @@ function validateAllocation(symbol, lots, notional, equity, openPositions, cfg) 
         alloc.allowedNotional / (price * contractSize * baseToEUR) / 0.01
       ) * 0.01;
 
+      if (maxLots < 0.01) return { allowed: false, reason: "LOTS_CAPPED_TO_ZERO" };
       const cappedLots = clamp(maxLots, 0.01, 100);
-      if (cappedLots <= 0) return { allowed: false, reason: "LOTS_CAPPED_TO_ZERO" };
 
       return { allowed: true, lots: Number(cappedLots.toFixed(2)), reduced: true };
     }
@@ -149,17 +149,13 @@ function computeSLTP(op, cfg, snapshot) {
     tp = price - tpDist - spread;
   }
 
-  // Normalize — use tick_size + digits from scan
-  const tick    = Number(scanRow?.tick_size ?? 0);
+  // Normalize — cfg.tickSize (priority) > scanRow.tick_size > fallback
+  const tick    = cfg.tickSize ?? Number(scanRow?.tick_size ?? 0);
   const digits  = Number.isFinite(scanRow?.digits) ? scanRow.digits
+                : tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
                 : Math.max(0, Math.ceil(-Math.log10(atr)) + 2);
 
-  // Indices: always round to integer (tick_size is 0.5 or 1.0, digits may be 1)
-  const INDEX_SYMBOLS = ['UK_100','GERMANY_40','FRANCE_40','US_30','US_500','US_TECH100','JAPAN_225','ITALY_40'];
-  if (INDEX_SYMBOLS.includes(op.symbol)) {
-    sl = Math.round(sl);
-    tp = Math.round(tp);
-  } else if (tick > 0) {
+  if (tick > 0) {
     sl = Number((Math.round(sl / tick) * tick).toFixed(digits));
     tp = Number((Math.round(tp / tick) * tick).toFixed(digits));
   } else {

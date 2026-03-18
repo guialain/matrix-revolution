@@ -69,42 +69,49 @@ export const RISK_CONFIG = {
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 10398.5, baseToEUR: 1.076,
+    tickSize: 0.5,
   },
   GERMANY_40: {
     tpAtr: 0.60, slAtr: 1.50,
     spread: 5.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 23910.5, baseToEUR: 1.000,
+    tickSize: 0.5,
   },
   FRANCE_40: {
     tpAtr: 0.50, slAtr: 1.50,
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 8008.5, baseToEUR: 1.000,
+    tickSize: 0.5,
   },
   US_30: {
     tpAtr: 0.50, slAtr: 1.50,
     spread: 7.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 47438, baseToEUR: 0.847,
+    tickSize: 1.0,
   },
   US_500: {
     tpAtr: 0.60, slAtr: 1.25,
     spread: 1.0,
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 6772.75, baseToEUR: 0.847,
+    tickSize: 0.25,
   },
   US_TECH100: {
     tpAtr: 0.60, slAtr: 1.75,
     spread: 2.25,
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 24938.75, baseToEUR: 0.847,
+    tickSize: 0.25,
   },
   JAPAN_225: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 10.0,
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 54055, baseToEUR: 0.00613,
+    tickSize: 5.0,
   },
 
   // ── CRYPTO ────────────────────────────────────────────────────────────────
@@ -169,7 +176,7 @@ export const RISK_CONFIG = {
 
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
 
-  CRUDEOIL: {
+  CrudeOIL: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
@@ -224,6 +231,6 @@ export const RISK_CONFIG = {
 // ============================================================================
 export function getRiskConfig(symbol) {
   if (!symbol) return RISK_CONFIG.default;
-  const clean = String(symbol).trim().toUpperCase();
+  const clean = String(symbol).trim();
   return RISK_CONFIG[clean] ?? RISK_CONFIG.default;
 }

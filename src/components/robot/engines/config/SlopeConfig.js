@@ -211,7 +211,7 @@ export const SLOPE_CONFIG = {
   },
 
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
-  CRUDEOIL: {
+  CrudeOIL: {
     flat:         { min: -0.5558, max:  1.2456  },
     up_weak:      { min:  1.2456, max:  3.2372  },
     up_strong:    { min:  3.2372, max:  5.8287  },
@@ -300,6 +300,6 @@ export function getSlopeClass(slope, symbol) {
 
 export function getSlopeConfig(symbol) {
   if (!symbol) return SLOPE_CONFIG.default;
-  const clean = String(symbol).trim().toUpperCase();
+  const clean = String(symbol).trim();
   return SLOPE_CONFIG[clean] ?? SLOPE_CONFIG.default;
 }

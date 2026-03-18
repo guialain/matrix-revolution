@@ -76,7 +76,7 @@ export const RISK_CONFIG = {
     spread: 5.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 23910.5, baseToEUR: 1.000,
-    tickSize: 0.5,
+    tickSize: 1.0,
   },
   FRANCE_40: {
     tpAtr: 0.50, slAtr: 1.50,
@@ -148,12 +148,14 @@ export const RISK_CONFIG = {
     spread: 1.26,
     targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 5016.73, baseToEUR: 0.847,
+    tickSize: 0.01,
   },
   SILVER: {
     tpAtr: 0.60, slAtr: 1.35,
     spread: 0.148,
     targetLeveragePerTrade: 0.5,
     contractSize: 10000, refPrice: 80.880, baseToEUR: 0.847,
+    tickSize: 0.001,
   },
   PALLADIUM: {
     tpAtr: 0.60, slAtr: 1.25,
@@ -172,6 +174,7 @@ export const RISK_CONFIG = {
     spread: 0.003,
     targetLeveragePerTrade: 0.5,
     contractSize: 25000, refPrice: 5.7810, baseToEUR: 0.847,
+    tickSize: 0.0001,
   },
 
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
@@ -187,12 +190,14 @@ export const RISK_CONFIG = {
     spread: 0.011,
     targetLeveragePerTrade: 0.5,
     contractSize: 10000, refPrice: 3.074, baseToEUR: 0.847,
+    tickSize: 0.001,
   },
   HEATING_OIL: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0.003,
     targetLeveragePerTrade: 0.5,
     contractSize: 100000, refPrice: 4.0379, baseToEUR: 0.847,
+    tickSize: 0.0001,
   },
 
   // ── AGRI ──────────────────────────────────────────────────────────────────
@@ -214,6 +219,7 @@ export const RISK_CONFIG = {
     spread: 0.75,
     targetLeveragePerTrade: 0.5,
     contractSize: 5000, refPrice: 593.75, baseToEUR: 0.847,
+    tickSize: 0.25,
   },
 
   // ── DEFAULT ───────────────────────────────────────────────────────────────

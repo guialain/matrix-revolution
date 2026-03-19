@@ -59,8 +59,15 @@
   font-weight: 600;
   padding: 7px 8px;
   text-align: right;
+  cursor: pointer;
 
   border-bottom: 1px solid rgba(255, 200, 80, 0.35);
+}
+
+.portfolio-table thead th:hover::after {
+  content: "👆";
+  font-size: 10px;
+  margin-left: 3px;
 }
 
 .portfolio-table td {
@@ -145,12 +152,22 @@ td.neg  { color: #ff4d4d; }
 .close-cell {
   cursor: pointer;
   text-align: center;
+  position: relative;
 }
 
 .close-cell svg {
   pointer-events: none; /* sécurité */
 }
 
-.close-cell.clickable:hover {
+.close-cell:hover {
   background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+
+.close-cell:hover::after {
+  content: "👆";
+  position: absolute;
+  font-size: 12px;
+  top: -2px;
+  right: -4px;
 }

@@ -47,7 +47,7 @@ function TradeRow({ trade, rank }) {
 
 export default function ClosedTrades() {
   const { trades, loading } = useClosedTrades(5000);
-  const [sortCol, setSortCol] = useState("pnl_abs");
+  const [sortCol, setSortCol] = useState("time");
   const [sortDir, setSortDir] = useState("desc");
 
   const sorted = useMemo(() => {

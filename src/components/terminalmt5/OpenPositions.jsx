@@ -18,7 +18,7 @@ export default function OpenPositions() {
   // STATE
   // =========================
   const [positions, setPositions] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({ key: "open_time", direction: "desc" });
   const [closingTicket, setClosingTicket] = useState(null);
 
   // =========================

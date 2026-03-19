@@ -23,7 +23,7 @@ export const RISK_CONFIG = {
     tpAtr: 0.60, slAtr: 1.75,
     spread: 0.00008,
     targetLeveragePerTrade: 1.5,
-    contractSize: 100000, refPrice: 1.15330, baseToEUR: 1.000,
+    contractSize: 100000, refPrice: 1.147722, baseToEUR: 1.000,
   },
   AUDUSD: {
     tpAtr: 0.60, slAtr: 1.75,

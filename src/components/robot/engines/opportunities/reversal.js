@@ -141,10 +141,10 @@ const ReversalStrategy = (() => {
       const deep = cfg.rsiSellMin  ?? 70;
       const semi = cfg.rsiSellSemi ?? 65;
 
-      // Zone extrême — décélération suffit, slope peut encore être positif
-      if (rsi > deep) return dslope < -dslopeMin;
-      // Zone semi — confirmation slope requise
-      if (rsi > semi) return slope < 0.5 && dslope < -dslopeMin;
+      // Zone extrême — slope doit avoir basculé (≤ 0) + décélération
+      if (rsi > deep) return slope <= 0 && dslope < -dslopeMin;
+      // Zone semi — slope confirmé au-delà de slopeMin + décélération
+      if (rsi > semi) return slope <= -slopeMin && dslope < -dslopeMin;
       return false;
     }
 
@@ -153,10 +153,10 @@ const ReversalStrategy = (() => {
       const deep = cfg.rsiBuyMax  ?? 30;
       const semi = cfg.rsiBuySemi ?? 35;
 
-      // Zone extrême — décélération suffit
-      if (rsi < deep) return dslope > dslopeMin;
-      // Zone semi — confirmation slope requise
-      if (rsi < semi) return slope > -0.5 && dslope > dslopeMin;
+      // Zone extrême — slope doit avoir basculé (≥ 0) + décélération
+      if (rsi < deep) return slope >= 0 && dslope > dslopeMin;
+      // Zone semi — slope confirmé au-delà de slopeMin + décélération
+      if (rsi < semi) return slope >= slopeMin && dslope > dslopeMin;
       return false;
     }
 

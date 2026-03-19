@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { getRiskConfig } from "../components/robot/engines/config/RiskConfig";
+import { getAssetClass } from "../components/classification/AssetClassification";
 
 // ============================================================================
 // Exposure Engine — EUR based
@@ -31,8 +32,11 @@ function computeExposureByAsset(positions, options = {}) {
 
   positions.forEach(pos => {
     const { symbol, side } = pos;
-    const fallback = pos.volume && pos.price && pos.contract_size
-      ? pos.volume * pos.price * Number(pos.contract_size) * (getRiskConfig(symbol)?.baseToEUR ?? 1)
+    const isFX = getAssetClass(symbol) === "FX";
+    const fallback = pos.volume && pos.contract_size
+      ? isFX
+        ? pos.volume * Number(pos.contract_size) * (getRiskConfig(symbol)?.baseToEUR ?? 1)
+        : pos.volume * pos.price * Number(pos.contract_size) * (getRiskConfig(symbol)?.baseToEUR ?? 1)
       : 0;
     const expo = Math.abs(
       Number(pos.notional_eur ?? pos.notional ?? pos.exposure ?? fallback)

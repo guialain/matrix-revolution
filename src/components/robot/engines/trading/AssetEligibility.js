@@ -48,7 +48,7 @@ const ALLOWED_SYMBOLS = [
   // METAL
   "GOLD", "SILVER", "PLATINUM",
   // OIL & GAS
-  "CrudeOIL", "NATURAL_GAS", "HEATING_OIL",
+  "CrudeOIL", "GASOLINE", "BRENT_OIL", "HEATING_OIL", "NATURAL_GAS",
   // AGRI
   "COCOA", "COFFEE_C"
 ];

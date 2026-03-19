@@ -104,23 +104,29 @@ const normalizePrice = (price) => {
 
 
 
-  if (minStopDistance > 0) {
+  // stopsLevel: broker value (via digits) or fallback from RiskConfig
+  const cfgStopsLevel = Number(cfg.stopsLevel);
+  const effectiveMinStop = minStopDistance > 0
+    ? minStopDistance
+    : (Number.isFinite(cfgStopsLevel) && cfgStopsLevel > 0) ? cfgStopsLevel : 0;
+
+  if (effectiveMinStop > 0) {
 
     if (selectedSide === "BUY") {
 
-      if (Math.abs(entry - slValue) < minStopDistance)
-        slValue = entry - minStopDistance * 1.05;
+      if (Math.abs(entry - slValue) < effectiveMinStop)
+        slValue = entry - effectiveMinStop * 1.05;
 
-      if (Math.abs(tpValue - entry) < minStopDistance)
-        tpValue = entry + minStopDistance * 1.05;
+      if (Math.abs(tpValue - entry) < effectiveMinStop)
+        tpValue = entry + effectiveMinStop * 1.05;
 
     } else {
 
-      if (Math.abs(slValue - entry) < minStopDistance)
-        slValue = entry + minStopDistance * 1.05;
+      if (Math.abs(slValue - entry) < effectiveMinStop)
+        slValue = entry + effectiveMinStop * 1.05;
 
-      if (Math.abs(entry - tpValue) < minStopDistance)
-        tpValue = entry - minStopDistance * 1.05;
+      if (Math.abs(entry - tpValue) < effectiveMinStop)
+        tpValue = entry - effectiveMinStop * 1.05;
     }
   }
 
@@ -159,9 +165,12 @@ const handleSideSelect = (selectedSide) => {
   const targetLev = cfg?.targetLeveragePerTrade ?? 1;
 
   if (ref > 0 && equity > 0) {
+    const isFX = assetClass === "FX";
     const eurPerLot = (tickSize > 0 && tickValue > 0)
       ? (ref / tickSize) * tickValue
-      : ref * (cfg?.contractSize ?? 100000) * (cfg?.baseToEUR ?? 1);
+      : isFX
+        ? (cfg?.contractSize ?? 100000) * (cfg?.baseToEUR ?? 1)
+        : ref * (cfg?.contractSize ?? 100000) * (cfg?.baseToEUR ?? 1);
     const rawSize = Math.round((equity * targetLev) / eurPerLot * 1000) / 1000;
     setLots(normalizeLots(rawSize));
   }
@@ -207,11 +216,14 @@ const refreshSLTP = () => {
     null;
 
   const baseToEUR = getRiskConfig(mt5Symbol)?.baseToEUR ?? 1;
+  const isFXNotional = assetClass === "FX";
   const notional_eur =
     Number.isFinite(lots) &&
     Number.isFinite(price) &&
     Number.isFinite(asset?.contract_size)
-      ? lots * price * asset.contract_size * baseToEUR
+      ? isFXNotional
+        ? lots * asset.contract_size * baseToEUR
+        : lots * price * asset.contract_size * baseToEUR
       : null;
 
   // ================= ORDER CONTROLLER =================

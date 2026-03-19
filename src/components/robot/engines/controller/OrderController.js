@@ -12,6 +12,7 @@ import ValidateAllocation from "./validators/ValidateAllocation";
 import ValidateTPSL from "./validators/ValidateTPSL";
 import ValidateMargin from "./validators/ValidateMargin";
 import { getRiskConfig } from "../config/RiskConfig";
+import { getAssetClass } from "../../../classification/AssetClassification";
 
 // ============================================================================
 // UTILS
@@ -30,7 +31,7 @@ function summarize(issues) {
   return "OK";
 }
 
-function computeMaxLots({ allowedNotional, price, contractSize, baseToEUR, volumeStep }) {
+function computeMaxLots({ allowedNotional, price, contractSize, baseToEUR, volumeStep, symbol }) {
   if (
     !Number.isFinite(allowedNotional) ||
     !Number.isFinite(price) ||
@@ -39,7 +40,9 @@ function computeMaxLots({ allowedNotional, price, contractSize, baseToEUR, volum
   ) return null;
 
   const b2e = Number.isFinite(baseToEUR) && baseToEUR > 0 ? baseToEUR : 1;
-  const rawLots = allowedNotional / (price * contractSize * b2e);
+  const isFX = getAssetClass(symbol) === "FX";
+  const eurPerLot = isFX ? contractSize * b2e : price * contractSize * b2e;
+  const rawLots = allowedNotional / eurPerLot;
 
   // broker-safe (arrondi vers le bas)
   return Math.floor(rawLots / volumeStep) * volumeStep;
@@ -80,7 +83,10 @@ const OrderController = {
     const cs2 = Number(ctx.asset?.contract_size);
     const b2e = getRiskConfig(ctx.draft?.symbol)?.baseToEUR ?? 1;
     if (Number.isFinite(price2) && Number.isFinite(cs2) && Number.isFinite(ctx2draft.lots)) {
-      const recalcNotional = ctx2draft.lots * price2 * cs2 * b2e;
+      const isFX = getAssetClass(ctx.draft?.symbol) === "FX";
+      const recalcNotional = isFX
+        ? ctx2draft.lots * cs2 * b2e
+        : ctx2draft.lots * price2 * cs2 * b2e;
       suggestedPatch = mergePatches(suggestedPatch, { notional_eur: recalcNotional });
     }
 
@@ -110,7 +116,8 @@ const OrderController = {
         price,
         contractSize: ctx.asset?.contract_size,
         baseToEUR: b2e,
-        volumeStep: ctx.asset?.volume_step
+        volumeStep: ctx.asset?.volume_step,
+        symbol: ctx.draft?.symbol
       });
 
       if (Number.isFinite(maxLots)) {

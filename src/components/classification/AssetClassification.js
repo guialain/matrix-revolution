@@ -58,6 +58,7 @@ export const ASSETS_BY_CLASS = {
     "CrudeOIL",
     "BRENT_OIL",
     "HEATING_OIL",
+    "GASOLINE",
     "NATURAL_GAS",
     "COPPER"
   ]

@@ -68,8 +68,11 @@ export const RISK_CONFIG = {
     tpAtr: 0.50, slAtr: 1.55,
     spread: 2.0,
     targetLeveragePerTrade: 2,
-    contractSize: 10, refPrice: 10398.5, baseToEUR: 1.076,
-    tickSize: 0.5,
+    contractSize: 10, refPrice: 8500, baseToEUR: 1.076,
+    tickSize: 0.5, tickValue: 5, profitCurrency: "GBP",
+    assetClass: "INDEX",
+    stopsLevel: 50,
+    volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GERMANY_40: {
     tpAtr: 0.50, slAtr: 1.55,
@@ -200,6 +203,20 @@ export const RISK_CONFIG = {
     targetLeveragePerTrade: 0.5,
     contractSize: 100000, refPrice: 4.0379, baseToEUR: 0.847,
     tickSize: 0.0001,
+  },
+  GASOLINE: {
+    tpAtr: 0.50, slAtr: 1.65,
+    spread: 0.003,
+    targetLeveragePerTrade: 0.5,
+    contractSize: 100000, refPrice: 3.13, baseToEUR: 0.847,
+    tickSize: 0.0001,
+  },
+  BRENT_OIL: {
+    tpAtr: 0.50, slAtr: 1.65,
+    spread: 0.04,
+    targetLeveragePerTrade: 0.5,
+    contractSize: 1000, refPrice: 112.27, baseToEUR: 0.847,
+    tickSize: 0.01,
   },
 
   // ── AGRI ──────────────────────────────────────────────────────────────────

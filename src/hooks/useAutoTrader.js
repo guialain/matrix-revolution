@@ -38,21 +38,32 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
+function computeEurPerLot(symbol, price, cfg) {
+  const contractSize = cfg.contractSize;
+  const baseToEUR    = cfg.baseToEUR ?? 1;
+  if (!Number.isFinite(contractSize) || contractSize <= 0) return null;
+  if (!Number.isFinite(price) || price <= 0) return null;
+
+  // FX: 1 lot = contractSize units of base currency
+  //     eurPerLot = contractSize × baseToEUR (price is irrelevant)
+  // Non-FX (indices, commodities, crypto):
+  //     eurPerLot = price × contractSize × baseToEUR
+  const assetClass = getAssetClass(symbol);
+  const eurPerLot = assetClass === "FX"
+    ? contractSize * baseToEUR
+    : price * contractSize * baseToEUR;
+
+  return eurPerLot > 0 ? eurPerLot : null;
+}
+
 function computeLots(op, equity, cfg) {
   const price = Number(op.close);
   if (!Number.isFinite(price) || price <= 0) return null;
   if (!Number.isFinite(equity) || equity <= 0) return null;
 
-  const contractSize = cfg.contractSize;
-  const baseToEUR    = cfg.baseToEUR ?? 1;
-  const targetLev    = cfg.targetLeveragePerTrade ?? 1;
-
-  if (!Number.isFinite(contractSize) || contractSize <= 0) return null;
-
-  // DealingRoom formula: eurPerLot = (ref / tickSize) * tickValue
-  // Equivalent when tick data unavailable: eurPerLot ≈ price * contractSize * baseToEUR
-  const eurPerLot = price * contractSize * baseToEUR;
-  if (eurPerLot <= 0) return null;
+  const targetLev = cfg.targetLeveragePerTrade ?? 1;
+  const eurPerLot = computeEurPerLot(op.symbol, price, cfg);
+  if (!eurPerLot) return null;
 
   const rawLots = (equity * targetLev) / eurPerLot;
 
@@ -75,8 +86,11 @@ function computeLots(op, equity, cfg) {
 // 2. COMPUTE NOTIONAL (mirrors ValidateSize notional + OrderController recalc)
 // ============================================================================
 
-function computeNotional(lots, price, contractSize, baseToEUR) {
-  const n = lots * price * contractSize * baseToEUR;
+function computeNotional(symbol, lots, price, contractSize, baseToEUR) {
+  const assetClass = getAssetClass(symbol);
+  const n = assetClass === "FX"
+    ? lots * contractSize * baseToEUR
+    : lots * price * contractSize * baseToEUR;
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
@@ -104,13 +118,15 @@ function validateAllocation(symbol, lots, notional, equity, openPositions, cfg) 
 
   // REDUCED — cap lots to remaining capacity
   if (alloc.reduced && Number.isFinite(alloc.allowedNotional)) {
-    const price        = notional / (lots * cfg.contractSize * (cfg.baseToEUR ?? 1));
     const contractSize = cfg.contractSize;
     const baseToEUR    = cfg.baseToEUR ?? 1;
+    const eurPerLot    = assetClass === "FX"
+      ? contractSize * baseToEUR
+      : (notional / lots); // derive from already-correct notional
 
-    if (Number.isFinite(price) && price > 0 && contractSize > 0) {
+    if (Number.isFinite(eurPerLot) && eurPerLot > 0) {
       const maxLots = Math.floor(
-        alloc.allowedNotional / (price * contractSize * baseToEUR) / 0.01
+        alloc.allowedNotional / eurPerLot / 0.01
       ) * 0.01;
 
       if (maxLots < 0.01) return { allowed: false, reason: "LOTS_CAPPED_TO_ZERO" };
@@ -149,10 +165,27 @@ function computeSLTP(op, cfg, snapshot) {
     tp = price - tpDist - spread;
   }
 
+  // Enforce broker stopsLevel (minimum distance from entry)
+  const stopsLevel = Number(cfg.stopsLevel);
+  if (Number.isFinite(stopsLevel) && stopsLevel > 0) {
+    if (op.side === "BUY") {
+      if (Math.abs(price - sl) < stopsLevel) sl = price - stopsLevel * 1.05;
+      if (Math.abs(tp - price) < stopsLevel) tp = price + stopsLevel * 1.05;
+    } else {
+      if (Math.abs(sl - price) < stopsLevel) sl = price + stopsLevel * 1.05;
+      if (Math.abs(price - tp) < stopsLevel) tp = price - stopsLevel * 1.05;
+    }
+  }
+
   // Normalize — cfg.tickSize (priority) > scanRow.tick_size > fallback
-  const tick    = cfg.tickSize ?? Number(scanRow?.tick_size ?? 0);
-  const digits  = Number.isFinite(scanRow?.digits) ? scanRow.digits
-                : tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
+  const cfgTick  = Number(cfg.tickSize);
+  const scanTick = Number(scanRow?.tick_size ?? 0);
+  const tick     = (Number.isFinite(cfgTick) && cfgTick > 0) ? cfgTick
+                 : (Number.isFinite(scanTick) && scanTick > 0) ? scanTick
+                 : 0;
+
+  const digits  = tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
+                : Number.isFinite(scanRow?.digits) ? scanRow.digits
                 : Math.max(0, Math.ceil(-Math.log10(atr)) + 2);
 
   if (tick > 0) {
@@ -162,6 +195,8 @@ function computeSLTP(op, cfg, snapshot) {
     sl = Number(sl.toFixed(digits));
     tp = Number(tp.toFixed(digits));
   }
+
+  console.log(`[AUTO-TRADER] SL/TP ${op.symbol}: tick=${tick} digits=${digits} sl=${sl} tp=${tp}`);
 
   return { sl, tp, slDist, tpDist };
 }
@@ -329,7 +364,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // STEP 2 — Compute notional (mirrors ValidateSize notional)
       // ==================================================================
       const baseToEUR = cfg.baseToEUR ?? 1;
-      let notional = computeNotional(lots, price, cfg.contractSize, baseToEUR);
+      let notional = computeNotional(op.symbol, lots, price, cfg.contractSize, baseToEUR);
       if (!notional) {
         console.log(`[AUTO-TRADER] SKIP ${op.symbol} — notional invalid`);
         continue;
@@ -351,7 +386,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // Apply capped lots if allocation was reduced
       if (allocResult.reduced) {
         lots = allocResult.lots;
-        notional = computeNotional(lots, price, cfg.contractSize, baseToEUR);
+        notional = computeNotional(op.symbol, lots, price, cfg.contractSize, baseToEUR);
         if (!notional) continue;
         console.log(
           `[AUTO-TRADER] ${op.symbol} — lots capped to ${lots} (allocation near limit)`

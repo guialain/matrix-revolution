@@ -6,6 +6,7 @@
 // ============================================================================
 
 import { getRiskConfig } from "../../config/RiskConfig";
+import { getAssetClass } from "../../../../classification/AssetClassification";
 
 function roundToStepDown(value, step) {
   return Math.floor(value / step) * step;
@@ -59,7 +60,10 @@ const ValidateSize = {
     }
 
     const b2e = getRiskConfig(draft.symbol)?.baseToEUR ?? 1;
-    const notional = fixedLots * cs * price * b2e;
+    const isFX = getAssetClass(draft.symbol) === "FX";
+    const notional = isFX
+      ? fixedLots * cs * b2e
+      : fixedLots * cs * price * b2e;
 
     metrics.price = price;
     metrics.contractSize = cs;

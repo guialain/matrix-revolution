@@ -7,7 +7,6 @@
 
 import { getSignalConfig }     from "../config/SignalConfig.js";
 import { getSlopeConfig }      from "../config/SlopeConfig";
-import { detectReversalPhase } from "./SignalPhaseDetector";
 import { scoreReversalBuy, scoreReversalSell } from "./ScoreEngine";
 
 const ReversalStrategy = (() => {
@@ -133,18 +132,18 @@ const ReversalStrategy = (() => {
     const { slopeMin, slopeMax } = getSlopeLimits(side, symbol);
     const dslopeMin = cfg.dslopeH1ReversalMin ?? 0.5;
 
-    // Spike filter — slope trop violent = mouvement non tradable
-    if (Math.abs(slope) > slopeMax) return false;
-
     // SELL REVERSAL
     if (side === "SELL") {
       const deep = cfg.rsiSellMin  ?? 70;
       const semi = cfg.rsiSellSemi ?? 65;
 
-      // Zone extrême — slope doit avoir basculé (≤ 0) + décélération
-      if (rsi > deep) return slope <= 0 && dslope < -dslopeMin;
+      // Spike filter — slope trop violent = mouvement non tradable
+      if (Math.abs(slope) > slopeMax) return false;
+
+      // Zone extrême — décélération suffit
+      if (rsi > deep) return slope <= 0.5 && dslope < -dslopeMin;
       // Zone semi — slope confirmé au-delà de slopeMin + décélération
-      if (rsi > semi) return slope <= -slopeMin && dslope < -dslopeMin;
+      if (rsi > semi) return slope < 0.5 && dslope < -dslopeMin;
       return false;
     }
 
@@ -153,10 +152,13 @@ const ReversalStrategy = (() => {
       const deep = cfg.rsiBuyMax  ?? 30;
       const semi = cfg.rsiBuySemi ?? 35;
 
-      // Zone extrême — slope doit avoir basculé (≥ 0) + décélération
-      if (rsi < deep) return slope >= 0 && dslope > dslopeMin;
+      // Spike filter — slope trop violent = mouvement non tradable
+      if (Math.abs(slope) > slopeMax) return false;
+
+      // Zone extrême — décélération suffit
+      if (rsi < deep) return slope >= -0.5 && dslope > dslopeMin;
       // Zone semi — slope confirmé au-delà de slopeMin + décélération
-      if (rsi < semi) return slope >= slopeMin && dslope > dslopeMin;
+      if (rsi < semi) return slope > -0.5 && dslope > dslopeMin;
       return false;
     }
 
@@ -193,18 +195,13 @@ const ReversalStrategy = (() => {
     if (rsiStats.minRSI > cfg.rsiBuyMax) return null;
 
     // Position extrême requise
-const z = num(dyn?.zscore);
-if (z === null || z > -1.2) return null;
+    const z = num(dyn?.zscore);
+    if (z === null || z > -1.6) return null;
 
-// =========================================================
-// ✅ MATURITY BLOCK — encore en accélération baissière
-// =========================================================
-
-let bearishPressure = 0;
-if (dyn.zscore !== null && dyn.zscore < -1.8)  bearishPressure++;
-if (dyn.dbbz !== null   && dyn.dbbz < -0.2)    bearishPressure++;
-if (dyn.dslope !== null && dyn.dslope < -3.0)  bearishPressure++;
-if (bearishPressure >= 2) return null;
+    // =========================================================
+    // MATURITY BLOCK — encore en accélération baissière (strict AND)
+    // =========================================================
+    if (dyn.zscore < -1.8 && dyn.dbbz < -0.2 && dyn.dslope < -3.0) return null;
 
     return isEarlyBuyConfirmed(dyn, cfg) ? "BUY_EARLY" : "BUY";
   }
@@ -212,38 +209,44 @@ if (bearishPressure >= 2) return null;
   function detectSell(rsiStats, dyn, cfg) {
     if (rsiStats.maxRSI < cfg.rsiSellMin) return null;
 
-// Position extrême requise
-const z = num(dyn?.zscore);
-if (z === null || z < 1.2) return null;
+    // Position extrême requise
+    const z = num(dyn?.zscore);
+    if (z === null || z < 1.6) return null;
 
-// =========================================================
-// ✅ MATURITY BLOCK — encore en accélération haussière
-// =========================================================
-
-let bullishPressure = 0;
-if (dyn.zscore !== null && dyn.zscore > 1.8)  bullishPressure++;
-if (dyn.dbbz !== null   && dyn.dbbz > 0.2)    bullishPressure++;
-if (dyn.dslope !== null && dyn.dslope > 3.0)  bullishPressure++;
-if (bullishPressure >= 2) return null;
+    // =========================================================
+    // MATURITY BLOCK — encore en accélération haussière (strict AND)
+    // =========================================================
+    if (dyn.zscore > 1.8 && dyn.dbbz > 0.2 && dyn.dslope > 3.0) return null;
 
     return isEarlySellConfirmed(dyn, cfg) ? "SELL_EARLY" : "SELL";
   }
 
   // ============================================================================
-  // PHASE PATH
+  // ZMID DETECTION — zscore mid-zone reversal (regime 2)
   // ============================================================================
-  function detectBuyPhase(dyn, cfg) {
-    const z = num(dyn?.zscore);
-    if (z === null || z > -1.2) return null;  // même guard que detectBuy
-    const p = detectReversalPhase(dyn.slope, dyn.dslope, "BUY", cfg);
-    return p ? `BUY_${p}` : null;
-  }
+  function detectZmid(row, dyn) {
+    const zscore = num(row?.zscore_h1);
+    const dbbz   = num(row?.dz_h1);
+    const slope  = dyn?.slope;
+    const dslope = dyn?.dslope;
 
-  function detectSellPhase(dyn, cfg) {
-    const z = num(dyn?.zscore);
-    if (z === null || z < 1.2) return null;   // même guard que detectSell
-    const p = detectReversalPhase(dyn.slope, dyn.dslope, "SELL", cfg);
-    return p ? `SELL_${p}` : null;
+    if (zscore === null || dbbz === null || slope === null || dslope === null) return null;
+
+    // Mid-zone only: |zscore| between 0.8 and 1.6
+    const az = Math.abs(zscore);
+    if (az < 0.8 || az >= 1.6) return null;
+
+    // BUY ZMID: zscore negative, dbbz positive (mean-reverting), slope turning up
+    if (zscore < -0.8 && dbbz > 0.15 && dslope > 0.3) {
+      return { side: "BUY", signalType: "BUY_ZMID" };
+    }
+
+    // SELL ZMID: zscore positive, dbbz negative (mean-reverting), slope turning down
+    if (zscore > 0.8 && dbbz < -0.15 && dslope < -0.3) {
+      return { side: "SELL", signalType: "SELL_ZMID" };
+    }
+
+    return null;
   }
 
   // ============================================================================
@@ -274,17 +277,71 @@ if (bullishPressure >= 2) return null;
     for (let i = 0; i < data.length; i++) {
       d.total++;
 
-      const rsiStats = getMinMaxRSI_H1(data, i, cfg.rsiWindowH1);
-      if (!rsiStats) continue;
-
       const dyn = getH1Dynamics(data[i]);
       if (!dyn) continue;
 
+      // ── ZMID check (regime 2) — before RSI stats ──────────────
+      if (dyn) {
+        const zmidSignal = detectZmid(data[i], dyn);
+        if (zmidSignal) {
+          const zmidSide = zmidSignal.side;
+          const zmidOpp = {
+            type:        "REVERSAL",
+            regime:      zmidSide === "BUY" ? "REVERSAL_BUY" : "REVERSAL_SELL",
+            index:       i,
+            timestamp:   data[i]?.timestamp,
+            symbol,
+            side:        zmidSide,
+            signalType:  zmidSignal.signalType,
+
+            rsi_h1:      num(data[i]?.rsi_h1),
+            rsi_h1_previouslow3:  num(data[i]?.rsi_h1_previouslow3),
+            rsi_h1_previoushigh3: num(data[i]?.rsi_h1_previoushigh3),
+            slope_h1:    dyn.slope,
+            dslope_h1:   dyn.dslope,
+            dz_h1:       dyn.dbbz,
+            zscore_h1:   num(data[i]?.zscore_h1),
+
+            intraday_change: num(data[i]?.intraday_change),
+
+            atr_h1:  num(data[i]?.atr_h1),
+            atr_m15: num(data[i]?.atr_m15),
+            close:   num(data[i]?.close) ?? num(data[i]?.price),
+
+            zscore_m5: num(data[i]?.zscore_m5),
+            rsi_m5:    num(data[i]?.rsi_m5),
+            slope_m5:  num(data[i]?.slope_m5),
+            dslope_m5: num(data[i]?.dslope_m5),
+            drsi_m5:   num(data[i]?.drsi_m5),
+
+            rsi_m1:    num(data[i]?.rsi_m1),
+            drsi_m1:   num(data[i]?.drsi_m1),
+          };
+
+          const scoreFn = zmidSide === "BUY" ? scoreReversalBuy : scoreReversalSell;
+          let zmidScore;
+          try {
+            const result = scoreFn(zmidOpp);
+            zmidScore = result?.total ?? Math.round(Math.abs(dyn.dslope) * 100 + Math.abs(dyn.dbbz) * 50);
+          } catch {
+            zmidScore = Math.round(Math.abs(dyn.dslope) * 100 + Math.abs(dyn.dbbz) * 50);
+          }
+
+          if (zmidScore >= scoreMin) {
+            zmidOpp.score = zmidScore;
+            d.signals++;
+            opps.push(zmidOpp);
+          }
+          continue;
+        }
+      }
+
+      const rsiStats = getMinMaxRSI_H1(data, i, cfg.rsiWindowH1);
+      if (!rsiStats) continue;
+
       const signalType =
         detectBuy(rsiStats, dyn, cfg)   ??
-        detectSell(rsiStats, dyn, cfg)  ??
-        detectBuyPhase(dyn, cfg)        ??
-        detectSellPhase(dyn, cfg);
+        detectSell(rsiStats, dyn, cfg);
 
       if (!signalType) continue;
 

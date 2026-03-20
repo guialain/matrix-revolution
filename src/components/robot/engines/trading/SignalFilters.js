@@ -349,6 +349,8 @@ continue;
 
 else {
 
+const isZmid = String(opp?.signalType ?? "").includes("ZMID");
+
 const TH = TIMING_CONFIG.M5.slopeThreshold;
 const sm5 = num(opp?.slope_m5);
 const dsm5 = num(opp?.dslope_m5);
@@ -356,7 +358,7 @@ const zm5 = num(opp?.zscore_m5);
 
 // ZSCORE EXTENSION
 
-if (side === "BUY" && zm5 !== null && zm5 > 1.9) {
+if (side === "BUY" && zm5 !== null && zm5 > 1.8) {
 
 waitOpportunities.push({
 ...opp,
@@ -368,7 +370,7 @@ continue;
 
 }
 
-if (side === "SELL" && zm5 !== null && zm5 < -1.9) {
+if (side === "SELL" && zm5 !== null && zm5 < -1.8) {
 
 waitOpportunities.push({
 ...opp,
@@ -382,7 +384,7 @@ continue;
 
 // M5 CONFIRMATION
 
-if (sm5 !== null && dsm5 !== null) {
+if (!isZmid && sm5 !== null && dsm5 !== null) {
 
 const slopeTooBearish = sm5 < -TH;
 const noMicroTurn = dsm5 <= 0;
@@ -418,7 +420,7 @@ continue;
 
 // MICRO
 
-if (isM5Contrary(opp, side)) {
+if (!isZmid && isM5Contrary(opp, side)) {
 
 waitOpportunities.push({
 ...opp,

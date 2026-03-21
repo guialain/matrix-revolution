@@ -60,16 +60,6 @@ export const SLOPE_CONFIG = {
     down_extreme: { min: -Infinity, max:  -4.7884 },
   },
 
-  EURGBP: {
-    flat:         { min:  -0.6133, max:   0.6907  },
-    up_weak:      { min:   0.6907, max:   2.2317  },
-    up_strong:    { min:   2.2317, max:   5.7830  },
-    up_extreme:   { min:   5.7830, max:  Infinity },
-    down_weak:    { min:  -2.2926, max:  -0.6133  },
-    down_strong:  { min:  -4.8131, max:  -2.2926  },
-    down_extreme: { min: -Infinity, max:  -4.8131 },
-  },
-
   AUDUSD: {
     flat:         { min:  -0.6552, max:   0.7009  },
     up_weak:      { min:   0.7009, max:   2.3159  },

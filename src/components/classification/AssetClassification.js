@@ -21,7 +21,7 @@ export const ASSET_CLASSES = {
 export const ASSETS_BY_CLASS = {
   [ASSET_CLASSES.FX]: [
     "AUDCAD", "AUDNZD", "AUDUSD",
-    "EURAUD", "EURCAD", "EURCHF", "EURGBP", "EURJPY",
+    "EURAUD", "EURCAD", "EURCHF", "EURJPY",
     "EURNOK", "EURNZD", "EURUSD",
     "GBPNZD", "GBPJPY", "GBPUSD",
     "NZDUSD",

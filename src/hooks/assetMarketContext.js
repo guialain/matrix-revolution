@@ -122,7 +122,6 @@ export const ASSET_MARKET_CONTEXT_MAP = {
     symbols: [
       "EURUSD",
       "EURJPY",
-      "EURGBP",
       "EURCHF",
       "EURAUD",
       "EURCAD"
@@ -138,7 +137,6 @@ export const ASSET_MARKET_CONTEXT_MAP = {
     base: "GBP",
     symbols: [
       "GBPUSD",
-      "EURGBP",
       "GBPJPY",
       "GBPAUD",
       "GBPCAD",

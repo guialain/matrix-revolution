@@ -12,8 +12,6 @@ export const INTRADAY_CONFIG = {
   USDJPY:      { strongMax: 0.50 },
   EURJPY:      { strongMax: 0.41 },
   GBPJPY:      { strongMax: 0.48 },
-  EURGBP:      { strongMax: 0.31 },
-
   // Indices
   US_30:       { strongMax: 1.14 },
   US_500:      { strongMax: 1.02 },

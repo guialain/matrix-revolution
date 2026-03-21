@@ -41,14 +41,14 @@ function resolveMarket(assetclass) {
 const ALLOWED_SYMBOLS = [
   // FX
   "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "EURJPY", "GBPJPY",
-  "NZDUSD", "EURAUD",
+  "NZDUSD", "EURAUD", "USDCHF", "USDCAD",
   // INDEX
   "GERMANY_40", "FRANCE_40", "UK_100", "US_30", "US_500", "US_TECH100",
   // CRYPTO
   "BTCUSD", "BTCEUR", "ETHUSD",
   // METAL
   "GOLD", "SILVER",
-  // OIL & GAS
+  // ENERGY
   "CrudeOIL", "BRENT_OIL", "GASOLINE",
   // AGRI
   "WHEAT",

@@ -7,9 +7,7 @@
 // ============================================================================
 
 // ================= MARKET / ASSET ======================
-// TopOpportunities supprimé — remplacé par continuation.js + reversal.js
-import ContinuationStrategy from "./engines/opportunities/continuation";
-import ReversalStrategy     from "./engines/opportunities/reversal";
+import { evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities";
 import AssetBrain       from "./engines/asset/AssetBrain";
 
 // ================= CONFIDENCE / SCORING =================
@@ -89,14 +87,7 @@ const RobotCore = {
       intraday_change: row.intraday_change ?? null,
     }));
 
-    const allOpps = [];
-    for (const row of topRows) {
-      if (!row.symbol) continue;
-      allOpps.push(
-        ...ContinuationStrategy.evaluate([row], { scoreMin: 30 }),
-        ...ReversalStrategy.evaluate([row], { scoreMin: 30 })
-      );
-    }
+    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 30 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

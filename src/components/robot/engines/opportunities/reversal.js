@@ -127,39 +127,43 @@ const ReversalStrategy = (() => {
     const slope  = num(dyn?.slope);
     const dslope = num(dyn?.dslope);
 
-    if (rsi === null || slope === null || dslope === null) return false;
+    if (rsi === null || slope === null || dslope === null) return null;
 
     const { slopeMin, slopeMax } = getSlopeLimits(side, symbol);
     const dslopeMin = cfg.dslopeH1ReversalMin ?? 0.5;
 
     // Zone EXTREME BUY (0–20)
-    if (rsi < 20) return dslope > 1.0;
+    if (rsi < 20) return dslope > 1.0 ? "BUY" : null;
 
     // Zone EXTREME SELL (80–100)
-    if (rsi > 80) return dslope < -1.0;
+    if (rsi > 80) return dslope < -1.0 ? "SELL" : null;
 
     // Spike filter — slope trop violent
-    if (Math.abs(slope) > slopeMax) return false;
+    if (Math.abs(slope) > slopeMax) return null;
 
-    // BUY REVERSAL
-    if (side === "BUY") {
-      // Zone DEEP (RSI 20–30) — slope doit avoir une amplitude minimale
-      if (rsi < 30) return dslope > dslopeMin && Math.abs(slope) >= slopeMin;
-      // Zone SEMI (RSI 30–35) — transition basse
-      if (rsi < 35) return slope >= slopeMin && dslope > dslopeMin;
-      return false;
+    // BUY REVERSAL — Zone DEEP (RSI 20–30)
+    if (side === "BUY" && rsi < 30)
+      return (dslope > dslopeMin && Math.abs(slope) >= slopeMin) ? "BUY" : null;
+
+    // SELL REVERSAL — Zone DEEP (RSI 70–80)
+    if (side === "SELL" && rsi > 70)
+      return (dslope < -dslopeMin && Math.abs(slope) >= slopeMin) ? "SELL" : null;
+
+    // SEMI BUY (30–35) — peut donner BUY ou SELL
+    if (rsi < 35) {
+      if (slope > slopeMin  && dslope > 0 && rsiStats.minRSI < 30) return "BUY";
+      if (slope < -slopeMin && dslope < 0 && rsiStats.minRSI < 30) return "SELL";
+      return null;
     }
 
-    // SELL REVERSAL
-    if (side === "SELL") {
-      // Zone DEEP (RSI 70–80) — slope doit avoir une amplitude minimale
-      if (rsi > 70) return dslope < -dslopeMin && Math.abs(slope) >= slopeMin;
-      // Zone SEMI (RSI 65–70) — transition haute
-      if (rsi > 65) return slope <= -slopeMin && dslope < -dslopeMin;
-      return false;
+    // SEMI SELL (65–70) — peut donner SELL ou BUY
+    if (rsi > 65) {
+      if (slope < -slopeMin && dslope < 0 && rsiStats.maxRSI > 70) return "SELL";
+      if (slope > slopeMin  && dslope > 0 && rsiStats.maxRSI > 70) return "BUY";
+      return null;
     }
 
-    return false;
+    return null;
   }
 
   // ============================================================================
@@ -344,10 +348,11 @@ const ReversalStrategy = (() => {
 
       if (!signalType) continue;
 
-      const side = signalType.startsWith("BUY") ? "BUY" : "SELL";
+      const detectedSide = signalType.startsWith("BUY") ? "BUY" : "SELL";
 
-      // ✅ symbol passé pour calibration per-asset
-      if (!passesStructureGate(side, rsiStats, dyn, cfg, symbol)) {
+      // ✅ passesStructureGate retourne le side confirmé (peut override en zone SEMI)
+      const side = passesStructureGate(detectedSide, rsiStats, dyn, cfg, symbol);
+      if (!side) {
         d.structureFiltered++;
         continue;
       }

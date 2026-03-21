@@ -1,13 +1,14 @@
 // ============================================================================
-// TopOpportunities.js — Routeur RSI → regime → engine
+// TopOpportunities.js — Routeur RSI 9 zones → engine
 // Rôle :
-//  - getRsiRegime() classe le RSI H1 en regime
-//  - Chaque regime dispatch vers reversal, continuation, ou les deux (transition)
+//  - getRsiRegime() classe le RSI H1 en 9 zones
+//  - Chaque regime dispatch vers reversal, continuation, ou les deux
 //  - 1 seul signal max par symbol, trié par score desc
 // ============================================================================
 
 import ContinuationStrategy from "./continuation";
 import ReversalStrategy     from "./reversal";
+import ZmidStrategy         from "./ZmidStrategy";
 import { getSlopeConfig }   from "../config/SlopeConfig";
 
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
@@ -15,26 +16,23 @@ const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 const SCORE_MIN_DEFAULT = 30;
 
 // ============================================================================
-// RSI REGIME ROUTER
-//   RSI < 20          → REVERSAL_BUY   (extreme)
-//   RSI 20–30         → REVERSAL_BUY   (deep)
-//   RSI 30–35         → TRANSITION_LOW  (reversal BUY ou continuation SELL)
-//   RSI 35–65         → CONTINUATION
-//   RSI 65–70         → TRANSITION_HIGH (reversal SELL ou continuation BUY)
-//   RSI 70–80         → REVERSAL_SELL   (deep)
-//   RSI > 80          → REVERSAL_SELL   (extreme)
+// RSI REGIME ROUTER — 9 zones
 // ============================================================================
 function getRsiRegime(rsi) {
   if (rsi === null) return null;
-  if (rsi < 30)  return "REVERSAL_BUY";
-  if (rsi < 35)  return "TRANSITION_LOW";
-  if (rsi <= 65) return "CONTINUATION";
-  if (rsi <= 70) return "TRANSITION_HIGH";
-  return "REVERSAL_SELL";
+  if (rsi < 20) return "EXTREME_OVERSOLD";
+  if (rsi < 30) return "OVERSOLD";
+  if (rsi < 35) return "TRANSITION_LOW_1";
+  if (rsi < 48) return "TRANSITION_LOW_2";
+  if (rsi < 52) return "NEUTRAL";
+  if (rsi < 65) return "TRANSITION_HIGH_2";
+  if (rsi < 70) return "TRANSITION_HIGH_1";
+  if (rsi < 80) return "OVERBOUGHT";
+  return "EXTREME_OVERBOUGHT";
 }
 
 // ============================================================================
-// Helpers — pick best opp from array
+// Helpers
 // ============================================================================
 function pickBest(opps) {
   if (!opps.length) return null;
@@ -69,23 +67,34 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
     const symbol = row?.symbol;
     if (!symbol) continue;
 
-    const rsi = num(row?.rsi_h1);
+    const rsi    = num(row?.rsi_h1);
+    const zscore = num(row?.zscore_h1);
+    const zMin3  = num(row?.zscore_h1_min3);
+    const zMax3  = num(row?.zscore_h1_max3);
+    const oneRow = [row];
+
+    // ── ZMID check first ──
+    const isZmidZone = zscore !== null && Math.abs(zscore) < 0.5
+                    && zMin3 !== null && zMax3 !== null
+                    && (zMax3 - zMin3) > 0.5;
+
+    if (isZmidZone) {
+      if (rsi !== null && rsi >= 48 && rsi <= 52) continue; // NEUTRAL → WAIT
+      setBest(best, symbol, pickBest(ZmidStrategy.evaluate(oneRow, { scoreMin })));
+      continue;
+    }
+
+    // ── Route RSI normal — 9 zones ──
     const regime = getRsiRegime(rsi);
     if (!regime) continue;
 
-    const oneRow = [row];
+    // ── EXTREME + DEEP → reversal only ──
+    if (regime === "EXTREME_OVERSOLD" || regime === "OVERSOLD" ||
+        regime === "OVERBOUGHT" || regime === "EXTREME_OVERBOUGHT") {
+      setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
 
-    if (regime === "REVERSAL_BUY" || regime === "REVERSAL_SELL") {
-      // Reversal uniquement
-      const opp = pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin }));
-      setBest(best, symbol, opp);
-
-    } else if (regime === "CONTINUATION") {
-      // Continuation uniquement
-      const opp = pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin }));
-      setBest(best, symbol, opp);
-
-    } else if (regime === "TRANSITION_LOW") {
+    // ── TRANSITION_1 → reversal + continuation ──
+    } else if (regime === "TRANSITION_LOW_1") {
       const prevRSIMin = num(row?.rsi_h1_previouslow3);
       if (prevRSIMin !== null && prevRSIMin < 30) {
         const slope  = num(row?.slope_h1);
@@ -93,16 +102,13 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
         const slopeMin = getSlopeConfig(symbol).up_weak.min;
 
         if (slope > slopeMin && dslope > 0) {
-          // Rebond confirmé → reversal BUY
           setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
         } else if (slope < -slopeMin && dslope < 0) {
-          // Poursuite baissière → continuation SELL
           setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
         }
-        // sinon → WAIT
       }
 
-    } else if (regime === "TRANSITION_HIGH") {
+    } else if (regime === "TRANSITION_HIGH_1") {
       const prevRSIMax = num(row?.rsi_h1_previoushigh3);
       if (prevRSIMax !== null && prevRSIMax > 70) {
         const slope  = num(row?.slope_h1);
@@ -110,17 +116,20 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
         const slopeMin = getSlopeConfig(symbol).up_weak.min;
 
         if (slope < -slopeMin && dslope < 0) {
-          // Retournement confirmé → reversal SELL
           setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
         } else if (slope > slopeMin && dslope > 0) {
-          // Poursuite haussière → continuation BUY
           setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
         }
-        // sinon → WAIT
       }
+
+    // ── TRANSITION_2 → continuation only ──
+    } else if (regime === "TRANSITION_LOW_2" || regime === "TRANSITION_HIGH_2") {
+      setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
+
+    // ── NEUTRAL → WAIT ──
     }
+    // regime === "NEUTRAL" → skip
   }
 
-  // Tri par score décroissant
   return [...best.values()].sort((a, b) => b.score - a.score);
 }

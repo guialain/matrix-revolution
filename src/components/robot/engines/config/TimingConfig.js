@@ -10,12 +10,10 @@ export const TIMING_CONFIG = {
   // Fenêtres horaires de trading — format "HH:MM" (heure locale du CSV)
   // Bloque les nouvelles entrées hors fenêtre (les trades ouverts continuent d'être gérés)
   // Override optionnel par symbol ; sinon default s'applique
+  // Plage unique 09:00–20:00 UTC pour tous les actifs
+  // Les filtres ATR/vol gèrent la sélection fine
   tradingHours: {
-    default:   { start: "06:00", end: "20:00" },
-    USDJPY:    { start: "06:00", end: "20:00" },
-    EURJPY:    { start: "06:00", end: "20:00" },
-    CrudeOIL:  { start: "06:00", end: "20:00" },
-    ETHUSD:    { start: "06:00", end: "20:00" },
+    default: { start: "09:00", end: "20:00" },
   },
 
   M5: {
@@ -32,11 +30,11 @@ export const TIMING_CONFIG = {
     // Overextended — spike terminal (reversal + continuation)
     // =========================================================
     overextended: {
-      slopeAbs:  6.5,
-      dslopeAbs: 4.5,
+      slopeAbs:  5.0,
+      dslopeAbs: 4.0,
       drsiAbs:   8.0,
-      rsiMax:    68,
-      rsiMin:    32,
+      rsiMax:    63,
+      rsiMin:    37,
     },
   },
 

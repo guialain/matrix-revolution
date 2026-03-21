@@ -18,7 +18,6 @@ export const VOLATILITY_CONFIG = {
   US_30:       { lowMax: 0.000586, medMax: 0.001745, highMax: 0.003198 },
   US_500:      { lowMax: 0.000614, medMax: 0.001579, highMax: 0.003150 },
   US_TECH100:  { lowMax: 0.000859, medMax: 0.002227, highMax: 0.004454 },
-  JAPAN_225:   { lowMax: 0.000941, medMax: 0.001932, highMax: 0.003610 },
   DOLLAR_INDX: { lowMax: 0.000354, medMax: 0.000688, highMax: 0.001114 },
   BTCEUR:      { lowMax: 0.001561, medMax: 0.005038, highMax: 0.009660 },
   BTCUSD:      { lowMax: 0.001531, medMax: 0.005003, highMax: 0.009439 },

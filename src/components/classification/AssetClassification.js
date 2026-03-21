@@ -41,8 +41,7 @@ export const ASSETS_BY_CLASS = {
   [ASSET_CLASSES.INDEX]: [
     "US_30", "US_500", "US_TECH100",
     "FRANCE_40", "GERMANY_40", "ITALY_40",
-    "UK_100", "DOLLAR_INDX",
-    "JAPAN_225"
+    "UK_100", "DOLLAR_INDX"
   ],
 
   [ASSET_CLASSES.METAL]: [

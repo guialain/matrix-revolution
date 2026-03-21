@@ -268,6 +268,16 @@ export const SLOPE_CONFIG = {
     down_extreme: { min: -Infinity, max:  -5.1228 },
   },
 
+  BRENT_OIL: {
+    flat:         { min:  -0.5574, max:   0.8665  },
+    up_weak:      { min:   0.8665, max:   2.5907  },
+    up_strong:    { min:   2.5907, max:   5.6592  },
+    up_extreme:   { min:   5.6592, max:  Infinity },
+    down_weak:    { min:  -2.6582, max:  -0.5574  },
+    down_strong:  { min:  -6.3011, max:  -2.6582  },
+    down_extreme: { min: -Infinity, max:  -6.3011 },
+  },
+
   NATURAL_GAS: {
     flat:         { min:  -0.6156, max:   0.6364  },
     up_weak:      { min:   0.6364, max:   2.2567  },

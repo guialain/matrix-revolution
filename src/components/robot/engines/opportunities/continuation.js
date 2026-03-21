@@ -46,7 +46,8 @@ const ContinuationStrategy = (() => {
     } else {
       return {
         slopeMin: Math.abs(slopeCfg.down_weak.max),
-        slopeMax: Math.abs(slopeCfg.down_extreme.max),
+        slopeMax: Math.abs(slopeCfg.down_extreme.max)
+          || Math.abs(slopeCfg.up_extreme.min),
       };
     }
   }

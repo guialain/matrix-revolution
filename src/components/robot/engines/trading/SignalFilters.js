@@ -87,65 +87,29 @@ function isBlockedVolatility(regime) {
 // =========================================================
 function isM5Contrary(opp, side) {
 
-const rsi = num(opp?.rsi_m5);
-const drsi = num(opp?.drsi_m5);
-const slope = num(opp?.slope_m5);
+const slope  = num(opp?.slope_m5);
 const dslope = num(opp?.dslope_m5);
+const drsi   = num(opp?.drsi_m5);
 
-const zh1 = num(opp?.zscore_h1);
-const zm5 = num(opp?.zscore_m5);
+if (slope === null || dslope === null || drsi === null)
+return false;
 
 const TH = TIMING_CONFIG.M5.slopeThreshold;
 
-if (rsi === null || drsi === null || slope === null || dslope === null)
-return false;
-
-// ================= BUY =================
-
 if (side === "BUY") {
-
-if (zh1 !== null && zh1 > 1.8) return true;
-if (zm5 !== null && zm5 > 1.8) return true;
-
-if (rsi > 65 && drsi > 5)
-return true;
-
-if (slope < 0 && dslope < 0 && drsi < 0)
-return true;
-
-if (dslope < 0 && drsi < 0)
-return true;
-
-const slopeWeak = slope < TH;
-const microWeak = dslope < 0 || drsi < 0;
-
-if (slopeWeak && microWeak)
-return true;
-
+  if (slope < 0 && dslope < 0 && drsi < 0) return true;
+  if (dslope < 0 && drsi < 0) return true;
+  const slopeWeak = slope < TH;
+  const microWeak = dslope < 0 || drsi < 0;
+  if (slopeWeak && microWeak) return true;
 }
 
-// ================= SELL =================
-
 if (side === "SELL") {
-
-if (zh1 !== null && zh1 < -1.8) return true;
-if (zm5 !== null && zm5 < -1.8) return true;
-
-if (rsi < 35 && drsi < -5)
-return true;
-
-if (slope > 0 && dslope > 0 && drsi > 0)
-return true;
-
-if (dslope > 0 && drsi > 0)
-return true;
-
-const slopeWeak = slope > -TH;
-const microWeak = dslope > 0 || drsi > 0;
-
-if (slopeWeak && microWeak)
-return true;
-
+  if (slope > 0 && dslope > 0 && drsi > 0) return true;
+  if (dslope > 0 && drsi > 0) return true;
+  const slopeWeak = slope > -TH;
+  const microWeak = dslope > 0 || drsi > 0;
+  if (slopeWeak && microWeak) return true;
 }
 
 return false;
@@ -161,8 +125,8 @@ const rsi  = num(opp?.rsi_m1);
 const drsi = num(opp?.drsi_m1);
 if (rsi === null || drsi === null) return false;
 
-if (side === "BUY"  && rsi > 68 && drsi > 0.5) return true;
-if (side === "SELL" && rsi < 32 && drsi < -0.5) return true;
+if (side === "BUY"  && rsi > 63 && drsi > 0.5) return true;
+if (side === "SELL" && rsi < 37 && drsi < -0.5) return true;
 
 return false;
 
@@ -173,42 +137,37 @@ return false;
 // =========================================================
 function isM5Overextended(opp, side) {
 
-const slope = num(opp?.slope_m5);
+const rsi    = num(opp?.rsi_m5);
+const drsi   = num(opp?.drsi_m5);
+const slope  = num(opp?.slope_m5);
 const dslope = num(opp?.dslope_m5);
-const drsi = num(opp?.drsi_m5);
-const rsi = num(opp?.rsi_m5);
-
-if (slope === null || dslope === null || drsi === null || rsi === null)
-return false;
+const zh1    = num(opp?.zscore_h1);
+const zm5    = num(opp?.zscore_m5);
 
 const oe = TIMING_CONFIG.M5.overextended;
 
-// BUY
 if (side === "BUY") {
-
-let score = 0;
-
-if (rsi > oe.rsiMax) score++;
-if (slope > oe.slopeAbs) score++;
-if (dslope > oe.dslopeAbs) score++;
-if (drsi > oe.drsiAbs) score++;
-
-if (score >= 2) return true;
-
+  // MTF extension block
+  if ((zh1 !== null && zh1 > 1.8) || (zm5 !== null && zm5 > 1.8)) return true;
+  // spike terminal RSI
+  if (rsi !== null && drsi !== null && rsi > 65 && drsi > 5) return true;
+  // TimingConfig thresholds
+  if (rsi !== null && slope !== null && dslope !== null && drsi !== null) {
+    if (rsi > oe.rsiMax || slope > oe.slopeAbs || dslope > oe.dslopeAbs || drsi > oe.drsiAbs)
+      return true;
+  }
 }
 
-// SELL
 if (side === "SELL") {
-
-let score = 0;
-
-if (rsi < oe.rsiMin) score++;
-if (slope < -oe.slopeAbs) score++;
-if (dslope < -oe.dslopeAbs) score++;
-if (drsi < -oe.drsiAbs) score++;
-
-if (score >= 2) return true;
-
+  // MTF extension block
+  if ((zh1 !== null && zh1 < -1.8) || (zm5 !== null && zm5 < -1.8)) return true;
+  // spike terminal RSI
+  if (rsi !== null && drsi !== null && rsi < 35 && drsi < -5) return true;
+  // TimingConfig thresholds
+  if (rsi !== null && slope !== null && dslope !== null && drsi !== null) {
+    if (rsi < oe.rsiMin || slope < -oe.slopeAbs || dslope < -oe.dslopeAbs || drsi < -oe.drsiAbs)
+      return true;
+  }
 }
 
 return false;

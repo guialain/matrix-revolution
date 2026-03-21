@@ -131,33 +131,37 @@ const ReversalStrategy = (() => {
 
     const { slopeMin, slopeMax } = getSlopeLimits(side, symbol);
     const dslopeMin = cfg.dslopeH1ReversalMin ?? 0.5;
+    const absSlope = Math.abs(slope);
 
-    // Zone EXTREME BUY (0–20)
+    // ── EXTREME BUY (RSI 0–20) — pas de spike filter
     if (rsi < 20) return dslope > 1.0 ? "BUY" : null;
 
-    // Zone EXTREME SELL (80–100)
+    // ── EXTREME SELL (RSI 80–100) — pas de spike filter
     if (rsi > 80) return dslope < -1.0 ? "SELL" : null;
 
-    // Spike filter — slope trop violent
-    if (Math.abs(slope) > slopeMax) return null;
+    // ── DEEP BUY (RSI 20–30)
+    if (side === "BUY" && rsi < 30) {
+      if (absSlope > slopeMax) return null; // spike filter DEEP
+      return (dslope > dslopeMin && absSlope >= slopeMin) ? "BUY" : null;
+    }
 
-    // BUY REVERSAL — Zone DEEP (RSI 20–30)
-    if (side === "BUY" && rsi < 30)
-      return (dslope > dslopeMin && Math.abs(slope) >= slopeMin) ? "BUY" : null;
+    // ── DEEP SELL (RSI 70–80)
+    if (side === "SELL" && rsi > 70) {
+      if (absSlope > slopeMax) return null; // spike filter DEEP
+      return (dslope < -dslopeMin && absSlope >= slopeMin) ? "SELL" : null;
+    }
 
-    // SELL REVERSAL — Zone DEEP (RSI 70–80)
-    if (side === "SELL" && rsi > 70)
-      return (dslope < -dslopeMin && Math.abs(slope) >= slopeMin) ? "SELL" : null;
-
-    // SEMI BUY (30–35) — peut donner BUY ou SELL
+    // ── TRANSITION_LOW_1 (RSI 30–35) — peut donner BUY ou SELL
     if (rsi < 35) {
+      if (absSlope > slopeMax) return null; // spike filter SEMI
       if (slope > slopeMin  && dslope > 0 && rsiStats.minRSI < 30) return "BUY";
       if (slope < -slopeMin && dslope < 0 && rsiStats.minRSI < 30) return "SELL";
       return null;
     }
 
-    // SEMI SELL (65–70) — peut donner SELL ou BUY
+    // ── TRANSITION_HIGH_1 (RSI 65–70) — peut donner SELL ou BUY
     if (rsi > 65) {
+      if (absSlope > slopeMax) return null; // spike filter SEMI
       if (slope < -slopeMin && dslope < 0 && rsiStats.maxRSI > 70) return "SELL";
       if (slope > slopeMin  && dslope > 0 && rsiStats.maxRSI > 70) return "BUY";
       return null;
@@ -241,12 +245,12 @@ const ReversalStrategy = (() => {
 
     // SELL_ZMID — venait d'en bas, cloche, momentum s'effondre
     if (Math.abs(zscore) < 0.5 && zMin3 < -1.0 && amplitude > 0.5 &&
-        dslope < -1.0 && slope < 3.0 && rsi < 55)
+        dslope < -1.0 && slope < 3.0)
       return { side: "SELL", signalType: "SELL_ZMID" };
 
     // BUY_ZMID — venait d'en haut, cloche inversée, momentum repart
     if (Math.abs(zscore) < 0.5 && zMax3 > 1.0 && amplitude > 0.5 &&
-        dslope > 1.0 && slope > -2.0 && rsi > 45)
+        dslope > 1.0 && slope > -2.0)
       return { side: "BUY", signalType: "BUY_ZMID" };
 
     return null;

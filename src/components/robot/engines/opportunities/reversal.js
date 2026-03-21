@@ -134,39 +134,47 @@ const ReversalStrategy = (() => {
 
     const zscore = num(dyn?.zscore);
 
-    // ── Spike bypass : spike en décélération franche (passe avant spike filter) ──
-    if (side === "BUY" && slope < -slopeMax && dslope > 1 && rsi < 30 && zscore !== null && zscore < -2)
-      return true;
-    if (side === "SELL" && slope > slopeMax && dslope < -1 && rsi > 70 && zscore !== null && zscore > 2)
-      return true;
+    // BUY REVERSAL
+    if (side === "BUY") {
+      // Spike bypass EXTREME — RSI < 20, slope extrême mais décélération
+      if (rsi < 20 && slope < -slopeMax && dslope > dslopeMin && zscore !== null && zscore < -1.6)
+        return true;
 
-    // SELL REVERSAL
-    if (side === "SELL") {
-      const deep = cfg.rsiSellMin  ?? 70;
-      const semi = cfg.rsiSellSemi ?? 65;
+      // Spike bypass DEEP — RSI < 30
+      if (rsi < 30 && slope < -slopeMax && dslope > 1 && zscore !== null && zscore < -2)
+        return true;
 
-      // Spike filter — slope trop violent = mouvement non tradable
+      // Spike filter — slope trop violent
       if (Math.abs(slope) > slopeMax) return false;
 
-      // Zone extrême — décélération suffit
-      if (rsi > deep) return slope <= 0.5 && dslope < -dslopeMin;
-      // Zone semi — slope confirmé au-delà de slopeMin + décélération
-      if (rsi > semi) return slope < 0.5 && dslope < -dslopeMin;
+      // Zone EXTREME (RSI 0–20) — survente extrême, slope cap configurable
+      if (rsi < 20) return slope > -(cfg.slopeExtremeBuyMax ?? 4) && dslope > dslopeMin;
+      // Zone DEEP (RSI 20–30) — slope doit avoir une amplitude minimale
+      if (rsi < 30) return dslope > dslopeMin && Math.abs(slope) >= slopeMin;
+      // Zone SEMI (RSI 30–35) — transition basse
+      if (rsi < 35) return slope >= slopeMin && dslope > dslopeMin;
       return false;
     }
 
-    // BUY REVERSAL — symétrique
-    if (side === "BUY") {
-      const deep = cfg.rsiBuyMax  ?? 30;
-      const semi = cfg.rsiBuySemi ?? 35;
+    // SELL REVERSAL
+    if (side === "SELL") {
+      // Spike bypass EXTREME — RSI > 80, slope extrême mais décélération
+      if (rsi > 80 && slope > slopeMax && dslope < -dslopeMin && zscore !== null && zscore > 1.6)
+        return true;
 
-      // Spike filter — slope trop violent = mouvement non tradable
+      // Spike bypass DEEP — RSI > 70
+      if (rsi > 70 && slope > slopeMax && dslope < -1 && zscore !== null && zscore > 2)
+        return true;
+
+      // Spike filter — slope trop violent
       if (Math.abs(slope) > slopeMax) return false;
 
-      // Zone extrême — décélération suffit
-      if (rsi < deep) return slope >= -0.5 && dslope > dslopeMin;
-      // Zone semi — slope confirmé au-delà de slopeMin + décélération
-      if (rsi < semi) return slope > -0.5 && dslope > dslopeMin;
+      // Zone EXTREME (RSI 80–100) — surachat extrême, slope cap configurable
+      if (rsi > 80) return slope < (cfg.slopeExtremeSellMax ?? 4) && dslope < -dslopeMin;
+      // Zone DEEP (RSI 70–80) — slope doit avoir une amplitude minimale
+      if (rsi > 70) return dslope < -dslopeMin && Math.abs(slope) >= slopeMin;
+      // Zone SEMI (RSI 65–70) — transition haute
+      if (rsi > 65) return slope <= -slopeMin && dslope < -dslopeMin;
       return false;
     }
 

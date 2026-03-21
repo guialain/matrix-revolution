@@ -32,10 +32,16 @@ export const RISK_CONFIG = {
     contractSize: 100000, refPrice: 0.71043, baseToEUR: 0.847,
   },
   NZDUSD: {
-    tpAtr: 0.30, slAtr: 0.90,
+    tpAtr: 0.30, slAtr: 1.70,
     spread: 0.00008,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 0.63000, baseToEUR: 0.847,
+  },
+  USDCHF: {
+    tpAtr: 0.30, slAtr: 1.10,
+    spread: 0.00015,
+    targetLeveragePerTrade: 1.5,
+    contractSize: 100000, refPrice: 0.8850, baseToEUR: 0.847,
   },
   GBPUSD: {
     tpAtr: 0.40, slAtr: 2.15,
@@ -156,21 +162,21 @@ export const RISK_CONFIG = {
   CrudeOIL: {
     tpAtr: 0.35, slAtr: 0.90,
     spread: 0.04,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 1.0,
     contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
     tickSize: 0.01,
   },
   GASOLINE: {
     tpAtr: 0.35, slAtr: 2.80,
     spread: 0.003,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 1.0,
     contractSize: 100000, refPrice: 3.13, baseToEUR: 0.847,
     tickSize: 0.0001,
   },
   BRENT_OIL: {
     tpAtr: 0.55, slAtr: 1.10,
     spread: 0.04,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 1.0,
     contractSize: 1000, refPrice: 112.27, baseToEUR: 0.847,
     tickSize: 0.01,
   },

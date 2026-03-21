@@ -26,7 +26,7 @@ const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 function isOutsideTradingHours(opp) {
 
 const now = new Date();
-const timePart = now.toTimeString().slice(0,5);
+const timePart = now.toUTCString().slice(17, 22);
 
 const symbol = String(opp?.symbol ?? "").toUpperCase();
 

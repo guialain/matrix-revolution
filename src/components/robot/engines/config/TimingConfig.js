@@ -5,14 +5,17 @@
 export const TIMING_CONFIG = {
 
   // Filtre weekend — pas d'entrée vendredi ≥ weekendFridayHour, samedi, dimanche
-  weekendFridayHour: 17,
+  weekendFridayHour: 20,
 
   // Fenêtres horaires de trading — format "HH:MM" (heure locale du CSV)
   // Bloque les nouvelles entrées hors fenêtre (les trades ouverts continuent d'être gérés)
   // Override optionnel par symbol ; sinon default s'applique
   tradingHours: {
-    default: { start: "08:00", end: "19:30" },
-    // EURUSD: { start: "08:00", end: "20:00" },
+    default:   { start: "06:00", end: "20:00" },
+    USDJPY:    { start: "06:00", end: "20:00" },
+    EURJPY:    { start: "06:00", end: "20:00" },
+    CrudeOIL:  { start: "06:00", end: "20:00" },
+    ETHUSD:    { start: "06:00", end: "20:00" },
   },
 
   M5: {

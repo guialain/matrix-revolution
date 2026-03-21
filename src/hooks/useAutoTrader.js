@@ -196,7 +196,7 @@ function computeSLTP(op, cfg, snapshot) {
     tp = Number(tp.toFixed(digits));
   }
 
-  console.log(`[AUTO-TRADER] SL/TP ${op.symbol}: tick=${tick} digits=${digits} sl=${sl} tp=${tp}`);
+  console.log(`[AUTO-TRADER] SL/TP ${op.symbol}: tick=${tick} digits=${digits} sl=${sl} tp=${tp} cfgTick=${cfgTick} scanTick=${scanTick}`);
 
   return { sl, tp, slDist, tpDist };
 }

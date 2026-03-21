@@ -132,6 +132,14 @@ const ReversalStrategy = (() => {
     const { slopeMin, slopeMax } = getSlopeLimits(side, symbol);
     const dslopeMin = cfg.dslopeH1ReversalMin ?? 0.5;
 
+    const zscore = num(dyn?.zscore);
+
+    // ── Spike bypass : spike en décélération franche (passe avant spike filter) ──
+    if (side === "BUY" && slope < -slopeMax && dslope > 1 && rsi < 30 && zscore !== null && zscore < -2)
+      return true;
+    if (side === "SELL" && slope > slopeMax && dslope < -1 && rsi > 70 && zscore !== null && zscore > 2)
+      return true;
+
     // SELL REVERSAL
     if (side === "SELL") {
       const deep = cfg.rsiSellMin  ?? 70;
@@ -222,29 +230,31 @@ const ReversalStrategy = (() => {
   }
 
   // ============================================================================
-  // ZMID DETECTION — zscore mid-zone reversal (regime 2)
+  // ZMID DETECTION — zscore mid-zone reversal (regime 3)
+  // Uses zscore_h1_min3 / max3 amplitude to detect bell-shaped reversals
   // ============================================================================
   function detectZmid(row, dyn) {
-    const zscore = num(row?.zscore_h1);
-    const dbbz   = num(row?.dz_h1);
-    const slope  = dyn?.slope;
-    const dslope = dyn?.dslope;
+    const zscore = num(dyn?.zscore);
+    const slope  = num(dyn?.slope);
+    const dslope = num(dyn?.dslope);
+    const rsi    = num(row?.rsi_h1);
+    const zMin3  = num(row?.zscore_h1_min3);
+    const zMax3  = num(row?.zscore_h1_max3);
 
-    if (zscore === null || dbbz === null || slope === null || dslope === null) return null;
+    if (zscore === null || slope === null || dslope === null ||
+        rsi === null || zMin3 === null || zMax3 === null) return null;
 
-    // Mid-zone only: |zscore| between 0.8 and 1.6
-    const az = Math.abs(zscore);
-    if (az < 0.8 || az >= 1.6) return null;
+    const amplitude = zMax3 - zMin3;
 
-    // BUY ZMID: zscore negative, dbbz positive (mean-reverting), slope turning up
-    if (zscore < -0.8 && dbbz > 0.15 && dslope > 0.3) {
-      return { side: "BUY", signalType: "BUY_ZMID" };
-    }
-
-    // SELL ZMID: zscore positive, dbbz negative (mean-reverting), slope turning down
-    if (zscore > 0.8 && dbbz < -0.15 && dslope < -0.3) {
+    // SELL_ZMID — venait d'en bas, cloche, momentum s'effondre
+    if (Math.abs(zscore) < 0.5 && zMin3 < -1.0 && amplitude > 0.5 &&
+        dslope < -1.0 && slope < 3.0 && rsi < 55)
       return { side: "SELL", signalType: "SELL_ZMID" };
-    }
+
+    // BUY_ZMID — venait d'en haut, cloche inversée, momentum repart
+    if (Math.abs(zscore) < 0.5 && zMax3 > 1.0 && amplitude > 0.5 &&
+        dslope > 1.0 && slope > -2.0 && rsi > 45)
+      return { side: "BUY", signalType: "BUY_ZMID" };
 
     return null;
   }

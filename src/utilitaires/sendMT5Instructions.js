@@ -3,9 +3,20 @@
 // Rôle : envoyer des ordres OPEN et CLOSE vers MT5 via l’API Node
 // ============================================================================
 
+import { getRiskConfig } from "../components/robot/engines/config/RiskConfig";
+
 const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 const API = `${API_BASE}/api`;
+
+// ============================================================================
+// TICK ROUNDING — final guard before dispatch
+// ============================================================================
+function roundToTick(price, tickSize) {
+  if (!Number.isFinite(tickSize) || tickSize <= 0) return price;
+  const digits = Math.max(0, Math.ceil(-Math.log10(tickSize)));
+  return Number((Math.round(price / tickSize) * tickSize).toFixed(digits));
+}
 
 // ============================================================================
 // OPEN POSITION
@@ -15,7 +26,12 @@ export function sendOrderToMT5(order) {
     return Promise.reject(new Error(`sendOrderToMT5 abort — symbol:${order?.symbol} side:${order?.side} lots:${order?.lots}`));
   }
 
-  console.log("[BRIDGE] sendOrderToMT5()", order);
+  // Final tick rounding — ensures SL/TP are always on valid price levels
+  const tick = getRiskConfig(order.symbol)?.tickSize;
+  const sl = roundToTick(order.sl, tick);
+  const tp = roundToTick(order.tp, tick);
+
+  console.log("[BRIDGE] sendOrderToMT5()", { ...order, sl, tp });
 
   return fetch(`${API}/mt5order`, {
     method: "POST",
@@ -25,8 +41,8 @@ export function sendOrderToMT5(order) {
       symbol: order.symbol,
       side: order.side,              // BUY | SELL
       lots: order.lots,
-      sl: order.sl,
-      tp: order.tp,
+      sl,
+      tp,
       slDist: order.slDist ?? null,
       tpDist: order.tpDist ?? null,
       tf: order.signalTF ?? null,

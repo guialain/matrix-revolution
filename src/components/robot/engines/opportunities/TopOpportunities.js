@@ -8,6 +8,7 @@
 
 import ContinuationStrategy from "./continuation";
 import ReversalStrategy     from "./reversal";
+import { getSlopeConfig }   from "../config/SlopeConfig";
 
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 
@@ -85,17 +86,38 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
       setBest(best, symbol, opp);
 
     } else if (regime === "TRANSITION_LOW") {
-      // Reversal BUY ou Continuation SELL
-      const rev  = pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin }));
-      const cont = pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin }));
-      // Reversal prioritaire, fallback continuation
-      setBest(best, symbol, rev ?? cont);
+      const prevRSIMin = num(row?.rsi_h1_previouslow3);
+      if (prevRSIMin !== null && prevRSIMin < 30) {
+        const slope  = num(row?.slope_h1);
+        const dslope = num(row?.dslope_h1);
+        const slopeMin = getSlopeConfig(symbol).up_weak.min;
+
+        if (slope > slopeMin && dslope > 0) {
+          // Rebond confirmé → reversal BUY
+          setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
+        } else if (slope < -slopeMin && dslope < 0) {
+          // Poursuite baissière → continuation SELL
+          setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
+        }
+        // sinon → WAIT
+      }
 
     } else if (regime === "TRANSITION_HIGH") {
-      // Reversal SELL ou Continuation BUY
-      const rev  = pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin }));
-      const cont = pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin }));
-      setBest(best, symbol, rev ?? cont);
+      const prevRSIMax = num(row?.rsi_h1_previoushigh3);
+      if (prevRSIMax !== null && prevRSIMax > 70) {
+        const slope  = num(row?.slope_h1);
+        const dslope = num(row?.dslope_h1);
+        const slopeMin = getSlopeConfig(symbol).up_weak.min;
+
+        if (slope < -slopeMin && dslope < 0) {
+          // Retournement confirmé → reversal SELL
+          setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
+        } else if (slope > slopeMin && dslope > 0) {
+          // Poursuite haussière → continuation BUY
+          setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
+        }
+        // sinon → WAIT
+      }
     }
   }
 

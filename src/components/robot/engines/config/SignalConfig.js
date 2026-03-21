@@ -22,10 +22,6 @@ export const H1_REVERSAL_DEFAULTS = {
   // ── SLOPE GATE ───────────────────────────────────────────────────
   dslopeH1ReversalMin: 0.5,
 
-  // ── EXTREME ZONE SLOPE CAP ─────────────────────────────────────
-  slopeExtremeBuyMax:  4,   // |slope| max en zone RSI 0–20
-  slopeExtremeSellMax: 4,   // |slope| max en zone RSI 80–100
-
   // ── EARLY FLIP ───────────────────────────────────────────────────
   flipSlopeMin:    1.0,
   flipDslopeMin:   1.0,

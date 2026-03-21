@@ -132,23 +132,17 @@ const ReversalStrategy = (() => {
     const { slopeMin, slopeMax } = getSlopeLimits(side, symbol);
     const dslopeMin = cfg.dslopeH1ReversalMin ?? 0.5;
 
-    const zscore = num(dyn?.zscore);
+    // Zone EXTREME BUY (0–20)
+    if (rsi < 20) return dslope > 1.0;
+
+    // Zone EXTREME SELL (80–100)
+    if (rsi > 80) return dslope < -1.0;
+
+    // Spike filter — slope trop violent
+    if (Math.abs(slope) > slopeMax) return false;
 
     // BUY REVERSAL
     if (side === "BUY") {
-      // Spike bypass EXTREME — RSI < 20, slope extrême mais décélération
-      if (rsi < 20 && slope < -slopeMax && dslope > dslopeMin && zscore !== null && zscore < -1.6)
-        return true;
-
-      // Spike bypass DEEP — RSI < 30
-      if (rsi < 30 && slope < -slopeMax && dslope > 1 && zscore !== null && zscore < -2)
-        return true;
-
-      // Spike filter — slope trop violent
-      if (Math.abs(slope) > slopeMax) return false;
-
-      // Zone EXTREME (RSI 0–20) — survente extrême, slope cap configurable
-      if (rsi < 20) return slope > -(cfg.slopeExtremeBuyMax ?? 4) && dslope > dslopeMin;
       // Zone DEEP (RSI 20–30) — slope doit avoir une amplitude minimale
       if (rsi < 30) return dslope > dslopeMin && Math.abs(slope) >= slopeMin;
       // Zone SEMI (RSI 30–35) — transition basse
@@ -158,19 +152,6 @@ const ReversalStrategy = (() => {
 
     // SELL REVERSAL
     if (side === "SELL") {
-      // Spike bypass EXTREME — RSI > 80, slope extrême mais décélération
-      if (rsi > 80 && slope > slopeMax && dslope < -dslopeMin && zscore !== null && zscore > 1.6)
-        return true;
-
-      // Spike bypass DEEP — RSI > 70
-      if (rsi > 70 && slope > slopeMax && dslope < -1 && zscore !== null && zscore > 2)
-        return true;
-
-      // Spike filter — slope trop violent
-      if (Math.abs(slope) > slopeMax) return false;
-
-      // Zone EXTREME (RSI 80–100) — surachat extrême, slope cap configurable
-      if (rsi > 80) return slope < (cfg.slopeExtremeSellMax ?? 4) && dslope < -dslopeMin;
       // Zone DEEP (RSI 70–80) — slope doit avoir une amplitude minimale
       if (rsi > 70) return dslope < -dslopeMin && Math.abs(slope) >= slopeMin;
       // Zone SEMI (RSI 65–70) — transition haute

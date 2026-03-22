@@ -2,11 +2,12 @@
 // OPEN POSITIONS — Neo Matrix (LIVE TABLE)
 // ============================================================================
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 const API_BASE = window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin;
 
 import "../../styles/stylesterminalMT5/openpositions.css";
 import { sendCloseToMT5 } from "../../utilitaires/sendMT5Instructions";
+import MaxHoldGuard from "../robot/engines/management/MaxHoldGuard";
 
 // ============================================================================
 // COMPONENT
@@ -20,6 +21,8 @@ export default function OpenPositions() {
   const [positions, setPositions] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: "open_time", direction: "desc" });
   const [closingTicket, setClosingTicket] = useState(null);
+  const [maxHoldAlerts, setMaxHoldAlerts] = useState([]);
+  const closedByGuardRef = React.useRef(new Set());
 
   // =========================
   // FETCH MT5 DATA
@@ -36,6 +39,30 @@ export default function OpenPositions() {
     const id = setInterval(fetchData, 2000);
     return () => clearInterval(id);
   }, []);
+
+  // =========================
+  // MAX HOLD GUARD — auto-close expired positions
+  // =========================
+  useEffect(() => {
+    if (!positions.length) { setMaxHoldAlerts([]); return; }
+
+    const toClose = MaxHoldGuard.evaluate(positions);
+    setMaxHoldAlerts(toClose);
+
+    for (const alert of toClose) {
+      if (closedByGuardRef.current.has(alert.ticket)) continue;
+      closedByGuardRef.current.add(alert.ticket);
+      console.warn(`⏰ ${alert.reason} | ${alert.symbol} ${alert.side} ticket=${alert.ticket} hold=${alert.duration_h.toFixed(1)}h (max=${alert.maxHoldH}h)`);
+      sendCloseToMT5({ ticket: alert.ticket })
+        .catch(err => console.error("[MaxHoldGuard] close error:", err));
+    }
+
+    // Cleanup stale tickets from ref
+    const activeTickets = new Set(positions.map(p => p.ticket));
+    for (const t of closedByGuardRef.current) {
+      if (!activeTickets.has(t)) closedByGuardRef.current.delete(t);
+    }
+  }, [positions]);
 
   // =========================
   // CLEAN + ENRICH
@@ -130,6 +157,13 @@ function closePosition(p, e) {
     <div className="open-positions">
       <div className="open-positions-title">OPEN POSITIONS</div>
 
+      {maxHoldAlerts.length > 0 && (
+        <div style={{ background: "#442200", border: "1px solid #ff8800", borderRadius: 6, padding: "6px 12px", marginBottom: 8, fontSize: "0.85em", color: "#ffaa33" }}>
+          ⏰ TRINITY ADVICE — {maxHoldAlerts.length} position{maxHoldAlerts.length > 1 ? "s" : ""} en fermeture automatique :
+          {maxHoldAlerts.map(a => ` ${a.symbol} (${a.reason}, ${a.duration_h.toFixed(1)}h)`).join(",")}
+        </div>
+      )}
+
       <div className="portfolio-table-wrapper">
         <table className="portfolio-table">
 
@@ -208,7 +242,10 @@ function closePosition(p, e) {
                   {p.intraday_change != null ? `${p.intraday_change.toFixed(2)}%` : "—"}
                 </td>
 
-                <td>{p.duration_h != null ? `${p.duration_h.toFixed(1)}h` : "—"}</td>
+                <td className={maxHoldAlerts.some(a => a.ticket === p.ticket) ? "maxhold-alert" : ""}>
+                  {p.duration_h != null ? `${p.duration_h.toFixed(1)}h` : "—"}
+                  {maxHoldAlerts.some(a => a.ticket === p.ticket) && " ⏰"}
+                </td>
 
                 <td className={p.pnl_eur >= 0 ? "pos" : "neg"}>
                   {formatEUR(p.pnl_eur)}

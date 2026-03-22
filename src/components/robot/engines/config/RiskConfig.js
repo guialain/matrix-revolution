@@ -9,6 +9,9 @@
 //   spread : spread fixe en unités prix, relevé sur MT5.
 //            Source unique dans computeSpreadPrice (priorité après config.spread global).
 //
+//   maxHoldH : durée max d'un trade en heures (clôture forcée si dépassé)
+//             Défaut global = defaultMaxHoldH (8h) si absent.
+//
 //   targetLeveragePerTrade : levier cible par trade (compound scaling)
 //   contractSize           : taille du contrat (unités de base par lot)
 //   refPrice               : prix de référence pour estimations
@@ -20,7 +23,7 @@ export const RISK_CONFIG = {
   // ── FX ────────────────────────────────────────────────────────────────────
 
   EURUSD: {
-    tpAtr: 0.60, slAtr: 1.75,
+    tpAtr: 0.60, slAtr: 1.75, maxHoldH: 12,
     spread: 0.00008,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 1.147722, baseToEUR: 1.000,
@@ -76,7 +79,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.30, slAtr: 1.70,
+    tpAtr: 0.30, slAtr: 1.70, maxHoldH: 8,
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 8500, baseToEUR: 1.076,
@@ -114,7 +117,7 @@ export const RISK_CONFIG = {
     tickSize: 0.25,
   },
   US_TECH100: {
-    tpAtr: 0.30, slAtr: 1.80,
+    tpAtr: 0.30, slAtr: 1.80, maxHoldH: 4,
     spread: 2.25,
     targetLeveragePerTrade: 2,
     contractSize: 100, refPrice: 24938.75, baseToEUR: 0.847,
@@ -151,7 +154,7 @@ export const RISK_CONFIG = {
     tickSize: 0.01,
   },
   SILVER: {
-    tpAtr: 0.45, slAtr: 1.80,
+    tpAtr: 0.45, slAtr: 1.80, maxHoldH: 3,
     spread: 0.148,
     targetLeveragePerTrade: 0.5,
     contractSize: 10000, refPrice: 80.880, baseToEUR: 0.847,
@@ -196,6 +199,7 @@ export const RISK_CONFIG = {
   default: {
     tpAtr: 0.50, slAtr: 1.45,
     spread: 0,
+    defaultMaxHoldH: 8,
     targetLeveragePerTrade: 1,
     contractSize: 100000, refPrice: 1.0, baseToEUR: 1.0,
   },

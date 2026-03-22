@@ -28,16 +28,14 @@ const ZmidStrategy = (() => {
 
     const amplitude = zMax3 - zMin3;
 
-    // SELL_ZMID — venait d'en bas, cloche, momentum s'effondre
-    // dslope < -1.0 (was -0.5) + dz_h1 < 0 (BB derivative aligned)
+    // SELL_ZMID — prix venait d'en bas (zMin3 < -0.7), revenu au milieu, repart à la baisse
     if (Math.abs(zscore) < 0.5 && zMin3 < -0.7 && amplitude > 0.5 &&
-        dslope < -1.0 && slope < 2.5 && dbbz < 0)
+        dslope < -0.7 && slope < 2.5 && dbbz < 0)
       return { side: "SELL", signalType: "SELL_ZMID" };
 
-    // BUY_ZMID — venait d'en haut, cloche inversée, momentum repart
-    // dslope > 1.0 (was 0.5) + dz_h1 > 0 (BB derivative aligned)
+    // BUY_ZMID — prix venait d'en haut (zMax3 > 0.7), revenu au milieu, repart à la hausse
     if (Math.abs(zscore) < 0.5 && zMax3 > 0.7 && amplitude > 0.5 &&
-        dslope > 1.0 && slope > -2.5 && dbbz > 0)
+        dslope > 0.7 && slope > -2.5 && dbbz > 0)
       return { side: "BUY", signalType: "BUY_ZMID" };
 
     return null;

@@ -163,21 +163,21 @@ export const RISK_CONFIG = {
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
 
   CrudeOIL: {
-    tpAtr: 0.35, slAtr: 0.90,
+    tpAtr: 0.35, slAtr: 0.90, reversalEnabled: false,
     spread: 0.04,
     targetLeveragePerTrade: 1.0,
     contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
     tickSize: 0.01,
   },
   GASOLINE: {
-    tpAtr: 0.35, slAtr: 2.80,
+    tpAtr: 0.35, slAtr: 2.80, reversalEnabled: false,
     spread: 0.003,
     targetLeveragePerTrade: 1.0,
     contractSize: 100000, refPrice: 3.13, baseToEUR: 0.847,
     tickSize: 0.0001,
   },
   BRENT_OIL: {
-    tpAtr: 0.55, slAtr: 1.10,
+    tpAtr: 0.55, slAtr: 1.10, reversalEnabled: false,
     spread: 0.04,
     targetLeveragePerTrade: 1.0,
     contractSize: 1000, refPrice: 112.27, baseToEUR: 0.847,
@@ -187,7 +187,7 @@ export const RISK_CONFIG = {
   // ── AGRI ──────────────────────────────────────────────────────────────────
 
   WHEAT: {
-    tpAtr: 0.50, slAtr: 1.70,
+    tpAtr: 0.50, slAtr: 1.70, reversalEnabled: false,
     spread: 0.75,
     targetLeveragePerTrade: 0.5,
     contractSize: 5000, refPrice: 593.75, baseToEUR: 0.847,

@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import useClosedTrades from "../../hooks/useClosedTrades";
 import "../../styles/stylesmatrixanalysis/performance.css";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -66,8 +65,7 @@ function StatBox({ label, value, sub, color }) {
 
 // ─── Performance ─────────────────────────────────────────────────────────────
 
-export default function Performance({ account }) {
-  const { trades } = useClosedTrades(5000);
+export default function Performance({ account, trades = [] }) {
   const s = useMemo(() => computeStats(trades, account), [trades, account]);
 
   if (!s) return null;
@@ -80,7 +78,7 @@ export default function Performance({ account }) {
     <div className="perf-container">
       <div className="perf-header">
         <span className="perf-header-title">Performance</span>
-        <span className="perf-header-date">{new Date().toLocaleDateString("fr-FR")}</span>
+        <span className="perf-header-date">{trades.length} trades</span>
       </div>
 
       <div className="perf-kpi-grid">
@@ -94,7 +92,7 @@ export default function Performance({ account }) {
         <StatBox label="Pire Trade"      value={`${s.worst.pnl_eur.toFixed(0)}€`}                                              sub={`${s.worst.symbol} ${s.worst.side}`} color="#f87171" />
         <StatBox label="Capital Initial" value={s.capitalInitial != null ? `${s.capitalInitial.toFixed(0)}€` : "—"} />
         <StatBox label="Capital Final"   value={s.capitalFinal   != null ? `${s.capitalFinal.toFixed(0)}€`   : "—"} />
-        <StatBox label="Performance"     value={s.performance    != null ? `${s.performance >= 0 ? "+" : ""}${s.performance}%` : "—"} sub="du jour" color={s.performance >= 0 ? "#4ade80" : "#f87171"} />
+        <StatBox label="Performance"     value={s.performance    != null ? `${s.performance >= 0 ? "+" : ""}${s.performance}%` : "—"} sub="période" color={s.performance >= 0 ? "#4ade80" : "#f87171"} />
       </div>
     </div>
   );

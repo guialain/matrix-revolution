@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import useClosedTrades from "../../hooks/useClosedTrades";
 import "../../styles/stylesmatrixanalysis/closedtrades.css";
 
 // ─── SortHeader ──────────────────────────────────────────────────────────────
@@ -45,8 +44,7 @@ function TradeRow({ trade, rank }) {
 
 // ─── ClosedTrades ────────────────────────────────────────────────────────────
 
-export default function ClosedTrades() {
-  const { trades, loading } = useClosedTrades(5000);
+export default function ClosedTrades({ trades = [], loading = false }) {
   const [sortCol, setSortCol] = useState("time");
   const [sortDir, setSortDir] = useState("desc");
 

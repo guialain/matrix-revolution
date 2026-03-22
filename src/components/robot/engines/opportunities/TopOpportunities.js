@@ -8,27 +8,25 @@
 
 import ContinuationStrategy from "./continuation";
 import ReversalStrategy     from "./reversal";
-import ZmidStrategy         from "./ZmidStrategy";
-import { getSlopeConfig }   from "../config/SlopeConfig";
+// ZmidStrategy removed — zone z~0 too noisy, continuation handles it better
 
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 
 const SCORE_MIN_DEFAULT = 30;
 
 // ============================================================================
-// RSI REGIME ROUTER — 9 zones
+// RSI REGIME ROUTER — continuation zones (30-70)
+// Reversals bypass the router (M15 detector)
 // ============================================================================
 function getRsiRegime(rsi) {
   if (rsi === null) return null;
-  if (rsi < 20) return "EXTREME_OVERSOLD";
-  if (rsi < 30) return "OVERSOLD";
-  if (rsi < 35) return "TRANSITION_LOW_1";
-  if (rsi < 48) return "TRANSITION_LOW_2";
-  if (rsi < 52) return "NEUTRAL";
-  if (rsi < 65) return "TRANSITION_HIGH_2";
-  if (rsi < 70) return "TRANSITION_HIGH_1";
-  if (rsi < 80) return "OVERBOUGHT";
-  return "EXTREME_OVERBOUGHT";
+  if (rsi < 30 || rsi >= 70) return null;   // reversal territory
+  if (rsi < 35) return "OVERSOLD_NEAR";     // 30-35
+  if (rsi < 48) return "TRANSITION_LOW";    // 35-48
+  if (rsi < 52) return "NEUTRAL";           // 48-52
+  if (rsi < 65) return "TRANSITION_HIGH";   // 52-65
+  if (rsi < 70) return "OVERBOUGHT_NEAR";   // 65-70
+  return null;
 }
 
 // ============================================================================
@@ -68,67 +66,20 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
     if (!symbol) continue;
 
     const rsi    = num(row?.rsi_h1);
-    const zscore = num(row?.zscore_h1);
-    const zMin3  = num(row?.zscore_h1_min3);
-    const zMax3  = num(row?.zscore_h1_max3);
     const oneRow = [row];
 
-    // ── ZMID check first ──
-    const isZmidZone = zscore !== null && Math.abs(zscore) < 0.5
-                    && zMin3 !== null && zMax3 !== null
-                    && (zMax3 - zMin3) > 0.5;
+    // ── Reversal M15: bypass router, always evaluate ──
+    setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
 
-    if (isZmidZone) {
-      if (rsi !== null && rsi >= 48 && rsi <= 52) continue; // NEUTRAL → WAIT
-      setBest(best, symbol, pickBest(ZmidStrategy.evaluate(oneRow, { scoreMin })));
-      continue;
-    }
-
-    // ── Route RSI normal — 9 zones ──
+    // ── Continuation: route by RSI regime (30-70) ──
     const regime = getRsiRegime(rsi);
     if (!regime) continue;
 
-    // ── EXTREME + DEEP → reversal only ──
-    if (regime === "EXTREME_OVERSOLD" || regime === "OVERSOLD" ||
-        regime === "OVERBOUGHT" || regime === "EXTREME_OVERBOUGHT") {
-      setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
-
-    // ── TRANSITION_1 → reversal + continuation ──
-    } else if (regime === "TRANSITION_LOW_1") {
-      const prevRSIMin = num(row?.rsi_h1_previouslow3);
-      if (prevRSIMin !== null && prevRSIMin < 30) {
-        const slope  = num(row?.slope_h1);
-        const dslope = num(row?.dslope_h1);
-        const slopeMin = getSlopeConfig(symbol).up_weak.min;
-
-        if (slope > slopeMin && dslope > 0) {
-          setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
-        } else if (slope < -slopeMin && dslope < 0) {
-          setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
-        }
-      }
-
-    } else if (regime === "TRANSITION_HIGH_1") {
-      const prevRSIMax = num(row?.rsi_h1_previoushigh3);
-      if (prevRSIMax !== null && prevRSIMax > 70) {
-        const slope  = num(row?.slope_h1);
-        const dslope = num(row?.dslope_h1);
-        const slopeMin = getSlopeConfig(symbol).up_weak.min;
-
-        if (slope < -slopeMin && dslope < 0) {
-          setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
-        } else if (slope > slopeMin && dslope > 0) {
-          setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
-        }
-      }
-
-    // ── TRANSITION_2 → continuation only ──
-    } else if (regime === "TRANSITION_LOW_2" || regime === "TRANSITION_HIGH_2") {
+    if (regime === "OVERSOLD_NEAR" || regime === "OVERBOUGHT_NEAR" ||
+        regime === "TRANSITION_LOW" || regime === "TRANSITION_HIGH") {
       setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
-
-    // ── NEUTRAL → WAIT ──
     }
-    // regime === "NEUTRAL" → skip
+    // NEUTRAL → skip
   }
 
   return [...best.values()].sort((a, b) => b.score - a.score);

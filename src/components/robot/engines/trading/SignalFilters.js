@@ -105,8 +105,8 @@ const rsi  = num(opp?.rsi_m1);
 const drsi = num(opp?.drsi_m1);
 if (rsi === null || drsi === null) return false;
 
-if (side === "BUY"  && rsi > 63 && drsi > 0) return true;
-if (side === "SELL" && rsi < 37 && drsi < 0) return true;
+if (side === "BUY"  && rsi > 65 && drsi > 0) return true;
+if (side === "SELL" && rsi < 35 && drsi < 0) return true;
 
 return false;
 

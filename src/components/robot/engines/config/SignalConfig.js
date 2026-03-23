@@ -46,8 +46,8 @@ export const H1_CONTINUATION_DEFAULTS = {
   phaseAccelDslopeMin:    1.5,
 
   // ── ZONE RSI ─────────────────────────────────────────────────────
-  rsiContMin: 35,
-  rsiContMax: 65,
+  rsiContMin: 30,
+  rsiContMax: 70,
 
   // ── BB ───────────────────────────────────────────────────────────
   zscoreH1BuyMax:  1.8,

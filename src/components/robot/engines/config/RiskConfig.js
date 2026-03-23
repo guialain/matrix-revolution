@@ -41,12 +41,14 @@ export const RISK_CONFIG = {
     spread: 0.00008,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 0.63000, baseToEUR: 0.847,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDCHF: {
     tpAtr: 0.50, slAtr: 1.40, maxHoldH: 8, reversalEnabled: false,
     spread: 0.00015,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 0.8850, baseToEUR: 0.847,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDCAD: {
     tpAtr: 0.45, slAtr: 1.45, maxHoldH: 8, reversalEnabled: false,
@@ -74,18 +76,21 @@ export const RISK_CONFIG = {
     spread: 0.018,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 183.351, baseToEUR: 1.000,
+    volume_min: 0.01, volume_max: 201, volume_step: 0.01,
   },
   EURAUD: {
     tpAtr: 0.50, slAtr: 1.20, maxHoldH: 8, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 1.61500, baseToEUR: 1.000,
+    volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GBPJPY: {
     tpAtr: 0.45, slAtr: 1.50, maxHoldH: 8, reversalEnabled: true,
     spread: 0.022,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 212.116, baseToEUR: 1.076,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   // ── INDEX ─────────────────────────────────────────────────────────────────
 

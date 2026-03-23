@@ -140,7 +140,7 @@ export const RISK_CONFIG = {
   ETHUSD: {
     tpAtr: 0.35, slAtr: 1.5, maxHoldH: 1.5, reversalEnabled: false,
     spread: 1.9,
-    targetLeveragePerTrade: 0.25,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2318.06, baseToEUR: 0.847,
   },
 

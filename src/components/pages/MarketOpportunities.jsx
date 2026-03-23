@@ -26,7 +26,6 @@ export default function MarketOpportunities() {
     asset: data.asset ?? null,
     indicators: data.indicators ?? {},
     macro: data.macro ?? {},
-    topMovers:   data.topMovers   ?? null,
     marketWatch: data.marketWatch ?? [],
   } : null;
 

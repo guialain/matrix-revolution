@@ -149,7 +149,7 @@ export const RISK_CONFIG = {
   GOLD: {
     tpAtr: 0.50, slAtr: 1.0, maxHoldH: 0.75, reversalEnabled: true,
     spread: 1.26,
-    targetLeveragePerTrade: 0.5,
+    targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 5016.73, baseToEUR: 0.847,
     tickSize: 0.01,
   },

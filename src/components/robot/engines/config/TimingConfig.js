@@ -24,7 +24,7 @@ export const TIMING_CONFIG = {
     // =========================================================
     overextended: {
       slopeAbs:  5.0,
-      dslopeAbs: 4.0,
+      dslopeAbs: 5.0,
       drsiAbs:   8.0,
       rsiMax:    63,
       rsiMin:    37,

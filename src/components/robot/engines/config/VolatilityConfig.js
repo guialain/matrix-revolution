@@ -9,6 +9,7 @@ export const VOLATILITY_CONFIG = {
   EURUSD:      { lowMax: 0.000369, medMax: 0.000715, highMax: 0.001175 },
   GBPUSD:      { lowMax: 0.000447, medMax: 0.000819, highMax: 0.001276 },
   USDJPY:      { lowMax: 0.000423, medMax: 0.000837, highMax: 0.001474 },
+  USDCAD:      { lowMax: 0.000380, medMax: 0.000720, highMax: 0.001200 },
   EURJPY:      { lowMax: 0.000380, medMax: 0.000694, highMax: 0.001198 },
   GBPJPY:      { lowMax: 0.000439, medMax: 0.000810, highMax: 0.001353 },
   UK_100:      { lowMax: 0.000767, medMax: 0.001350, highMax: 0.002041 },

@@ -67,10 +67,10 @@ function computeLots(op, equity, cfg) {
 
   const rawLots = (equity * targetLev) / eurPerLot;
 
-  // Broker-safe normalization (mirrors DealingRoom.normalizeLots)
-  const volStep = 0.01;
-  const volMin  = 0.01;
-  const volMax  = 100;
+  // Broker-safe normalization — read from RiskConfig, fallback to 0.01
+  const volStep = cfg.volume_step ?? 0.01;
+  const volMin  = cfg.volume_min  ?? 0.01;
+  const volMax  = cfg.volume_max  ?? 100;
 
   let lots = roundToStepDown(rawLots, volStep);
   lots = clamp(lots, volMin, volMax);

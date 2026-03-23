@@ -192,7 +192,7 @@ const RobotCore = {
         ? "LOW_SCORE"
         : "OK";
 
-      if (eligibility?.eligible && finalScore >= 10) {
+      if (eligibility?.eligible && finalScore >= 5) {
         tradableMarket.push(enriched);
       } else {
         notTradableMarket.push(enriched);

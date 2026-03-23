@@ -50,6 +50,21 @@ function WaitSection({ opportunities }) {
 
 /* ─── NotEligibleSection ──────────────────────────────────────────────────── */
 
+function resolveBlockReason(op) {
+  const eligible = op.eligibility?.eligible;
+  const reasons  = op.eligibility?.reasons ?? [];
+
+  // Not eligible → use eligibility reason
+  if (!eligible && reasons.length > 0) return reasons[0];
+  if (!eligible) return "Not eligible";
+
+  // Eligible but blocked by score
+  const score = op.score ?? 0;
+  if (score < 5) return `Low score (${Math.round(score)})`;
+
+  return "Unknown";
+}
+
 function NotEligibleSection({ blocked }) {
   return (
     <section className="mo-section rc-not-eligible">
@@ -58,25 +73,18 @@ function NotEligibleSection({ blocked }) {
       {blocked.length > 0 ? (
         <div className="rc-ne-lines">
           {blocked.slice(0, 6).map((op, i) => {
+            const reason   = resolveBlockReason(op);
             const volLevel = op.eligibility?.context?.volatilityLevel ?? null;
-            const volRatio = op.eligibility?.context?.volatilityRatio ?? null;
 
             return (
               <div key={i} className="rc-ne-line">
                 <span className="neo-op-symbol">{op.symbol}</span>
-                <span
-                  className="rc-ne-reason"
-                  data-reason={(op.eligibility?.reasons ?? ["Unknown"])[0]}
-                >
-                  {(op.eligibility?.reasons ?? ["Unknown"])[0]}
+                <span className="rc-ne-reason" data-reason={reason}>
+                  {reason}
                 </span>
                 {volLevel && (
-                  <span
-                    className={`rc-ne-vol rc-ne-vol-${volLevel.toLowerCase()}`}
-                    title={volRatio != null ? `ATR M15 / Spread = ${volRatio}` : undefined}
-                  >
+                  <span className={`rc-ne-vol rc-ne-vol-${volLevel.toLowerCase()}`}>
                     {volLevel}
-                    {volRatio != null && ` (${volRatio})`}
                   </span>
                 )}
               </div>

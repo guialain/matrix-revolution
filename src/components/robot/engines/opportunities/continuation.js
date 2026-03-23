@@ -98,7 +98,7 @@ if (
   zscore_h1 !== null &&
   dz_h1 !== null &&
   dslope_h1 !== null &&
-  zscore_h1 > 1.8 &&
+  zscore_h1 > 1.9 &&
   dz_h1 > 0.3 &&
   dslope_h1 > 0
 )
@@ -152,7 +152,7 @@ if (
   zscore_h1 !== null &&
   dz_h1 !== null &&
   dslope_h1 !== null &&
-  zscore_h1 < -1.8 &&
+  zscore_h1 < -1.9 &&
   dz_h1 < -0.3 &&
   dslope_h1 < 0
 )

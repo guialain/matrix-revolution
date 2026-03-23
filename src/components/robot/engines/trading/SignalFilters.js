@@ -128,7 +128,7 @@ const oe = TIMING_CONFIG.M5.overextended;
 
 if (side === "BUY") {
   // MTF extension block
-  if ((zh1 !== null && zh1 > 1.8) || (zm5 !== null && zm5 > 1.8)) return true;
+  if ((zh1 !== null && zh1 > 1.9) || (zm5 !== null && zm5 > 1.9)) return true;
   // spike terminal RSI
   if (rsi !== null && drsi !== null && rsi > 65 && drsi > 5) return true;
   // TimingConfig thresholds
@@ -140,7 +140,7 @@ if (side === "BUY") {
 
 if (side === "SELL") {
   // MTF extension block
-  if ((zh1 !== null && zh1 < -1.8) || (zm5 !== null && zm5 < -1.8)) return true;
+  if ((zh1 !== null && zh1 < -1.9) || (zm5 !== null && zm5 < -1.9)) return true;
   // spike terminal RSI
   if (rsi !== null && drsi !== null && rsi < 35 && drsi < -5) return true;
   // TimingConfig thresholds

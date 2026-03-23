@@ -12,7 +12,7 @@ import ReversalStrategy     from "./reversal";
 
 const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
 
-const SCORE_MIN_DEFAULT = 10;
+const SCORE_MIN_DEFAULT = 5;
 
 // ============================================================================
 // RSI REGIME ROUTER — continuation zones (30-70)

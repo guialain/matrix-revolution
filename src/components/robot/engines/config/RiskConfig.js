@@ -23,7 +23,7 @@ export const RISK_CONFIG = {
   // ── FX ────────────────────────────────────────────────────────────────────
 
   EURUSD: {
-    tpAtr: 0.65, slAtr: 1.65, maxHoldH: 8, reversalEnabled: false,
+    tpAtr: 0.60, slAtr: 1.75, maxHoldH: 8, reversalEnabled: false,
     spread: 0.00008,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 1.147722, baseToEUR: 1.000,
@@ -79,7 +79,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.30, slAtr: 1.50, maxHoldH: 4.05, reversalEnabled: true,
+    tpAtr: 0.60, slAtr: 1.50, maxHoldH: 4.05, reversalEnabled: true,
     spread: 2.0,
     targetLeveragePerTrade: 2,
     contractSize: 10, refPrice: 8500, baseToEUR: 1.076,

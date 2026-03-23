@@ -130,26 +130,11 @@ const formatPrice = (v) => {
 // ========================================================================
 
 const marketStatus = useMemo(() => {
-  if (!assetClass) return "unknown";
-
-  // Crypto = toujours ouvert
-  if (assetClass === "crypto") {
-    return "open";
-  }
-
-  const nowUtc = new Date();
-  const day = nowUtc.getUTCDay();   // 0=Sun ... 6=Sat
-  const hour = nowUtc.getUTCHours();
-
-  // FX / Indices / Commodities
-  // Open: Mon 22:00 UTC → Fri 22:00 UTC
-  const isWeek =
-    (day > 1 && day < 5) ||                  // Tue–Thu
-    (day === 1 && hour >= 22) ||              // Mon after 22h
-    (day === 5 && hour < 22);                 // Fri before 22h
-
-  return isWeek ? "open" : "closed";
-}, [assetClass, now]);
+  const h = now.getUTCHours() + now.getUTCMinutes() / 60;
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return "closed";
+  return (h >= 9 && h < 20) ? "open" : "closed";
+}, [now]);
 
 
 
@@ -196,11 +181,9 @@ const marketStatus = useMemo(() => {
         {symbol}
       </span>
 
-      {marketStatus !== "unknown" && (
-        <span className={`market-badge ${marketStatus}`}>
-          {marketStatus === "open" ? "Market Open" : "Market Closed"}
-        </span>
-      )}
+      <span className={`market-badge ${marketStatus}`}>
+        {marketStatus === "open" ? "NEO Open" : "NEO Closed"}
+      </span>
 
       {meta && (
         <span className={`asset-badge asset-${assetClass}`}>

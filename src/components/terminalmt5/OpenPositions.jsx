@@ -236,7 +236,7 @@ function closePosition(p, e) {
                   {p.side ?? "—"}
                 </td>
 
-                <td>{formatNumberSmart(p.lots, 3)}</td>
+                <td>{p.lots != null ? Number(p.lots).toFixed(3) : "—"}</td>
 
                 <td className={p.intraday_change >= 0 ? "pos" : "neg"}>
                   {p.intraday_change != null ? `${p.intraday_change.toFixed(2)}%` : "—"}

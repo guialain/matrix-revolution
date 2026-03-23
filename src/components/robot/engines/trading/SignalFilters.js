@@ -21,26 +21,6 @@ const SignalFilters = (() => {
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 // =========================================================
-// TRADING HOURS
-// =========================================================
-function isOutsideTradingHours(opp) {
-
-const now = new Date();
-const timePart = now.toUTCString().slice(17, 22);
-
-const symbol = String(opp?.symbol ?? "").toUpperCase();
-
-const hours =
-TIMING_CONFIG.tradingHours?.[symbol] ??
-TIMING_CONFIG.tradingHours?.default;
-
-if (!hours) return false;
-
-return timePart < hours.start || timePart >= hours.end;
-
-}
-
-// =========================================================
 // WEEKEND
 // =========================================================
 function isWeekendRisk() {
@@ -202,22 +182,6 @@ waitOpportunities.push({
 ...opp,
 state: "LOW_SCORE",
 debugInfo: `score=${opp.score}`
-});
-
-continue;
-
-}
-
-// =========================================================
-// HOURS
-// =========================================================
-
-if (isOutsideTradingHours(opp)) {
-
-waitOpportunities.push({
-...opp,
-state: "WAIT_OUTSIDE_HOURS",
-debugInfo: "hours"
 });
 
 continue;

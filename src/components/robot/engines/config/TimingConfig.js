@@ -7,14 +7,7 @@ export const TIMING_CONFIG = {
   // Filtre weekend — pas d'entrée vendredi ≥ weekendFridayHour, samedi, dimanche
   weekendFridayHour: 20,
 
-  // Fenêtres horaires de trading — format "HH:MM" (heure locale du CSV)
-  // Bloque les nouvelles entrées hors fenêtre (les trades ouverts continuent d'être gérés)
-  // Override optionnel par symbol ; sinon default s'applique
-  // Plage unique 09:00–20:00 UTC pour tous les actifs
-  // Les filtres ATR/vol gèrent la sélection fine
-  tradingHours: {
-    default: { start: "09:00", end: "20:00" },
-  },
+  // Trading hours: gérés par GlobalMarketHours.js (source unique)
 
   M5: {
 

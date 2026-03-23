@@ -89,7 +89,7 @@ const RobotCore = {
       intraday_change: row.intraday_change ?? null,
     }));
 
-    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 30 });
+    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 10 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

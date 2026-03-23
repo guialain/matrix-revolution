@@ -14,7 +14,7 @@
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
 
-const SCORE_MIN_TRADE = 20;
+const SCORE_MIN_TRADE = 10;
 
 const SignalFilters = (() => {
 

@@ -95,7 +95,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.60, slAtr: 1.50, maxHoldH: 4.05, reversalEnabled: true,
+    tpAtr: 0.60, slAtr: 1.50, maxHoldH: 8, reversalEnabled: true,
     spread: 2.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 8500, baseToEUR: 1.076,
@@ -105,7 +105,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GERMANY_40: {
-    tpAtr: 0.40, slAtr: 1.80, maxHoldH: 4, reversalEnabled: true,
+    tpAtr: 0.40, slAtr: 1.80, maxHoldH: 8, reversalEnabled: true,
     spread: 5.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 23910.5, baseToEUR: 1.000,
@@ -113,7 +113,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   FRANCE_40: {
-    tpAtr: 0.30, slAtr: 2.00, maxHoldH: 4, reversalEnabled: true,
+    tpAtr: 0.30, slAtr: 2.00, maxHoldH: 8, reversalEnabled: true,
     spread: 2.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 8008.5, baseToEUR: 1.000,
@@ -121,7 +121,7 @@ export const RISK_CONFIG = {
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
   },
   US_30: {
-    tpAtr: 0.45, slAtr: 2.00, maxHoldH: 4, reversalEnabled: true,
+    tpAtr: 0.45, slAtr: 2.00, maxHoldH: 8, reversalEnabled: true,
     spread: 7.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 47438, baseToEUR: 0.847,
@@ -129,7 +129,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   US_500: {
-    tpAtr: 0.40, slAtr: 2.00, maxHoldH: 4, reversalEnabled: true,
+    tpAtr: 0.40, slAtr: 2.00, maxHoldH: 8, reversalEnabled: true,
     spread: 1.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 6772.75, baseToEUR: 0.847,
@@ -137,7 +137,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   US_TECH100: {
-    tpAtr: 0.37, slAtr: 1.15, maxHoldH: 4, reversalEnabled: true,
+    tpAtr: 0.37, slAtr: 1.15, maxHoldH: 8, reversalEnabled: true,
     spread: 2.25,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 24938.75, baseToEUR: 0.847,
@@ -147,21 +147,21 @@ export const RISK_CONFIG = {
   // ── CRYPTO ────────────────────────────────────────────────────────────────
 
   BTCEUR: {
-    tpAtr: 0.45, slAtr: 1.45, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.45, slAtr: 1.45, maxHoldH: 8, reversalEnabled: false,
     spread: 70.71,
     targetLeveragePerTrade: 0.3,
     contractSize: 10, refPrice: 63931.05, baseToEUR: 1.000,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   BTCUSD: {
-    tpAtr: 0.45, slAtr: 1.65, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.45, slAtr: 1.65, maxHoldH: 8, reversalEnabled: false,
     spread: 51.3,
     targetLeveragePerTrade: 0.3,
     contractSize: 10, refPrice: 73747.20, baseToEUR: 0.847,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   ETHUSD: {
-    tpAtr: 0.35, slAtr: 1.5, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.35, slAtr: 1.5, maxHoldH: 8, reversalEnabled: false,
     spread: 1.9,
     targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2318.06, baseToEUR: 0.847,
@@ -171,7 +171,7 @@ export const RISK_CONFIG = {
   // ── METAL ─────────────────────────────────────────────────────────────────
 
   GOLD: {
-    tpAtr: 0.50, slAtr: 1.0, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.50, slAtr: 1.0, maxHoldH: 8, reversalEnabled: false,
     spread: 1.26,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 5016.73, baseToEUR: 0.847,
@@ -179,7 +179,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   SILVER: {
-    tpAtr: 0.55, slAtr: 2.85, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.55, slAtr: 2.85, maxHoldH: 8, reversalEnabled: false,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
     spread: 0.148,
     targetLeveragePerTrade: 0.5,
@@ -189,7 +189,7 @@ export const RISK_CONFIG = {
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
 
   CrudeOIL: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 8, reversalEnabled: false,
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
     contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
@@ -197,7 +197,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GASOLINE: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 8, reversalEnabled: false,
     spread: 0.003,
     targetLeveragePerTrade: 0.5,
     contractSize: 100000, refPrice: 3.13, baseToEUR: 0.847,
@@ -205,7 +205,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   BRENT_OIL: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 8, reversalEnabled: false,
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
     contractSize: 1000, refPrice: 112.27, baseToEUR: 0.847,
@@ -216,7 +216,7 @@ export const RISK_CONFIG = {
   // ── AGRI ──────────────────────────────────────────────────────────────────
 
   WHEAT: {
-    tpAtr: 0.45, slAtr: 1.85, maxHoldH: 4, reversalEnabled: false,
+    tpAtr: 0.45, slAtr: 1.85, maxHoldH: 8, reversalEnabled: false,
     spread: 0.75,
     targetLeveragePerTrade: 0.5,
     contractSize: 5000, refPrice: 593.75, baseToEUR: 0.847,
@@ -229,7 +229,7 @@ export const RISK_CONFIG = {
   default: {
     tpAtr: 0.45, slAtr: 1.45,
     spread: 0,
-    defaultMaxHoldH: 4,
+    defaultMaxHoldH: 8,
     targetLeveragePerTrade: 1,
     contractSize: 100000, refPrice: 1.0, baseToEUR: 1.0,
   },

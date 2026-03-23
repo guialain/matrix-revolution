@@ -89,7 +89,7 @@ const RobotCore = {
       intraday_change: row.intraday_change ?? null,
     }));
 
-    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 5 });
+    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 
@@ -188,7 +188,7 @@ const RobotCore = {
 
       const reason = !eligibility?.eligible
         ? "ELIGIBILITY"
-        : finalScore < 5
+        : finalScore < 0
         ? "LOW_SCORE"
         : "OK";
 

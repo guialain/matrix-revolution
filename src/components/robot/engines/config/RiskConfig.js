@@ -147,21 +147,21 @@ export const RISK_CONFIG = {
   // ── CRYPTO ────────────────────────────────────────────────────────────────
 
   BTCEUR: {
-    tpAtr: 0.45, slAtr: 1.45, maxHoldH: 1.25, reversalEnabled: false,
+    tpAtr: 0.45, slAtr: 1.45, maxHoldH: 2.0, reversalEnabled: false,
     spread: 70.71,
     targetLeveragePerTrade: 0.3,
     contractSize: 10, refPrice: 63931.05, baseToEUR: 1.000,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   BTCUSD: {
-    tpAtr: 0.45, slAtr: 1.65, maxHoldH: 1.5, reversalEnabled: false,
+    tpAtr: 0.45, slAtr: 1.65, maxHoldH: 2.0, reversalEnabled: false,
     spread: 51.3,
     targetLeveragePerTrade: 0.3,
     contractSize: 10, refPrice: 73747.20, baseToEUR: 0.847,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   ETHUSD: {
-    tpAtr: 0.35, slAtr: 1.5, maxHoldH: 1.5, reversalEnabled: false,
+    tpAtr: 0.35, slAtr: 1.5, maxHoldH: 2.0, reversalEnabled: false,
     spread: 1.9,
     targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2318.06, baseToEUR: 0.847,
@@ -171,7 +171,7 @@ export const RISK_CONFIG = {
   // ── METAL ─────────────────────────────────────────────────────────────────
 
   GOLD: {
-    tpAtr: 0.50, slAtr: 1.0, maxHoldH: 0.75, reversalEnabled: false,
+    tpAtr: 0.50, slAtr: 1.0, maxHoldH: 2.5, reversalEnabled: false,
     spread: 1.26,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 5016.73, baseToEUR: 0.847,

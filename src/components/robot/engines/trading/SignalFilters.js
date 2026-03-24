@@ -83,8 +83,8 @@ const SignalFilters = (() => {
   function isM1Contrary(opp, side) {
     const rsi = num(opp?.rsi_m1);
 
-    if (side === "BUY"  && rsi !== null && rsi > 50) return true;
-    if (side === "SELL" && rsi !== null && rsi < 50) return true;
+    if (side === "BUY"  && rsi !== null && rsi > 60) return true;
+    if (side === "SELL" && rsi !== null && rsi < 40) return true;
 
     return false;
   }

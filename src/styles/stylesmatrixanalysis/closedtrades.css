@@ -27,7 +27,7 @@
 }
 
 .ct-header-title {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: #f5c26b;
   letter-spacing: 0.15em;
@@ -35,7 +35,7 @@
 }
 
 .ct-header-count {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   color: #f5c26b;
   letter-spacing: 0.08em;
@@ -54,12 +54,12 @@
   border: 1px solid rgba(0, 200, 100, 0.15);
   border-radius: 3px;
   color: #ffe9c2;
-  font-size: 9px;
+  font-size: 11px;
   font-family: 'Courier New', Courier, monospace;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 3px 8px;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -97,11 +97,12 @@
   grid-template-columns: 40px 140px 90px 50px 50px 90px 90px 70px 80px 80px;
   align-items: center;
   gap: 2px;
-  padding: 3px 4px;
-  font-size: 10px;
+  padding: 4px 6px;
+  font-size: 12px;
 }
 
 .ct-table-header {
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(0, 200, 100, 0.08);
@@ -125,16 +126,16 @@
 
 .ct-cell        { color: #ffe9c2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ct-rank        { color: rgba(255, 233, 194, 0.4); }
-.ct-time        { font-size: 9px; }
+.ct-time        { font-size: 11px; }
 .ct-symbol      { font-weight: 600; }
 .ct-side-buy    { color: #60a5fa; }
 .ct-side-sell   { color: #f472b6; }
-.ct-price       { font-size: 9px; }
+.ct-price       { font-size: 11px; }
 .ct-dur         { color: rgba(255, 233, 194, 0.5); }
-.ct-pnl         { font-weight: 600; text-align: right; }
+.ct-pnl         { font-weight: 700; text-align: right; font-size: 13px; }
 .ct-pnl.pos     { color: #4ade80; }
 .ct-pnl.neg     { color: #f87171; }
-.ct-equity      { color: rgba(255, 233, 194, 0.4); text-align: right; font-size: 9px; }
+.ct-equity      { color: rgba(255, 233, 194, 0.4); text-align: right; font-size: 11px; }
 
 /* Right-align PnL + Equity in BOTH header and rows */
 .ct-table-header > :nth-child(9),

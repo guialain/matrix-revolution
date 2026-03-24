@@ -67,7 +67,7 @@ const RobotCore = {
       symbol:      row.symbol,
       timestamp:   null,
       price:       row.price        ?? null,
-      close:       row.price        ?? null,
+      close:       row.close        ?? row.price ?? null,
       slope_h1:    row.slope_h1     ?? null,
       dslope_h1:   row.dslope_h1    ?? null,
       zscore_h1:   row.zscore_h1    ?? null,

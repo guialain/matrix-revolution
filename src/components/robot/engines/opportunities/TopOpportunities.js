@@ -1,85 +1,219 @@
 // ============================================================================
-// TopOpportunities.js — Routeur RSI 9 zones → engine
-// Rôle :
-//  - getRsiRegime() classe le RSI H1 en 9 zones
-//  - Chaque regime dispatch vers reversal, continuation, ou les deux
-//  - 1 seul signal max par symbol, trié par score desc
+// TopOpportunities.js — 12-ROUTE RSI MATCHER (live mode)
+//
+// RSI-first routing (per row, based on rsi_h1):
+// - RSI ∈ [0..25)   → BUY-R-[0-25]     reversal
+// - RSI ∈ [25..30)  → BUY-R-[25-30]    reversal
+// - RSI ∈ [30..35)  → BUY-R-[30-35]    reversal  |  SELL-C-[30-35] continuation
+// - RSI ∈ [35..48)  → BUY-C-[35-48]    cont      |  SELL-C-[35-48] cont
+// - RSI ∈ [48..52)  → NEUTRAL (skip)
+// - RSI ∈ [52..65)  → BUY-C-[52-65]    cont      |  SELL-C-[52-65] cont
+// - RSI ∈ [65..70)  → BUY-C-[65-70]    cont      |  SELL-R-[65-70] reversal
+// - RSI ∈ [70..75)  → SELL-R-[70-75]   reversal
+// - RSI ∈ [75..100] → SELL-R-[75-100]  reversal
+//
+// Each row = 1 symbol snapshot (live). Returns 1 opp max per symbol.
 // ============================================================================
 
-import ContinuationStrategy from "./continuation";
-import ReversalStrategy     from "./reversal";
-// ZmidStrategy removed — zone z~0 too noisy, continuation handles it better
+import { getRiskConfig } from "../config/RiskConfig";
+import {
+  scoreReversalBuy, scoreReversalSell,
+  scoreContinuationBuy, scoreContinuationSell
+} from "./ScoreEngine";
 
-const num = v => Number.isFinite(Number(v)) ? Number(v) : null;
-
-const SCORE_MIN_DEFAULT = 0;
+const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 // ============================================================================
-// RSI REGIME ROUTER — continuation zones (30-70)
-// Reversals bypass the router (M15 detector)
+// 12-ROUTE MATCHER
 // ============================================================================
-function getRsiRegime(rsi) {
-  if (rsi === null) return null;
-  if (rsi < 30 || rsi >= 70) return null;   // reversal territory
-  if (rsi < 35) return "OVERSOLD_NEAR";     // 30-35
-  if (rsi < 48) return "TRANSITION_LOW";    // 35-48
-  if (rsi < 52) return "NEUTRAL";           // 48-52
-  if (rsi < 65) return "TRANSITION_HIGH";   // 52-65
-  if (rsi < 70) return "OVERBOUGHT_NEAR";   // 65-70
+function matchRoute(rsi, slope_h1, dslope_h1, zscore_h1) {
+  if (rsi === null || slope_h1 === null || dslope_h1 === null)
+    return null;
+
+  // ── REVERSAL BUY (bas) ──────────────────────────────────────────────
+  if (rsi < 25
+   && slope_h1 < -6
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-R-[0-25]", side: "BUY", type: "REVERSAL" };
+
+  if (rsi >= 25 && rsi < 30
+   && slope_h1 < -2
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-R-[25-30]", side: "BUY", type: "REVERSAL" };
+
+  if (rsi >= 30 && rsi < 35
+   && slope_h1 > 1.0
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-R-[30-35]", side: "BUY", type: "REVERSAL" };
+
+  // ── CONTINUATION SELL (zone basse) ──────────────────────────────────
+  if (rsi >= 30 && rsi < 35
+   && slope_h1 <= -2.0
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-C-[30-35]", side: "SELL", type: "CONTINUATION" };
+
+  if (rsi >= 35 && rsi < 48
+   && slope_h1 <= -1.5
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-C-[35-48]", side: "SELL", type: "CONTINUATION" };
+
+  // ── CONTINUATION BUY/SELL (zone centrale) ───────────────────────────
+  if (rsi >= 35 && rsi < 48
+   && slope_h1 >= 1.0
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-C-[35-48]", side: "BUY", type: "CONTINUATION" };
+
+  if (rsi >= 52 && rsi < 65
+   && slope_h1 >= 1.5
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-C-[52-65]", side: "BUY", type: "CONTINUATION" };
+
+  if (rsi >= 52 && rsi < 65
+   && slope_h1 <= -1.0
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-C-[52-65]", side: "SELL", type: "CONTINUATION" };
+
+  // ── CONTINUATION BUY (zone haute) ───────────────────────────────────
+  if (rsi >= 65 && rsi < 70
+   && slope_h1 >= 2.0
+   && dslope_h1 > 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "BUY-C-[65-70]", side: "BUY", type: "CONTINUATION" };
+
+  // ── REVERSAL SELL (haut) ────────────────────────────────────────────
+  if (rsi >= 65 && rsi < 70
+   && slope_h1 < -1.0
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-R-[65-70]", side: "SELL", type: "REVERSAL" };
+
+  if (rsi >= 70 && rsi < 75
+   && slope_h1 > 2.0
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-R-[70-75]", side: "SELL", type: "REVERSAL" };
+
+  if (rsi >= 75
+   && slope_h1 > 6.0
+   && dslope_h1 < 0
+   && zscore_h1 !== null && Math.abs(zscore_h1) >= 0.3)
+    return { route: "SELL-R-[75-100]", side: "SELL", type: "REVERSAL" };
+
   return null;
 }
 
 // ============================================================================
-// Helpers
+// ROUTE → SIGNAL PHASE
 // ============================================================================
-function pickBest(opps) {
-  if (!opps.length) return null;
-  return opps.reduce((a, b) => (a.score >= b.score ? a : b));
-}
-
-function setBest(map, symbol, opp) {
-  if (!opp) return;
-  const existing = map.get(symbol);
-  if (!existing || opp.score > existing.score) {
-    map.set(symbol, opp);
-  }
-}
+const ROUTE_PHASE = {
+  "BUY-R-[0-25]":    "EXTREME_LOW",
+  "BUY-R-[25-30]":   "OVERSOLD",
+  "BUY-R-[30-35]":   "PULLBACK_LOW",
+  "SELL-C-[30-35]":  "TREND_DOWN_DEEP",
+  "SELL-C-[35-48]":  "TREND_DOWN",
+  "BUY-C-[35-48]":   "TREND_UP_LOW",
+  "BUY-C-[52-65]":   "TREND_UP",
+  "SELL-C-[52-65]":  "TREND_DOWN_HIGH",
+  "BUY-C-[65-70]":   "TREND_UP_HIGH",
+  "SELL-R-[65-70]":  "PULLBACK_HIGH",
+  "SELL-R-[70-75]":  "OVERBOUGHT",
+  "SELL-R-[75-100]": "EXTREME_HIGH",
+};
 
 // ============================================================================
-// MAIN
+// MAIN — live mode (1 row per symbol)
 // ============================================================================
-
-/**
- * @param {Array} marketData — tableau de rows (1 row = 1 symbol, live snapshot)
- * @param {object} [opts]
- * @param {number} [opts.scoreMin=30]
- * @returns {Array} — opps dédupliquées (1 par symbol max), triées par score desc
- */
 export function evaluateTopOpportunities(marketData = [], opts = {}) {
   if (!Array.isArray(marketData) || !marketData.length) return [];
 
-  const scoreMin = opts.scoreMin ?? SCORE_MIN_DEFAULT;
-  const best = new Map(); // symbol → opp
+  const scoreMin = num(opts?.scoreMin) ?? 0;
+  const best = new Map();
 
   for (const row of marketData) {
     const symbol = row?.symbol;
     if (!symbol) continue;
 
-    const rsi    = num(row?.rsi_h1);
-    const oneRow = [row];
+    const riskCfg = getRiskConfig(symbol);
 
-    // ── Reversal M15: bypass router, always evaluate ──
-    setBest(best, symbol, pickBest(ReversalStrategy.evaluate(oneRow, { scoreMin })));
+    const match = matchRoute(
+      num(row?.rsi_h1),
+      num(row?.slope_h1),
+      num(row?.dslope_h1),
+      num(row?.zscore_h1)
+    );
+    if (!match) continue;
 
-    // ── Continuation: route by RSI regime (30-70) ──
-    const regime = getRsiRegime(rsi);
-    if (!regime) continue;
+    if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
-    if (regime === "OVERSOLD_NEAR" || regime === "OVERBOUGHT_NEAR" ||
-        regime === "TRANSITION_LOW" || regime === "TRANSITION_HIGH") {
-      setBest(best, symbol, pickBest(ContinuationStrategy.evaluate(oneRow, { scoreMin })));
+    // ── ScoreEngine dispatch ──────────────────────────────────────────
+    const scoreRow = {
+      symbol,
+      rsi_h1:               num(row?.rsi_h1),
+      rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
+      rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
+      slope_h1:             num(row?.slope_h1),
+      dslope_h1:            num(row?.dslope_h1),
+      zscore_h1:            num(row?.zscore_h1),
+      atr_m15:              num(row?.atr_m15),
+      close:                num(row?.close),
+      intraday_change:      num(row?.intraday_change),
+    };
+
+    const scoreFn =
+      match.type === "REVERSAL" && match.side === "BUY"  ? scoreReversalBuy :
+      match.type === "REVERSAL" && match.side === "SELL" ? scoreReversalSell :
+      match.type === "CONTINUATION" && match.side === "BUY"  ? scoreContinuationBuy :
+      scoreContinuationSell;
+
+    const { total, breakdown } = scoreFn(scoreRow);
+    const score = Math.round(total);
+
+    if (score < scoreMin) continue;
+
+    const opp = {
+      type:       match.type,
+      regime:     `${match.type}_${match.side}`,
+      route:      match.route,
+      symbol,
+      side:       match.side,
+      signalType: match.side,
+      signalPhase: ROUTE_PHASE[match.route] ?? match.route,
+      score,
+      breakdown,
+
+      rsi_h1:     scoreRow.rsi_h1,
+      slope_h1:   scoreRow.slope_h1,
+      dslope_h1:  scoreRow.dslope_h1,
+      dz_h1:      num(row?.dz_h1),
+      zscore_h1:  scoreRow.zscore_h1,
+      atr_h1:     num(row?.atr_h1),
+      atr_m15:    scoreRow.atr_m15,
+      close:      scoreRow.close,
+
+      rsi_m5:     num(row?.rsi_m5),
+      slope_m5:   num(row?.slope_m5),
+      dslope_m5:  num(row?.dslope_m5),
+      drsi_m5:    num(row?.drsi_m5),
+      zscore_m5:  num(row?.zscore_m5),
+
+      rsi_m1:     num(row?.rsi_m1),
+      drsi_m1:    num(row?.drsi_m1),
+
+      intraday_change: scoreRow.intraday_change,
+    };
+
+    const existing = best.get(symbol);
+    if (!existing || opp.score > existing.score) {
+      best.set(symbol, opp);
     }
-    // NEUTRAL → skip
   }
 
   return [...best.values()].sort((a, b) => b.score - a.score);

@@ -42,7 +42,7 @@ const SignalFilters = (() => {
     const rsi    = num(opp?.rsi_m5);
     const dslope = num(opp?.dslope_m5);
 
-    const rsiTh = isContinuation ? 65 : 60;
+    const rsiTh = isContinuation ? 67 : 60;
 
     if (side === "BUY") {
       if (rsi !== null && rsi > rsiTh) return true;

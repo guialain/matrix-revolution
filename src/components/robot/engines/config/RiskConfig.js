@@ -189,7 +189,7 @@ export const RISK_CONFIG = {
   // ── OIL & GAS ─────────────────────────────────────────────────────────────
 
   CrudeOIL: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 1.5, reversalEnabled: true,
+    tpAtr: 0.40, slAtr: 1.45, maxHoldH: 1.5, reversalEnabled: true,
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
     contractSize: 1000, refPrice: 94.70, baseToEUR: 0.847,
@@ -197,7 +197,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GASOLINE: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 1.5, reversalEnabled: false,
+    tpAtr: 0.40, slAtr: 1.45, maxHoldH: 1.5, reversalEnabled: false,
     spread: 0.003,
     targetLeveragePerTrade: 0.5,
     contractSize: 100000, refPrice: 3.13, baseToEUR: 0.847,
@@ -205,7 +205,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   BRENT_OIL: {
-    tpAtr: 0.40, slAtr: 1.20, maxHoldH: 1.5, reversalEnabled: true,
+    tpAtr: 0.40, slAtr: 1.45, maxHoldH: 1.5, reversalEnabled: true,
     spread: 0.04,
     targetLeveragePerTrade: 0.5,
     contractSize: 1000, refPrice: 112.27, baseToEUR: 0.847,

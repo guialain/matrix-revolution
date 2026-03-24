@@ -94,9 +94,9 @@
 .ct-table-header,
 .ct-trade-row {
   display: grid;
-  grid-template-columns: 24px 100px 72px 36px 36px 64px 64px 48px 54px 56px;
+  grid-template-columns: 40px 140px 90px 50px 50px 90px 90px 70px 80px 80px;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 3px 4px;
   font-size: 10px;
 }

@@ -44,14 +44,14 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDCHF: {
-    tpAtr: 0.50, slAtr: 1.40, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.55, maxHoldH: 24, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 0.8850, baseToEUR: 0.847,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDCAD: {
-    tpAtr: 0.45, slAtr: 1.45, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.45, slAtr: 1.55, maxHoldH: 24, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 1.5,
     contractSize: 100000, refPrice: 1.3600, baseToEUR: 0.847,

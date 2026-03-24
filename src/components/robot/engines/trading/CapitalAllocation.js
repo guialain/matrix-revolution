@@ -28,6 +28,13 @@ export const CLASS_WEIGHTS = {
   CRYPTO:  0.15  // Crypto
 };
 
+/** Apply new weights at runtime (from UI editor) */
+export function applyWeights(newWeights) {
+  for (const cls of Object.keys(CLASS_WEIGHTS)) {
+    if (newWeights[cls] != null) CLASS_WEIGHTS[cls] = newWeights[cls];
+  }
+}
+
 // ============================================================================
 // ENGINE
 // ============================================================================

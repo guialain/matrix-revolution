@@ -65,13 +65,13 @@ const SignalFilters = (() => {
     const zm5   = num(opp?.zscore_m5);
 
     if (side === "BUY") {
-      if (slope !== null && slope > 5) return true;
-      if (zm5   !== null && zm5   > 1.8) return true;
+      if (slope !== null && slope > 6.5) return true;
+      if (zm5   !== null && zm5   > 1.9) return true;
     }
 
     if (side === "SELL") {
-      if (slope !== null && slope < -5) return true;
-      if (zm5   !== null && zm5   < -1.8) return true;
+      if (slope !== null && slope < -6.5) return true;
+      if (zm5   !== null && zm5   < -1.9) return true;
     }
 
     return false;

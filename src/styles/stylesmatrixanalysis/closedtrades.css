@@ -118,8 +118,9 @@
 
 /* ─── CELL STYLES ────────────────────────────────────────── */
 
-.ct-col-label { color: rgba(0, 255, 136, 0.4); }
-.ct-col-sort  { color: rgba(0, 255, 136, 0.4); cursor: pointer; user-select: none; }
+.ct-col-label,
+.ct-col-sort    { color: rgba(0, 255, 136, 0.4); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-col-sort    { cursor: pointer; user-select: none; }
 .ct-col-sort:hover { color: #00ff88; }
 
 .ct-cell        { color: #ffe9c2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -128,13 +129,16 @@
 .ct-symbol      { font-weight: 600; }
 .ct-side-buy    { color: #60a5fa; }
 .ct-side-sell   { color: #f472b6; }
-.ct-lots        { }
 .ct-price       { font-size: 9px; }
 .ct-dur         { color: rgba(255, 233, 194, 0.5); }
 .ct-pnl         { font-weight: 600; text-align: right; }
 .ct-pnl.pos     { color: #4ade80; }
 .ct-pnl.neg     { color: #f87171; }
 .ct-equity      { color: rgba(255, 233, 194, 0.4); text-align: right; font-size: 9px; }
+
+/* Right-align PnL + Equity in BOTH header and rows */
+.ct-table-header > :nth-child(9),
+.ct-table-header > :nth-child(10) { text-align: right; }
 
 /* ─── EMPTY / LOADING ────────────────────────────────────── */
 

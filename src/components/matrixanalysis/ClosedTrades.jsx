@@ -78,7 +78,7 @@ function TradeRow({ trade, rank, equity }) {
       <span className="ct-cell ct-price">{trade.close_price ?? "-"}</span>
       <span className="ct-cell ct-dur">{fmtDuration(trade.open_time, trade.close_time)}</span>
       <span className={`ct-cell ct-pnl${pnl >= 0 ? " pos" : " neg"}`}>
-        {pnl >= 0 ? "+" : ""}{pnl.toFixed(2)}€
+        {pnl >= 0 ? "+" : ""}{pnl.toFixed(0)}€
       </span>
       <span className="ct-cell ct-equity">{equity != null ? `${equity.toFixed(0)}€` : "-"}</span>
     </div>

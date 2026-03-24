@@ -51,7 +51,7 @@ const ALLOWED_SYMBOLS = [
   // ENERGY
   "CrudeOIL", "BRENT_OIL", "GASOLINE",
   // AGRI
-  "WHEAT",
+  
 ];
 
 // ============================================================================

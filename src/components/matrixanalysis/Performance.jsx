@@ -11,12 +11,16 @@ const PRESETS = [
   { key: "custom", label: "Custom" },
 ];
 
-/** Parse "2026.03.24 01:41:00" or "2026/03/24 01:41:00" → Date */
-function parseCloseTime(ct) {
+/** Parse MQL5 "2026.03.24 01:41:00" → Date */
+function parseMT5(ct) {
   if (!ct) return null;
-  const s = ct.replace(/[./]/g, "-");        // "2026-03-24 01:41:00"
-  const d = new Date(s.replace(" ", "T"));   // "2026-03-24T01:41:00"
+  const d = new Date(ct.replace(/\./g, "-").replace(" ", "T"));
   return isNaN(d.getTime()) ? null : d;
+}
+
+/** Net PnL for a trade (profit + swap + commission) */
+function netPnl(t) {
+  return (t.pnl_eur ?? 0) + (t.swap ?? 0) + (t.commission ?? 0);
 }
 
 function startOfDay(d) {
@@ -49,12 +53,20 @@ function filterTrades(trades, preset, customFrom, customTo) {
   }
 
   return trades.filter(t => {
-    const d = parseCloseTime(t.close_time);
+    const d = parseMT5(t.close_time);
     if (!d) return false;
     if (from && d < from) return false;
     if (to   && d > to)   return false;
     return true;
   });
+}
+
+/** Format minutes → "Xh Ym" */
+function fmtDuration(min) {
+  if (min < 60) return `${min}m`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 // ─── stats ───────────────────────────────────────────────────────────────────
@@ -66,13 +78,15 @@ function computeStats(trades, account) {
     (a, b) => (a.close_time ?? "").localeCompare(b.close_time ?? "")
   );
 
-  const pnls      = ordered.map(t => t.pnl_eur ?? 0);
+  const pnls      = ordered.map(netPnl);
   const total     = pnls.reduce((a, b) => a + b, 0);
-  const winners   = ordered.filter(t => (t.pnl_eur ?? 0) > 0);
-  const losers    = ordered.filter(t => (t.pnl_eur ?? 0) < 0);
-  const grossWin  = winners.reduce((a, t) => a + (t.pnl_eur ?? 0), 0);
-  const grossLoss = Math.abs(losers.reduce((a, t) => a + (t.pnl_eur ?? 0), 0));
+  const winners   = ordered.filter(t => netPnl(t) > 0);
+  const losers    = ordered.filter(t => netPnl(t) < 0);
+  const grossWin  = winners.reduce((a, t) => a + netPnl(t), 0);
+  const grossLoss = Math.abs(losers.reduce((a, t) => a + netPnl(t), 0));
   const pf        = grossLoss > 0 ? grossWin / grossLoss : grossWin > 0 ? Infinity : 0;
+  const avgWin    = winners.length ? grossWin / winners.length : 0;
+  const avgLoss   = losers.length  ? grossLoss / losers.length : 0;
 
   let peak = 0, cum = 0, maxDD = 0;
   for (const p of pnls) {
@@ -82,21 +96,34 @@ function computeStats(trades, account) {
     if (dd > maxDD) maxDD = dd;
   }
 
-  const expectancy     = ordered.length ? +(total / ordered.length).toFixed(2) : 0;
+  // Avg hold duration in minutes
+  let holdSum = 0, holdCount = 0;
+  for (const t of ordered) {
+    const open  = parseMT5(t.open_time);
+    const close = parseMT5(t.close_time);
+    if (open && close) {
+      holdSum += (close - open) / 60000;
+      holdCount++;
+    }
+  }
+  const avgHoldMin = holdCount ? Math.round(holdSum / holdCount) : null;
+
   const capitalFinal   = account?.equity ?? null;
   const capitalInitial = account?.balance != null ? +(account.balance - total).toFixed(2) : null;
   const performance    = capitalInitial && capitalInitial > 0
     ? +((total / capitalInitial) * 100).toFixed(2) : null;
-  const best  = ordered.reduce((a, b) => (b.pnl_eur ?? 0) > (a.pnl_eur ?? 0) ? b : a);
-  const worst = ordered.reduce((a, b) => (b.pnl_eur ?? 0) < (a.pnl_eur ?? 0) ? b : a);
+  const best  = ordered.reduce((a, b) => netPnl(b) > netPnl(a) ? b : a);
+  const worst = ordered.reduce((a, b) => netPnl(b) < netPnl(a) ? b : a);
 
   return {
     total: +total.toFixed(2),
     count: ordered.length,
     winRate: ordered.length ? +((winners.length / ordered.length) * 100).toFixed(1) : 0,
     pf: isFinite(pf) ? +pf.toFixed(2) : "\u221e",
+    avgWin: +avgWin.toFixed(2),
+    avgLoss: +avgLoss.toFixed(2),
     maxDD: +maxDD.toFixed(2),
-    expectancy,
+    avgHoldMin,
     capitalInitial,
     capitalFinal,
     performance,
@@ -195,17 +222,18 @@ export default function Performance({ account, trades = [], onFilteredTrades }) 
       </div>
 
       <div className="perf-kpi-grid">
-        <StatBox label="PnL Total"       value={`${s.total >= 0 ? "+" : ""}${s.total.toFixed(0)}\u20ac`}                           sub={`${s.winners}W / ${s.losers}L`}      color={pnlColor} />
-        <StatBox label="Trades"          value={s.count}                                                                        sub={`${s.winRate}% win rate`} />
-        <StatBox label="Win Rate"        value={`${s.winRate}%`}                                                                sub={`${s.winners} gagnants`}             color={wrColor} />
-        <StatBox label="Profit Factor"   value={s.pf}                                                                           sub="gains / pertes"                      color={pfColor} />
-        <StatBox label="Drawdown Max"    value={`-${s.maxDD}\u20ac`}                                                                 color="#f87171" />
-        <StatBox label="Expectancy"      value={`${s.expectancy >= 0 ? "+" : ""}${s.expectancy}\u20ac`}                             sub="par trade"  color={s.expectancy >= 0 ? "#4ade80" : "#f87171"} />
-        <StatBox label="Meilleur Trade"  value={`+${s.best.pnl_eur.toFixed(0)}\u20ac`}                                              sub={s.best.symbol}  color="#4ade80" />
-        <StatBox label="Pire Trade"      value={`${s.worst.pnl_eur.toFixed(0)}\u20ac`}                                              sub={`${s.worst.symbol} ${s.worst.side}`} color="#f87171" />
-        <StatBox label="Capital Initial" value={s.capitalInitial != null ? `${s.capitalInitial.toFixed(0)}\u20ac` : "\u2014"} />
-        <StatBox label="Capital Final"   value={s.capitalFinal   != null ? `${s.capitalFinal.toFixed(0)}\u20ac`   : "\u2014"} />
-        <StatBox label="Performance"     value={s.performance    != null ? `${s.performance >= 0 ? "+" : ""}${s.performance}%` : "\u2014"} sub="p\u00e9riode" color={s.performance >= 0 ? "#4ade80" : "#f87171"} />
+        <StatBox label="PnL Total"       value={`${s.total >= 0 ? "+" : ""}${s.total.toFixed(0)}\u20ac`}  sub={`${s.winners}W / ${s.losers}L`}      color={pnlColor} />
+        <StatBox label="Trades"          value={s.count}                                                   sub={`${s.winRate}% win rate`} />
+        <StatBox label="Win Rate"        value={`${s.winRate}%`}                                           sub={`${s.winners} gagnants`}             color={wrColor} />
+        <StatBox label="Profit Factor"   value={s.pf}                                                      sub="gains / pertes"                      color={pfColor} />
+        <StatBox label="Avg Win"         value={`+${s.avgWin.toFixed(0)}\u20ac`}                           color="#4ade80" />
+        <StatBox label="Avg Loss"        value={`-${s.avgLoss.toFixed(0)}\u20ac`}                          color="#f87171" />
+        <StatBox label="Drawdown Max"    value={`-${s.maxDD.toFixed(0)}\u20ac`}                            color="#f87171" />
+        <StatBox label="Avg Hold"        value={s.avgHoldMin != null ? fmtDuration(s.avgHoldMin) : "\u2014"} />
+        <StatBox label="Meilleur"        value={`+${netPnl(s.best).toFixed(0)}\u20ac`}                    sub={s.best.symbol}  color="#4ade80" />
+        <StatBox label="Pire"            value={`${netPnl(s.worst).toFixed(0)}\u20ac`}                    sub={s.worst.symbol} color="#f87171" />
+        <StatBox label="Capital"         value={s.capitalInitial != null ? `${s.capitalInitial.toFixed(0)}\u20ac` : "\u2014"} sub={s.capitalFinal != null ? `\u2192 ${s.capitalFinal.toFixed(0)}\u20ac` : ""} />
+        <StatBox label="Performance"     value={s.performance != null ? `${s.performance >= 0 ? "+" : ""}${s.performance}%` : "\u2014"} color={s.performance >= 0 ? "#4ade80" : "#f87171"} />
       </div>
     </div>
   );

@@ -493,15 +493,18 @@ app.get("/api/closedtrades", (req, res) => {
     const raw = cache.closedtrades ?? [];
 
     const trades = raw.map(t => ({
-      ticket:     num(t.ticket),
-      symbol:     t.symbol,
-      side:       t.side,
-      lots:       num(t.lots),
-      open_price: num(t.open_price),
-      pnl_eur:    num(t.pnl_eur),
-      commission: num(t.commission),
-      swap:       num(t.swap),
-      close_time: t.close_time,
+      ticket:      num(t.ticket),
+      symbol:      t.symbol,
+      side:        t.side,
+      lots:        num(t.lots),
+      open_price:  num(t.open_price),
+      close_price: num(t.close_price),
+      pnl_eur:     num(t.pnl_eur),
+      commission:  num(t.commission),
+      swap:        num(t.swap),
+      open_time:   t.open_time,
+      close_time:  t.close_time,
+      position_id: num(t.position_id),
     }));
 
     res.json({ trades });

@@ -1,5 +1,5 @@
 /* =========================================================
-   CLOSED TRADES — STYLES
+   RESULTS (CLOSED TRADES) — STYLES
 ========================================================= */
 
 .ct-container {
@@ -12,7 +12,6 @@
   box-sizing: border-box;
   font-family: 'Courier New', Courier, monospace;
   overflow: hidden;
-  overflow-x: hidden;
 }
 
 /* ─── HEADER ─────────────────────────────────────────────── */
@@ -20,7 +19,7 @@
 .ct-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   background: rgba(0, 200, 100, 0.15);
   padding: 6px 12px;
   border-bottom: 1px solid rgba(0, 200, 100, 0.25);
@@ -40,6 +39,40 @@
   font-weight: 800;
   color: #f5c26b;
   letter-spacing: 0.08em;
+  margin-left: auto;
+}
+
+/* ─── PNL FILTER BUTTONS ─────────────────────────────────── */
+
+.ct-pnl-filters {
+  display: flex;
+  gap: 3px;
+}
+
+.ct-pnl-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 200, 100, 0.15);
+  border-radius: 3px;
+  color: #ffe9c2;
+  font-size: 9px;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ct-pnl-btn:hover {
+  background: rgba(0, 200, 100, 0.12);
+  border-color: rgba(0, 200, 100, 0.35);
+}
+
+.ct-pnl-btn.active {
+  background: rgba(0, 200, 100, 0.2);
+  border-color: rgba(0, 200, 100, 0.5);
+  color: #4ade80;
 }
 
 /* ─── SCROLL AREA ────────────────────────────────────────── */
@@ -48,7 +81,7 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 16px 8px 16px;
+  padding: 0 8px 8px;
 }
 
 .ct-scroll::-webkit-scrollbar { width: 4px; }
@@ -56,78 +89,56 @@
 .ct-scroll::-webkit-scrollbar-thumb { background: rgba(0, 200, 100, 0.4); border-radius: 2px; }
 .ct-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 200, 100, 0.75); }
 
-/* ─── TABLE HEADER ───────────────────────────────────────── */
+/* ─── TABLE GRID — 10 columns ───────────────────────────── */
+
+.ct-table-header,
+.ct-trade-row {
+  display: grid;
+  grid-template-columns: 24px 100px 72px 36px 36px 64px 64px 48px 54px 56px;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  font-size: 10px;
+}
 
 .ct-table-header {
-  display: grid;
-  grid-template-columns: 24px 1fr 44px 40px 80px 64px 44px 44px 60px;
-  gap: 8px;
-  padding: 4px 8px;
-  font-size: 11px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   border-bottom: 1px solid rgba(0, 200, 100, 0.08);
-  margin-bottom: 4px;
-  margin-top: 0;
+  margin-bottom: 2px;
   position: sticky;
   top: 0;
   background: #020508;
   z-index: 1;
 }
 
-.ct-col-label {
-  color: rgba(0, 255, 136, 0.4);
-}
-
-.ct-col-sort {
-  color: rgba(0, 255, 136, 0.4);
-  cursor: pointer;
-  user-select: none;
-}
-
-.ct-col-sort:hover {
-  color: #00ff88;
-}
-
-/* ─── TRADE ROW ──────────────────────────────────────────── */
-
-.ct-trade-row {
-  display: grid;
-  grid-template-columns: 24px 1fr 44px 40px 80px 64px 44px 44px 60px;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-}
-
 .ct-trade-row.even {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.ct-trade-rank   { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-symbol { color: #ffe9c2; font-size: 11px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ct-trade-lots   { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-open   { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-date   { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-time   { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-side-buy  { color: #60a5fa; font-size: 11px; min-width: 0; }
-.ct-trade-side-sell { color: #f472b6; font-size: 11px; min-width: 0; }
-.ct-trade-swap-pos  { color: #4ade80; font-size: 11px; min-width: 0; }
-.ct-trade-swap-neg  { color: #f87171; font-size: 11px; min-width: 0; }
-.ct-trade-swap-zero { color: #ffe9c2; font-size: 11px; min-width: 0; }
-.ct-trade-pnl   { font-weight: 600; text-align: right; font-size: 11px; min-width: 0; }
-.ct-trade-pnl.pos { color: #4ade80; }
-.ct-trade-pnl.neg { color: #f87171; }
+/* ─── CELL STYLES ────────────────────────────────────────── */
+
+.ct-col-label { color: rgba(0, 255, 136, 0.4); }
+.ct-col-sort  { color: rgba(0, 255, 136, 0.4); cursor: pointer; user-select: none; }
+.ct-col-sort:hover { color: #00ff88; }
+
+.ct-cell        { color: #ffe9c2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-rank        { color: rgba(255, 233, 194, 0.4); }
+.ct-time        { font-size: 9px; }
+.ct-symbol      { font-weight: 600; }
+.ct-side-buy    { color: #60a5fa; }
+.ct-side-sell   { color: #f472b6; }
+.ct-lots        { }
+.ct-price       { font-size: 9px; }
+.ct-dur         { color: rgba(255, 233, 194, 0.5); }
+.ct-pnl         { font-weight: 600; text-align: right; }
+.ct-pnl.pos     { color: #4ade80; }
+.ct-pnl.neg     { color: #f87171; }
+.ct-equity      { color: rgba(255, 233, 194, 0.4); text-align: right; font-size: 9px; }
 
 /* ─── EMPTY / LOADING ────────────────────────────────────── */
 
-.ct-loading {
-  color: #444;
-  padding: 24px;
-  font-size: 13px;
-}
-
+.ct-loading { color: #444; padding: 24px; font-size: 13px; }
 .ct-empty {
   border: 1px solid rgba(0, 200, 100, 0.25);
   border-radius: 8px;

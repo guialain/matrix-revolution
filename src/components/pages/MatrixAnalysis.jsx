@@ -77,7 +77,7 @@ export default function MatrixAnalysis() {
             onFilteredTrades={handleFilteredTrades}
           />
           <div className="closedtrades-scroll">
-            <ClosedTrades trades={filteredTrades} loading={tradesLoading} />
+            <ClosedTrades trades={filteredTrades} loading={tradesLoading} account={snapshot?.account} />
           </div>
         </div>
 

@@ -21,11 +21,11 @@ const LEVERAGE_MAX = 20;
 export const CLASS_WEIGHTS = {
 
   INDEX:   0.30, // Indices
-  AGRI:    0.05, // Agriculture
+  AGRI:    0.07, // Agriculture
   OIL_GAS: 0.05, // Oil & Gas
-  METAL:   0.15, // Métaux
-  FX:      0.35, // Forex
-  CRYPTO:  0.15  // Crypto
+  METAL:   0.08, // Métaux
+  FX:      0.40, // Forex
+  CRYPTO:  0.10  // Crypto
 };
 
 /** Apply new weights at runtime (from UI editor) */

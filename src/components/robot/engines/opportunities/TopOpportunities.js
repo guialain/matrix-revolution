@@ -16,10 +16,6 @@
 // ============================================================================
 
 import { getRiskConfig } from "../config/RiskConfig";
-import {
-  scoreReversalBuy, scoreReversalSell,
-  scoreContinuationBuy, scoreContinuationSell
-} from "./ScoreEngine";
 
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
@@ -139,10 +135,9 @@ const ROUTE_PHASE = {
 // ============================================================================
 // MAIN — live mode (1 row per symbol)
 // ============================================================================
-export function evaluateTopOpportunities(marketData = [], opts = {}) {
+export function evaluateTopOpportunities(marketData = []) {
   if (!Array.isArray(marketData) || !marketData.length) return [];
 
-  const scoreMin = num(opts?.scoreMin) ?? 0;
   const best = new Map();
 
   for (const row of marketData) {
@@ -163,31 +158,9 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
 
     if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
-    // ── ScoreEngine dispatch ──────────────────────────────────────────
-    const scoreRow = {
-      symbol,
-      rsi_h1:               num(row?.rsi_h1),
-      rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
-      rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-      slope_h1:             num(row?.slope_h1),
-      dslope_h1:            num(row?.dslope_h1),
-      zscore_h1:            num(row?.zscore_h1),
-      slope_h4:             num(row?.slope_h4),
-      atr_m15:              num(row?.atr_m15),
-      close:                num(row?.close),
-      intraday_change:      num(row?.intraday_change),
-    };
-
-    const scoreFn =
-      match.type === "REVERSAL" && match.side === "BUY"  ? scoreReversalBuy :
-      match.type === "REVERSAL" && match.side === "SELL" ? scoreReversalSell :
-      match.type === "CONTINUATION" && match.side === "BUY"  ? scoreContinuationBuy :
-      scoreContinuationSell;
-
-    const { total, breakdown } = scoreFn(scoreRow);
-    const score = Math.round(total);
-
-    if (score < scoreMin) continue;
+    // ── Score neutralisé (routing H4+H1 suffit) ───────────────────────
+    const score = 50;
+    const breakdown = {};
 
     const opp = {
       type:       match.type,
@@ -205,17 +178,17 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
       dslope_h4:  num(row?.dslope_h4),
 
       // H1
-      rsi_h1:     scoreRow.rsi_h1,
-      slope_h1:   scoreRow.slope_h1,
-      dslope_h1:  scoreRow.dslope_h1,
+      rsi_h1:     num(row?.rsi_h1),
+      slope_h1:   num(row?.slope_h1),
+      dslope_h1:  num(row?.dslope_h1),
       dz_h1:      num(row?.dz_h1),
-      zscore_h1:  scoreRow.zscore_h1,
+      zscore_h1:  num(row?.zscore_h1),
       atr_h1:     num(row?.atr_h1),
       rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
       rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
 
       // M15 (for SignalFilters)
-      atr_m15:    scoreRow.atr_m15,
+      atr_m15:    num(row?.atr_m15),
 
       // M5 (for SignalFilters)
       rsi_m5:     num(row?.rsi_m5),
@@ -224,8 +197,8 @@ export function evaluateTopOpportunities(marketData = [], opts = {}) {
       drsi_m5:    num(row?.drsi_m5),
       zscore_m5:  num(row?.zscore_m5),
 
-      close:      scoreRow.close,
-      intraday_change: scoreRow.intraday_change,
+      close:      num(row?.close),
+      intraday_change: num(row?.intraday_change),
     };
 
     const existing = best.get(symbol);

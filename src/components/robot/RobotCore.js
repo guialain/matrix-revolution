@@ -68,24 +68,27 @@ const RobotCore = {
       timestamp:   null,
       price:       row.price        ?? null,
       close:       row.close        ?? row.price ?? null,
+      // H4
+      slope_h4:    row.slope_h4     ?? null,
+      dslope_h4:   row.dslope_h4    ?? null,
+      // H1
       slope_h1:    row.slope_h1     ?? null,
       dslope_h1:   row.dslope_h1    ?? null,
       zscore_h1:   row.zscore_h1    ?? null,
       dz_h1:       row.dz_h1        ?? null,
       rsi_h1:      row.rsi_h1       ?? null,
       atr_h1:      row.atr_h1       ?? null,
+      rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,
+      rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
+      // M15
       atr_m15:     row.atr_m15      ?? null,
+      // M5
       slope_m5:    row.slope_m5     ?? null,
       dslope_m5:   row.dslope_m5    ?? null,
       zscore_m5:   row.zscore_m5    ?? null,
       drsi_m5:     row.drsi_m5      ?? null,
       rsi_m5:      row.rsi_m5       ?? null,
-      rsi_m1:      row.rsi_m1       ?? null,
-      drsi_m1:     row.drsi_m1      ?? null,
-      rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,
-      rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
-      zscore_h1_min3: row.zscore_h1_min3 ?? null,
-      zscore_h1_max3: row.zscore_h1_max3 ?? null,
+      // Other
       intraday_change: row.intraday_change ?? null,
     }));
 
@@ -165,8 +168,6 @@ const RobotCore = {
         slope_h1: rawRow?.slope_h1 ?? null,
         rsi_m5:   rawRow?.rsi_m5   ?? null,
         slope_m5: rawRow?.slope_m5 ?? null,
-        rsi_m1:   rawRow?.rsi_m1   ?? null,
-        drsi_m1:  rawRow?.drsi_m1  ?? null,
 
 
         eligibility,

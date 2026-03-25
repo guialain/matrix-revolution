@@ -5,7 +5,7 @@
 export const TIMING_CONFIG = {
 
   // Filtre weekend — pas d'entrée vendredi ≥ weekendFridayHour, samedi, dimanche
-  weekendFridayHour: 20,
+  weekendFridayHour: 17,
 
   // Trading hours: gérés par GlobalMarketHours.js (source unique)
 

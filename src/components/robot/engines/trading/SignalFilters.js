@@ -1,8 +1,8 @@
 // ============================================================================
-// SignalFilters.js — v3 (aligned with Neo-Backtest)
+// SignalFilters.js — v3.1 (aligned with Neo-Backtest v7.1)
 //
-// Chain: Score → Weekend → Volatility → M5 Contrary → M5 Overextended → M1 Contrary → VALID
-// Unified path (no separate continuation/reversal branches)
+// Chain: Score → Weekend → Volatility → M5 Contrary → M5 Overextended → VALID
+// M1 removed (no longer in dataset). M5-only entry timing.
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -38,20 +38,18 @@ const SignalFilters = (() => {
   // =========================================================
   // M5 CONTRARY — RSI zone + dslope momentum
   // =========================================================
-  function isM5Contrary(opp, side, isContinuation) {
+  function isM5Contrary(opp, side) {
     const rsi    = num(opp?.rsi_m5);
     const dslope = num(opp?.dslope_m5);
 
-    const rsiTh = isContinuation ? 67 : 65;
-
     if (side === "BUY") {
-      if (rsi !== null && rsi > rsiTh) return true;
-      if (dslope !== null && dslope < -2) return true;
+      if (rsi !== null && rsi > 65) return true;
+      if (dslope !== null && dslope < -2.0) return true;
     }
 
     if (side === "SELL") {
-      if (rsi !== null && rsi < (100 - rsiTh)) return true;
-      if (dslope !== null && dslope > 2) return true;
+      if (rsi !== null && rsi < 35) return true;
+      if (dslope !== null && dslope > 2.0) return true;
     }
 
     return false;
@@ -65,26 +63,14 @@ const SignalFilters = (() => {
     const zm5   = num(opp?.zscore_m5);
 
     if (side === "BUY") {
-      if (slope !== null && slope > 6.5) return true;
-      if (zm5   !== null && zm5   > 1.9) return true;
+      if (slope !== null && slope > 6) return true;
+      if (zm5   !== null && zm5   > 1.8) return true;
     }
 
     if (side === "SELL") {
-      if (slope !== null && slope < -6.5) return true;
-      if (zm5   !== null && zm5   < -1.9) return true;
+      if (slope !== null && slope < -6) return true;
+      if (zm5   !== null && zm5   < -1.8) return true;
     }
-
-    return false;
-  }
-
-  // =========================================================
-  // M1 CONTRARY — RSI zone gate
-  // =========================================================
-  function isM1Contrary(opp, side) {
-    const rsi = num(opp?.rsi_m1);
-
-    if (side === "BUY"  && rsi !== null && rsi > 60) return true;
-    if (side === "SELL" && rsi !== null && rsi < 40) return true;
 
     return false;
   }
@@ -101,9 +87,6 @@ const SignalFilters = (() => {
     for (const opp of opps) {
       const side = opp?.side;
       if (!side) continue;
-
-      const type = String(opp?.type ?? "").toUpperCase();
-      const isContinuation = type === "CONTINUATION";
 
       // Score gate
       if ((opp?.score ?? 0) < 0) {
@@ -125,7 +108,7 @@ const SignalFilters = (() => {
       }
 
       // M5 contrary
-      if (isM5Contrary(opp, side, isContinuation)) {
+      if (isM5Contrary(opp, side)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY" });
         continue;
       }
@@ -133,12 +116,6 @@ const SignalFilters = (() => {
       // M5 overextended
       if (isM5Overextended(opp, side)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_OVEREXTENDED" });
-        continue;
-      }
-
-      // M1 contrary
-      if (isM1Contrary(opp, side)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_M1_CONTRARY" });
         continue;
       }
 

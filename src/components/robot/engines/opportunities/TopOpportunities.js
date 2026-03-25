@@ -1,16 +1,16 @@
 // ============================================================================
-// TopOpportunities.js — 10-ROUTE H4+H1 MATCHER v7.1 (live mode)
+// TopOpportunities.js — 12-ROUTE dslope_h4+H1 MATCHER v7.2 (live mode)
 //
 // Detection: dslope_h4 (H4 acceleration), dslope_h1 (H1 acceleration), rsi_h1 (zone),
 //            zscore_h1 (BB position), rsi_h1_previouslow3/high3 (context)
 // Filtering M5: delegated to SignalFilters.js
 //
-// 10 routes RSI-first (v7.1 — extreme reversals removed):
-//   REVERSAL  BUY  [25-30]  [30-35]
+// 12 routes RSI-first (v7.2 — extremes restored with dslope_h4):
+//   REVERSAL  BUY  [0-25]  [25-30]  [30-35]
 //   CONT      SELL [30-35] [35-50]  |  BUY [35-50]
 //   CONT      BUY  [50-65] |  SELL [50-65]
 //   CONT      BUY  [65-70]
-//   REVERSAL  SELL [65-70]  [70-75]
+//   REVERSAL  SELL [65-70]  [70-75]  [75-100]
 //
 // Each row = 1 symbol snapshot (live). Returns 1 opp max per symbol.
 // ============================================================================
@@ -28,7 +28,15 @@ function matchRoute(rsi, dslope_h4, dslope_h1, zscore_h1, prevLow3, prevHigh3) {
     return null;
 
   // ── REVERSAL BUY (bas) ──────────────────────────────────────────────
-  // [25-30] Oversold: H4 baissier, H1 accélère vers le haut, creux récent profond
+  // [0-25] Extreme oversold: H4 décélère, H1 retourne, zscore extrême
+  if (rsi < 25
+   && dslope_h4 <= -1
+   && dslope_h1 > 0
+   && zscore_h1 < -1.5
+   && prevLow3 !== null && prevLow3 < 15)
+    return { route: "BUY-R-[0-25]", side: "BUY", type: "REVERSAL" };
+
+  // [25-30] Oversold: H4 décélère, H1 accélère vers le haut, creux récent profond
   if (rsi >= 25 && rsi < 30
    && dslope_h4 <= -1
    && dslope_h1 > 0
@@ -105,13 +113,21 @@ function matchRoute(rsi, dslope_h4, dslope_h1, zscore_h1, prevLow3, prevHigh3) {
    && prevHigh3 !== null && prevHigh3 > 75)
     return { route: "SELL-R-[65-70]", side: "SELL", type: "REVERSAL" };
 
-  // [70-75] Strong: H4 haussier, H1 retourne, pic récent très élevé
+  // [70-75] Strong: H4 accélère haut, H1 retourne, pic récent très élevé
   if (rsi >= 70 && rsi < 75
    && dslope_h4 >= 1
    && dslope_h1 < 0
    && zscore_h1 > 1.2
    && prevHigh3 !== null && prevHigh3 > 75)
     return { route: "SELL-R-[70-75]", side: "SELL", type: "REVERSAL" };
+
+  // [75-100] Extreme overbought: H4 accélère, H1 décroche, zscore extrême
+  if (rsi >= 75
+   && dslope_h4 >= 1
+   && dslope_h1 < 0
+   && zscore_h1 > 1.5
+   && prevHigh3 !== null && prevHigh3 > 80)
+    return { route: "SELL-R-[75-100]", side: "SELL", type: "REVERSAL" };
 
   return null;
 }
@@ -120,6 +136,7 @@ function matchRoute(rsi, dslope_h4, dslope_h1, zscore_h1, prevLow3, prevHigh3) {
 // ROUTE → SIGNAL PHASE
 // ============================================================================
 const ROUTE_PHASE = {
+  "BUY-R-[0-25]":    "EXTREME_LOW",
   "BUY-R-[25-30]":   "OVERSOLD",
   "BUY-R-[30-35]":   "PULLBACK_LOW",
   "SELL-C-[30-35]":  "TREND_DOWN_DEEP",
@@ -130,6 +147,7 @@ const ROUTE_PHASE = {
   "BUY-C-[65-70]":   "TREND_UP_HIGH",
   "SELL-R-[65-70]":  "PULLBACK_HIGH",
   "SELL-R-[70-75]":  "OVERBOUGHT",
+  "SELL-R-[75-100]": "EXTREME_HIGH",
 };
 
 // ============================================================================

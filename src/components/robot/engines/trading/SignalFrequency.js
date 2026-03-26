@@ -23,7 +23,14 @@ function refreshFrequency() {
   lastFetch = now;
   fetch(`${API_BASE}/api/signals/frequency`, { credentials: "include" })
     .then(res => res.ok ? res.json() : {})
-    .then(data => { frequencyCache = data; })
+    .then(data => {
+      // Merge: keep local entries that are newer than server (race-safe)
+      const merged = { ...data };
+      for (const [k, v] of Object.entries(frequencyCache)) {
+        if (v > (merged[k] ?? 0)) merged[k] = v;
+      }
+      frequencyCache = merged;
+    })
     .catch(() => {});
 }
 

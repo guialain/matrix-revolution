@@ -2,7 +2,17 @@ const API_BASE = typeof window !== "undefined"
   ? (window.location.hostname === "localhost" ? "http://localhost:3001" : window.location.origin)
   : "http://localhost:3001";
 
-const COOLDOWN_MS = 5 * 60 * 1000;
+// Cooldown configurable (default 5 min, persisted in localStorage)
+const COOLDOWN_OPTIONS = [0, 5, 10, 15, 30, 45, 60]; // minutes
+
+function loadCooldownMinutes() {
+  try {
+    const v = parseInt(localStorage.getItem("neo_cooldown_min"), 10);
+    return COOLDOWN_OPTIONS.includes(v) ? v : 5;
+  } catch { return 5; }
+}
+
+let cooldownMin = loadCooldownMinutes();
 
 let frequencyCache = {};   // key → timestamp
 let lastFetch = 0;
@@ -18,23 +28,35 @@ function refreshFrequency() {
 }
 
 const SignalFrequency = {
-  canEmit(key) {
-    refreshFrequency(); // fire-and-forget, uses cached data
-    const last = frequencyCache[key];
-    if (!last) return true;
-    return (Date.now() - last) >= COOLDOWN_MS;
+  COOLDOWN_OPTIONS,
+
+  getCooldownMinutes() {
+    return cooldownMin;
   },
 
-  // Returns remaining cooldown in ms (0 if expired or unknown)
+  setCooldownMinutes(min) {
+    if (!COOLDOWN_OPTIONS.includes(min)) return;
+    cooldownMin = min;
+    try { localStorage.setItem("neo_cooldown_min", String(min)); } catch {}
+  },
+
+  canEmit(key) {
+    if (cooldownMin === 0) return true;
+    refreshFrequency();
+    const last = frequencyCache[key];
+    if (!last) return true;
+    return (Date.now() - last) >= cooldownMin * 60 * 1000;
+  },
+
   getCooldownRemaining(key) {
+    if (cooldownMin === 0) return 0;
     refreshFrequency();
     const last = frequencyCache[key];
     if (!last) return 0;
-    const remaining = COOLDOWN_MS - (Date.now() - last);
+    const remaining = (cooldownMin * 60 * 1000) - (Date.now() - last);
     return remaining > 0 ? remaining : 0;
   },
 
-  // Record cooldown after real trade execution (local + server)
   recordCooldown(key) {
     frequencyCache[key] = Date.now();
     fetch(`${API_BASE}/api/signals/cooldown`, {

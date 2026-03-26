@@ -146,26 +146,24 @@ export default function useRobotCore(snapshot) {
     ];
 
     // -----------------------------------------------------------------------
-    // PERSIST VALID OPS (survive 15s between cycles)
+    // PERSIST VALID OPS (30s active, then EXPIRED until next scan)
     // -----------------------------------------------------------------------
     const now = Date.now();
+    const SIGNAL_TTL_MS = 30_000;
 
     for (const op of validOps) {
       const key = `${op.symbol}_${op.side}`;
-      if (!persistedValid.current[key]) {
-        persistedValid.current[key] = { op, expiresAt: now + 15000 };
-      } else {
-        persistedValid.current[key].op = op; // update data, keep original expiry
-      }
+      persistedValid.current[key] = { op, expiresAt: now + SIGNAL_TTL_MS };
     }
 
-    const finalValidOps = Object.values(persistedValid.current)
-      .filter(({ expiresAt }) => expiresAt > now)
-      .map(({ op }) => op);
+    const finalValidOps = [];
+    const expiredOps = [];
 
-    for (const key of Object.keys(persistedValid.current)) {
-      if (persistedValid.current[key].expiresAt <= now) {
-        delete persistedValid.current[key];
+    for (const [key, entry] of Object.entries(persistedValid.current)) {
+      if (entry.expiresAt > now) {
+        finalValidOps.push(entry.op);
+      } else {
+        expiredOps.push({ ...entry.op, state: "EXPIRED" });
       }
     }
 
@@ -204,6 +202,7 @@ export default function useRobotCore(snapshot) {
 
       allowed,
       validOpportunities: finalValidOps,
+      expiredOpportunities: expiredOps,
       waitOpportunities:  waitOps,
       closePositions:     closeOps,
 

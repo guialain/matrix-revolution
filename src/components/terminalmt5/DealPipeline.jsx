@@ -23,19 +23,31 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
   // ================= EXTRACTION TRINITY =================
   const {
     validOpportunities = [],
+    expiredOpportunities = [],
     waitOpportunities  = []
   } = robot ?? {};
 
   const displayValid = validOpportunities.filter(
     op => op.symbol !== draftDeal?.symbol
   );
+  const displayExpired = expiredOpportunities.filter(
+    op => op.symbol !== draftDeal?.symbol
+  );
 
   const hasValid = displayValid.length > 0;
+  const hasExpired = displayExpired.length > 0;
   const hasWait  = waitOpportunities.length > 0;
 
   const [muted, setMuted] = useState(false);
 
-  // ================= COOLDOWN TICK (1s) =================
+  // ================= COOLDOWN CONFIG + TICK =================
+  const [cooldownMin, setCooldownMin] = useState(() => SignalFrequency.getCooldownMinutes());
+  const handleCooldownChange = (e) => {
+    const v = parseInt(e.target.value, 10);
+    SignalFrequency.setCooldownMinutes(v);
+    setCooldownMin(v);
+  };
+
   const hasCooldown = waitOpportunities.some(op => op.state === "WAIT_COOLDOWN");
   const [cdTick, setCdTick] = useState(0);
   useEffect(() => {
@@ -119,6 +131,16 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
 
       <div className="box-title">
         Deal Pipeline
+        <select
+          className="cooldown-select"
+          value={cooldownMin}
+          onChange={handleCooldownChange}
+          title="Cooldown between trades (same symbol+side)"
+        >
+          {SignalFrequency.COOLDOWN_OPTIONS.map(m => (
+            <option key={m} value={m}>{m === 0 ? "No CD" : `${m}m CD`}</option>
+          ))}
+        </select>
         <button
           className={`voice-btn ${muted ? "off" : "on"}`}
           onClick={() => setMuted(m => !m)}
@@ -197,18 +219,27 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
             </span>
           </div>
 
-          {!hasValid ? (
+          {!hasValid && !hasExpired ? (
             <div className="pipeline-empty">
               No validated opportunity
             </div>
           ) : (
-            displayValid.slice(0, 7).map((op, i) => (
-              <TrinityOpportunityLine
-                key={`${op.symbol}-${i}`}
-                op={op}
-                onClick={onSelectDeal}
-              />
-            ))
+            <>
+              {displayValid.slice(0, 7).map((op, i) => (
+                <TrinityOpportunityLine
+                  key={`valid-${op.symbol}-${i}`}
+                  op={op}
+                  onClick={onSelectDeal}
+                />
+              ))}
+              {displayExpired.slice(0, 5).map((op, i) => (
+                <TrinityOpportunityLine
+                  key={`exp-${op.symbol}-${i}`}
+                  op={op}
+                  muted
+                />
+              ))}
+            </>
           )}
 
         </div>

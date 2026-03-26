@@ -123,6 +123,18 @@
   color: #f5c26b;
 }
 
+.cooldown-select {
+  background: rgba(0, 0, 0, 0.4);
+  color: #f5c26b;
+  border: 1px solid rgba(245, 194, 107, 0.3);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 9px;
+  padding: 1px 4px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
 .pipeline-title {
   display: flex;
   align-items: center;
@@ -227,7 +239,9 @@
 /* ================= STATES ================= */
 
 .pipeline-item.muted {
-  opacity: 0.55;
+  opacity: 0.35;
+  text-decoration: line-through;
+  pointer-events: none;
 }
 
 .pipeline-clickable {

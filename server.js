@@ -446,6 +446,7 @@ app.get("/api/mt5data", (req, res) => {
       marketWatch: (cache.scan ?? [])
         .filter(r => r.symbol)
         .map(r => ({
+          timestamp:       r.timestamp || null,
           symbol:          r.symbol,
           assetclass:      r.assetclass || null,
           price:           num(r.price),
@@ -468,6 +469,9 @@ app.get("/api/mt5data", (req, res) => {
           dslope_m5:       num(r.dslope_m5),
           zscore_m5:       num(r.zscore_m5),
           drsi_m5:         num(r.drsi_m5),
+          rsi_m15:         num(r.rsi_m15),
+          slope_m15:       num(r.slope_m15),
+          dslope_m15:      num(r.dslope_m15),
           rsi_h1_previouslow3:  num(r.rsi_h1_previouslow3),
           rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),
           zscore_h1_min3:       num(r.zscore_h1_min3),
@@ -590,8 +594,9 @@ app.post("/api/mt5order", (req, res) => {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "ORDER", payload: order });
     } else {
-      // Local fallback: write directly
-      const filePath = path.join(MT5_DIR, "neo_order.json");
+      // Local: write unique file per order (EA picks up all neo_order_*.json)
+      const orderId = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const filePath = path.join(MT5_DIR, `neo_order_${orderId}.json`);
       fs.writeFileSync(filePath, JSON.stringify(order));
     }
 
@@ -631,7 +636,8 @@ app.post("/api/mt5close", (req, res) => {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "CLOSE", payload: closeCmd });
     } else {
-      const filePath = path.join(MT5_DIR, "neo_close.json");
+      const closeId = `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const filePath = path.join(MT5_DIR, `neo_close_${closeId}.json`);
       fs.writeFileSync(filePath, JSON.stringify(closeCmd));
     }
 
@@ -708,7 +714,7 @@ app.post("/api/signals/publish", (req, res) => {
       ...op,
       emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
     };
-  }).filter(op => op.emittedAt && (now - op.emittedAt) < 15000);
+  }).filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
 
   signalsStore[key].validOpportunities = fresh;
   signalsStore[key].waitOpportunities = waitOpportunities;
@@ -717,11 +723,16 @@ app.post("/api/signals/publish", (req, res) => {
   res.json({ ok: true, valid: fresh.length, wait: waitOpportunities.length });
 });
 
-// GET /api/signals — returns current signal store for user
+// GET /api/signals — returns current signal store for user (TTL 30s)
 app.get("/api/signals", (req, res) => {
   const key = getSignalKey(req);
   ensureSignalBuckets(key);
-  res.json(signalsStore[key]);
+  const now = Date.now();
+  const store = signalsStore[key];
+  res.json({
+    ...store,
+    validOpportunities: (store.validOpportunities ?? []).filter(op => op.emittedAt && (now - op.emittedAt) < 30000),
+  });
 });
 
 // GET /api/signals/frequency — returns frequency map for user

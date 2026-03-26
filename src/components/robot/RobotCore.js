@@ -65,7 +65,7 @@ const RobotCore = {
     // --- 1.2 Détection brute des opportunités (continuation + reversal)
     const topRows = (snapshot.marketWatch ?? []).map(row => ({
       symbol:      row.symbol,
-      timestamp:   null,
+      timestamp:   row.timestamp    ?? null,
       price:       row.price        ?? null,
       close:       row.close        ?? row.price ?? null,
       // H4
@@ -84,6 +84,9 @@ const RobotCore = {
       rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
       // M15
       atr_m15:     row.atr_m15      ?? null,
+      rsi_m15:     row.rsi_m15      ?? null,
+      slope_m15:   row.slope_m15    ?? null,
+      dslope_m15:  row.dslope_m15   ?? null,
       // M5
       slope_m5:    row.slope_m5     ?? null,
       dslope_m5:   row.dslope_m5    ?? null,

@@ -7,7 +7,8 @@ export const TIMING_CONFIG = {
   // Filtre weekend — pas d'entrée vendredi ≥ weekendFridayHour, samedi, dimanche
   weekendFridayHour: 17,
 
-  // Trading hours: gérés par GlobalMarketHours.js (source unique)
+  // Filtre trading hours — entrées autorisées uniquement dans cette fenêtre (UTC)
+  tradingHoursUTC: { open: 9, close: 21 },
 
   M5: {
 

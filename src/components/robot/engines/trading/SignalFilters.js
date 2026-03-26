@@ -1,8 +1,8 @@
 // ============================================================================
-// SignalFilters.js — v3.1 (aligned with Neo-Backtest v7.1)
+// SignalFilters.js — v4 (aligned with Neo-Backtest v8)
 //
-// Chain: Score → Weekend → Volatility → M5 Contrary → M5 Overextended → VALID
-// M1 removed (no longer in dataset). M5-only entry timing.
+// Chain: Score → Weekend → Hours → Volatility → M5 Contrary → M5 Overextended → VALID
+// M5-only entry timing.
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -17,9 +17,20 @@ const SignalFilters = (() => {
   // =========================================================
   function isWeekendRisk() {
     const now = new Date();
-    const day = now.getDay();
-    const hour = now.getHours();
+    const day = now.getUTCDay();
+    const hour = now.getUTCHours();
     return (day === 6 || day === 0) || (day === 5 && hour >= TIMING_CONFIG.weekendFridayHour);
+  }
+
+  // =========================================================
+  // TRADING HOURS — UTC
+  // =========================================================
+  function isOutsideTradingHours() {
+    const hours = TIMING_CONFIG.tradingHoursUTC;
+    if (!hours) return false;
+
+    const hourUTC = new Date().getUTCHours();
+    return hourUTC < hours.open || hourUTC >= hours.close;
   }
 
   // =========================================================
@@ -36,19 +47,27 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 CONTRARY — RSI zone + dslope momentum
+  // M5 CONTRARY — momentum opposé au signal H1
   // =========================================================
-  function isM5Contrary(opp, side) {
+  function isM5Contrary(opp, side, isReversal) {
     const rsi    = num(opp?.rsi_m5);
+    const slope  = num(opp?.slope_m5);
+    const drsi   = num(opp?.drsi_m5);
     const dslope = num(opp?.dslope_m5);
 
+    const slopeTh = isReversal ? 4 : 2;
+
     if (side === "BUY") {
-      if (rsi !== null && rsi > 65) return true;
+      if (rsi !== null && rsi > 69) return true;
+      if (slope !== null && slope < -slopeTh) return true;
+      if (drsi !== null && drsi < -2) return true;
       if (dslope !== null && dslope < -2.0) return true;
     }
 
     if (side === "SELL") {
-      if (rsi !== null && rsi < 35) return true;
+      if (rsi !== null && rsi < 31) return true;
+      if (slope !== null && slope > slopeTh) return true;
+      if (drsi !== null && drsi > 2) return true;
       if (dslope !== null && dslope > 2.0) return true;
     }
 
@@ -56,7 +75,7 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 OVEREXTENDED — slope spike + zscore extension
+  // M5 OVEREXTENDED — prix/momentum trop étiré
   // =========================================================
   function isM5Overextended(opp, side) {
     const slope = num(opp?.slope_m5);
@@ -88,32 +107,41 @@ const SignalFilters = (() => {
       const side = opp?.side;
       if (!side) continue;
 
+      const type = String(opp?.type ?? "").toUpperCase();
+      const isContinuation = type === "CONTINUATION";
+
       // Score gate
       if ((opp?.score ?? 0) < 0) {
         waitOpportunities.push({ ...opp, state: "LOW_SCORE" });
         continue;
       }
 
-      // Weekend
+      // 1. Weekend
       if (isWeekendRisk()) {
         waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND" });
         continue;
       }
 
-      // Volatility
+      // 2. Trading hours
+      if (isOutsideTradingHours()) {
+        waitOpportunities.push({ ...opp, state: "WAIT_HOURS" });
+        continue;
+      }
+
+      // 3. Volatility
       const regime = getRegime(opp);
       if (isBlockedVolatility(regime)) {
         waitOpportunities.push({ ...opp, state: `WAIT_VOL_${regime}` });
         continue;
       }
 
-      // M5 contrary
-      if (isM5Contrary(opp, side)) {
+      // 4. M5 contrary
+      if (isM5Contrary(opp, side, !isContinuation)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY" });
         continue;
       }
 
-      // M5 overextended
+      // 5. M5 overextended
       if (isM5Overextended(opp, side)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_OVEREXTENDED" });
         continue;

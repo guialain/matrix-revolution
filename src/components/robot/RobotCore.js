@@ -71,11 +71,13 @@ const RobotCore = {
       // H4
       slope_h4:    row.slope_h4     ?? null,
       dslope_h4:   row.dslope_h4    ?? null,
+      drsi_h4:     row.drsi_h4      ?? null,
       // H1
       slope_h1:    row.slope_h1     ?? null,
       dslope_h1:   row.dslope_h1    ?? null,
       zscore_h1:   row.zscore_h1    ?? null,
       dz_h1:       row.dz_h1        ?? null,
+      drsi_h1:     row.drsi_h1      ?? null,
       rsi_h1:      row.rsi_h1       ?? null,
       atr_h1:      row.atr_h1       ?? null,
       rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,

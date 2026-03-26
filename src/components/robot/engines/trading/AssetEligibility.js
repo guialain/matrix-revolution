@@ -38,7 +38,7 @@ function resolveMarket(assetclass) {
   }
 }
 
-const ALLOWED_SYMBOLS = [
+export const ALLOWED_SYMBOLS = [
   // FX
   "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "EURJPY", "GBPJPY",
   "NZDUSD", "EURAUD", "USDCHF", "USDCAD",

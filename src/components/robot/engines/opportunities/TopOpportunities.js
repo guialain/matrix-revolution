@@ -18,6 +18,7 @@
 
 import { getRiskConfig } from "../config/RiskConfig";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine";
+import { ALLOWED_SYMBOLS } from "../trading/AssetEligibility";
 
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
@@ -184,6 +185,7 @@ export function evaluateTopOpportunities(marketData = []) {
   for (const row of marketData) {
     const symbol = row?.symbol;
     if (!symbol) continue;
+    if (!ALLOWED_SYMBOLS.includes(symbol)) continue;
 
     const riskCfg = getRiskConfig(symbol);
 

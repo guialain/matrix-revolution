@@ -15,7 +15,7 @@ const GlobalMarketHours = {
   neo: {
     label: "NEO MATRIX HOURS",
     open: 9.0,    // 09h00 UTC
-    close: 20.0   // 20h00 UTC
+    close: 21.0   // 21h00 UTC
   },
 
   // =========================

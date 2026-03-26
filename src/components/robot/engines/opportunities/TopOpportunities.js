@@ -17,6 +17,7 @@
 // ============================================================================
 
 import { getRiskConfig } from "../config/RiskConfig";
+import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine";
 
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
@@ -201,9 +202,21 @@ export function evaluateTopOpportunities(marketData = []) {
 
     if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
-    // ── Score neutralisé (routing H4+H1 suffit) ───────────────────────
-    const score = 50;
-    const breakdown = {};
+    // ── Score informatif (UI only, pas de gate) ────────────────────────
+    const scoreRow = {
+      symbol, rsi_h1: num(row?.rsi_h1), rsi_h1_previouslow3: num(row?.rsi_h1_previouslow3),
+      rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
+      zscore_h1: num(row?.zscore_h1), slope_h1: num(row?.slope_h1), dslope_h1: num(row?.dslope_h1),
+      atr_m15: num(row?.atr_m15), close: num(row?.close), intraday_change: num(row?.intraday_change),
+    };
+    const scored =
+      match.type === "REVERSAL" && match.side === "BUY"  ? scoreReversalBuy(scoreRow) :
+      match.type === "REVERSAL" && match.side === "SELL" ? scoreReversalSell(scoreRow) :
+      match.type === "CONTINUATION" && match.side === "BUY"  ? scoreContinuationBuy(scoreRow) :
+      match.type === "CONTINUATION" && match.side === "SELL" ? scoreContinuationSell(scoreRow) :
+      { total: 0, breakdown: {} };
+    const score = Math.round(scored.total);
+    const breakdown = scored.breakdown;
 
     const opp = {
       type:       match.type,

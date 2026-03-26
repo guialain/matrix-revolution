@@ -110,12 +110,6 @@ const SignalFilters = (() => {
       const type = String(opp?.type ?? "").toUpperCase();
       const isContinuation = type === "CONTINUATION";
 
-      // Score gate
-      if ((opp?.score ?? 0) < 0) {
-        waitOpportunities.push({ ...opp, state: "LOW_SCORE" });
-        continue;
-      }
-
       // 1. Weekend
       if (isWeekendRisk()) {
         waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND" });

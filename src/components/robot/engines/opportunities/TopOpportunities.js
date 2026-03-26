@@ -30,9 +30,8 @@ function matchRoute(rsi, drsi_h4, slope_h1, dslope_h1, drsi_h1, zscore_h1, prevL
     return null;
 
   // ── REVERSAL BUY (bas) ──────────────────────────────────────────────
-  // [0-25] Extreme oversold
+  // [0-25] Extreme oversold — H4 pas exigé, H1 retourne suffit
   if (rsi < 25
-   && drsi_h4 > 0
    && drsi_h1 !== null && drsi_h1 > 0
    && dslope_h1 > 0.25
    && zscore_h1 < -0.8)
@@ -145,9 +144,8 @@ function matchRoute(rsi, drsi_h4, slope_h1, dslope_h1, drsi_h1, zscore_h1, prevL
    && zscore_h1 > 0.8)
     return { route: "SELL-R-[70-75]", side: "SELL", type: "REVERSAL" };
 
-  // [75-100] Extreme overbought — miroir de BUY-R-[0-25]
+  // [75-100] Extreme overbought — miroir de BUY-R-[0-25], H4 pas exigé
   if (rsi >= 75
-   && drsi_h4 < 0
    && drsi_h1 !== null && drsi_h1 < 0
    && dslope_h1 < -0.25
    && zscore_h1 > 0.8)

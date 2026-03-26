@@ -189,6 +189,11 @@ export function evaluateTopOpportunities(marketData = []) {
 
     const riskCfg = getRiskConfig(symbol);
 
+    // Veto anti-spike : ATR H1 > 2× cap → skip
+    const atrH1Cap = num(riskCfg?.atrH1Cap);
+    const atrH1 = num(row?.atr_h1);
+    if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 2 * atrH1Cap) continue;
+
     const match = matchRoute(
       num(row?.rsi_h1),
       num(row?.drsi_h4),

@@ -596,19 +596,21 @@ app.post("/api/mt5order", (req, res) => {
       timestamp: timestamp ?? Date.now()
     };
 
-    const { token } = resolveUserToken(req);
+    const { token, email } = resolveUserToken(req);
 
     if (token) {
       // Remote user: queue command for agent pickup
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "ORDER", payload: order });
+      console.log(`[MT5ORDER] QUEUED for agent | email=${email} token=${token.slice(0,8)}… | ${side} ${symbol}`);
+      res.json({ status: "OK", mode: "AGENT_QUEUE", email, order });
     } else {
       // Local: write file matching EA glob neo_order_*.json
       const filePath = path.join(MT5_DIR, `neo_order_${Date.now()}.json`);
       fs.writeFileSync(filePath, JSON.stringify(order));
+      console.log(`[MT5ORDER] LOCAL file written | email=${email ?? "owner"} | ${side} ${symbol}`);
+      res.json({ status: "OK", mode: "LOCAL_FILE", email, order });
     }
-
-    res.json({ status: "OK", message: "Order queued", order });
 
   } catch (err) {
     console.error("MT5 ORDER API ERROR:", err);
@@ -638,17 +640,19 @@ app.post("/api/mt5close", (req, res) => {
 
     if (symbol) closeCmd.symbol = symbol;
 
-    const { token } = resolveUserToken(req);
+    const { token, email } = resolveUserToken(req);
 
     if (token) {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "CLOSE", payload: closeCmd });
+      console.log(`[MT5CLOSE] QUEUED for agent | email=${email} token=${token.slice(0,8)}… | ticket=${ticket}`);
+      res.json({ status: "OK", mode: "AGENT_QUEUE", email, closeCmd });
     } else {
       const filePath = path.join(MT5_DIR, `neo_close_${Date.now()}.json`);
       fs.writeFileSync(filePath, JSON.stringify(closeCmd));
+      console.log(`[MT5CLOSE] LOCAL file written | email=${email ?? "owner"} | ticket=${ticket}`);
+      res.json({ status: "OK", mode: "LOCAL_FILE", email, closeCmd });
     }
-
-    res.json({ status: "OK", message: "Close queued", closeCmd });
 
   } catch (err) {
     console.error("MT5 CLOSE API ERROR:", err);

@@ -7,7 +7,8 @@
 // ============================================================================
 
 // ================= MARKET / ASSET ======================
-import { evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities";
+// import { evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities";
+import { evaluateTopOpportunities_H1 as evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities_H1";
 import AssetBrain       from "./engines/asset/AssetBrain";
 
 // ================= CONFIDENCE / SCORING =================

@@ -131,11 +131,11 @@ async function pollOrders() {
 
     for (const cmd of orders) {
       if (cmd.action === "ORDER") {
-        const filePath = path.join(mt5_dir, "neo_order.json");
+        const filePath = path.join(mt5_dir, "neo_order_0.json");
         fs.writeFileSync(filePath, JSON.stringify(cmd.payload));
         console.log(`📥 Order written: ${cmd.payload.symbol} ${cmd.payload.side}`);
       } else if (cmd.action === "CLOSE") {
-        const filePath = path.join(mt5_dir, "neo_close.json");
+        const filePath = path.join(mt5_dir, "neo_close_0.json");
         fs.writeFileSync(filePath, JSON.stringify(cmd.payload));
         console.log(`📥 Close written: ticket ${cmd.payload.ticket}`);
       } else if (cmd.action === "SWITCH") {

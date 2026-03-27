@@ -594,8 +594,8 @@ app.post("/api/mt5order", (req, res) => {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "ORDER", payload: order });
     } else {
-      // Local: write single file (EA reads neo_order.json)
-      const filePath = path.join(MT5_DIR, "neo_order.json");
+      // Local: write file matching EA glob neo_order_*.json
+      const filePath = path.join(MT5_DIR, "neo_order_0.json");
       fs.writeFileSync(filePath, JSON.stringify(order));
     }
 
@@ -635,7 +635,7 @@ app.post("/api/mt5close", (req, res) => {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "CLOSE", payload: closeCmd });
     } else {
-      const filePath = path.join(MT5_DIR, "neo_close.json");
+      const filePath = path.join(MT5_DIR, "neo_close_0.json");
       fs.writeFileSync(filePath, JSON.stringify(closeCmd));
     }
 

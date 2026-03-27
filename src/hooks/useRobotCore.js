@@ -95,6 +95,8 @@ export default function useRobotCore(snapshot) {
 
     const throttledValid = valid.filter(op => {
       const key = `${op.symbol}_${op.side}`;
+      // Don't publish signals that are in cooldown
+      if (!SignalFrequency.canEmit(key)) return false;
       if (last[key] && (now - last[key]) < PUBLISH_COOLDOWN_MS) return false;
       last[key] = now;
       return true;

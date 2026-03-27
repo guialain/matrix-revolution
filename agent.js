@@ -40,7 +40,7 @@ const FILES = {
 function readLastRowCSV(filePath) {
   if (!fs.existsSync(filePath)) return null;
   try {
-    const content = fs.readFileSync(filePath, "utf8").trim();
+    const content = fs.readFileSync(filePath, "utf8").replace(/\0/g, "").trim();
     if (!content) return null;
     const lines = content.split(/\r?\n/);
     if (lines.length < 2) return null;
@@ -61,7 +61,7 @@ function readLastRowCSV(filePath) {
 function readAllRowsCSV(filePath) {
   if (!fs.existsSync(filePath)) return [];
   try {
-    const content = fs.readFileSync(filePath, "utf8").trim();
+    const content = fs.readFileSync(filePath, "utf8").replace(/\0/g, "").trim();
     if (!content) return [];
     const lines = content.split(/\r?\n/);
     if (lines.length < 2) return [];
@@ -79,13 +79,23 @@ function readAllRowsCSV(filePath) {
 // READ ALL MT5 DATA
 // ============================================================================
 
+let lastScanTimestamp = null;   // gate: only push scan on new M5 candle
+let lastScan = [];
+
 function readAllData() {
+  const scanRaw = readAllRowsCSV(path.join(mt5_dir, FILES.scan));
+  const newTs = scanRaw?.[0]?.timestamp ?? null;
+  if (newTs && newTs !== lastScanTimestamp) {
+    lastScan = scanRaw;
+    lastScanTimestamp = newTs;
+  }
+
   return {
     account:       readLastRowCSV(path.join(mt5_dir, FILES.account)),
     asset:         readLastRowCSV(path.join(mt5_dir, FILES.asset)),
     indicators:    readLastRowCSV(path.join(mt5_dir, FILES.indicators)),
     macro:         readLastRowCSV(path.join(mt5_dir, FILES.macro)),
-    scan:          readAllRowsCSV(path.join(mt5_dir, FILES.scan)),
+    scan:          lastScan,
     openpositions: readAllRowsCSV(path.join(mt5_dir, FILES.openpositions)),
     closedtrades:  readAllRowsCSV(path.join(mt5_dir, FILES.closedtrades)),
     timestamp:     Date.now(),

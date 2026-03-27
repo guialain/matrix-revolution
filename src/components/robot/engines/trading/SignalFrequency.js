@@ -72,6 +72,10 @@ const SignalFrequency = {
       credentials: "include",
       body: JSON.stringify({ symbol: key })
     }).catch(() => {});
+  },
+
+  clearCooldown(key) {
+    delete frequencyCache[key];
   }
 };
 

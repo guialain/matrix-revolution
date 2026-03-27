@@ -427,8 +427,9 @@ export default function useAutoTrader(mode, robot, snapshot) {
         signalTF: "H1"
       };
 
-      // Mark sent BEFORE async call (prevent race on next render cycle)
+      // Mark sent + record cooldown BEFORE async call (prevent race)
       sentRef.current[dedupKey] = now;
+      SignalFrequency.recordCooldown(`${order.symbol}_${order.side}`);
 
       // ==================================================================
       // LOG + FIRE
@@ -443,12 +444,12 @@ export default function useAutoTrader(mode, robot, snapshot) {
       sendOrderToMT5(order)
         .then(() => {
           console.log(`[AUTO-TRADER] OK — ${order.side} ${order.symbol}`);
-          SignalFrequency.recordCooldown(`${order.symbol}_${order.side}`);
         })
         .catch(err => {
           console.error(`[AUTO-TRADER] FAIL — ${order.side} ${order.symbol}:`, err);
           // Allow retry on failure
           delete sentRef.current[dedupKey];
+          SignalFrequency.clearCooldown(`${order.symbol}_${order.side}`);
         });
     }
   }, [mode, robot, snapshot]);

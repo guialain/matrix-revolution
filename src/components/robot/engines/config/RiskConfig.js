@@ -43,7 +43,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDCHF: {
-    tpAtr: 0.45, slAtr: 1.20, atrH1Cap: 0.00240, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.45, slAtr: 1.50, atrH1Cap: 0.00240, maxHoldH: 24, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 0.8850, baseToEUR: 0.847,
@@ -194,7 +194,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   SILVER: {
-    tpAtr: 0.45, slAtr: 1.80, atrH1Cap: 1.653, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 1.45, slAtr: 1.80, atrH1Cap: 1.653, maxHoldH: 24, reversalEnabled: true,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
     spread: 0.148,
     targetLeveragePerTrade: 0.5,

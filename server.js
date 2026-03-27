@@ -174,6 +174,8 @@ function readAllRowsCSV(filePath) {
 // CACHE UPDATE (background polling every 1s)
 // ============================================================================
 
+let lastScanTimestamp = null;        // gate: only update scan on new M5 candle
+
 function updateCache() {
 
   const accountRaw     = readLastRowCSV(path.join(MT5_DIR, FILES.account));
@@ -188,7 +190,14 @@ function updateCache() {
   CACHE.asset         = assetRaw;
   CACHE.indicators    = indiRaw;
   CACHE.macro         = macroRaw;
-  CACHE.scan          = scanRaw ?? [];
+
+  // Scan: only update when timestamp changes (= new M5 candle from EA)
+  const newTs = scanRaw?.[0]?.timestamp ?? null;
+  if (newTs && newTs !== lastScanTimestamp) {
+    CACHE.scan = scanRaw ?? [];
+    lastScanTimestamp = newTs;
+  }
+
   CACHE.openpositions = openPosRaw ?? [];
   CACHE.closedtrades  = closedRaw ?? [];
 
@@ -595,7 +604,7 @@ app.post("/api/mt5order", (req, res) => {
       AGENTS_QUEUE[token].push({ action: "ORDER", payload: order });
     } else {
       // Local: write file matching EA glob neo_order_*.json
-      const filePath = path.join(MT5_DIR, "neo_order_0.json");
+      const filePath = path.join(MT5_DIR, `neo_order_${Date.now()}.json`);
       fs.writeFileSync(filePath, JSON.stringify(order));
     }
 
@@ -635,7 +644,7 @@ app.post("/api/mt5close", (req, res) => {
       if (!AGENTS_QUEUE[token]) AGENTS_QUEUE[token] = [];
       AGENTS_QUEUE[token].push({ action: "CLOSE", payload: closeCmd });
     } else {
-      const filePath = path.join(MT5_DIR, "neo_close_0.json");
+      const filePath = path.join(MT5_DIR, `neo_close_${Date.now()}.json`);
       fs.writeFileSync(filePath, JSON.stringify(closeCmd));
     }
 

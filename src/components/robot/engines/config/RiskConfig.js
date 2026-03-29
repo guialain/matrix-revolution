@@ -180,6 +180,17 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
 
+  // ── AGRICULTURE ────────────────────────────────────────────────────────────
+
+  WHEAT: {
+    tpAtr: 0.35, slAtr: 1.35, atrH1Cap: 5.50, maxHoldH: 24, reversalEnabled: true,
+    spread: 0.30, spread_price: 0.25,
+    targetLeveragePerTrade: 1.0,
+    contractSize: 100, refPrice: 550, baseToEUR: 0.847,
+    tickSize: 0.25,
+    volume_min: 0.01, volume_max: 100, volume_step: 0.01,
+  },
+
   // ── DEFAULT ───────────────────────────────────────────────────────────────
 
   default: {

@@ -5,7 +5,7 @@
 export const TIMING_CONFIG = {
 
   // Filtre weekend — pas d'entrée vendredi ≥ weekendFridayHour, samedi, dimanche
-  weekendFridayHour: 18,
+  weekendFridayHour: 17.5,
 
   // Filtre trading hours — entrées autorisées uniquement dans cette fenêtre (UTC)
   tradingHoursUTC: { open: 9, close: 21 },

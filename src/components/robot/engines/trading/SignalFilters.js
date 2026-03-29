@@ -18,8 +18,8 @@ const SignalFilters = (() => {
   function isWeekendRisk() {
     const now = new Date();
     const day = now.getUTCDay();
-    const hour = now.getUTCHours();
-    return (day === 6 || day === 0) || (day === 5 && hour >= TIMING_CONFIG.weekendFridayHour);
+    const hourDec = now.getUTCHours() + now.getUTCMinutes() / 60;
+    return (day === 6 || day === 0) || (day === 5 && hourDec >= TIMING_CONFIG.weekendFridayHour);
   }
 
   // =========================================================

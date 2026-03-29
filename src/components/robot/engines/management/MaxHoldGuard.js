@@ -9,7 +9,7 @@
 import { getRiskConfig, RISK_CONFIG } from "../config/RiskConfig";
 
 const DEFAULT_MAX_HOLD_H = RISK_CONFIG.default?.defaultMaxHoldH || 8;
-const FRIDAY_CLOSE_H = 20.5; // 20:30 UTC
+const FRIDAY_CLOSE_H = 21; // 21:00 UTC
 
 const MaxHoldGuard = (() => {
 

@@ -100,9 +100,9 @@ export default function TopMoversPanel({ onSwitchSymbol }) {
         symbol: r.symbol,
         price: r.price ?? null,
         intraday_change: r.intraday_change ?? null,
-        rsi_h1: r.rsi_h1 ?? null,
-        zscore_h1: r.zscore_h1 ?? null,
-        slope_h1: r.slope_h1 ?? null,
+        rsi_h1: r.rsi_h1_s0 ?? null,
+        zscore_h1: r.zscore_h1_s0 ?? null,
+        slope_h1: r.slope_h1_s0 ?? null,
       });
     }
 

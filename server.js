@@ -174,7 +174,7 @@ function readAllRowsCSV(filePath) {
 // CACHE UPDATE (background polling every 1s)
 // ============================================================================
 
-let lastScanTimestamp = null;        // gate: only update scan on new M5 candle
+let lastScanTimestamp = null;        // gate: only update scan on new timestamp (~5s)
 
 function updateCache() {
 
@@ -191,7 +191,7 @@ function updateCache() {
   CACHE.indicators    = indiRaw;
   CACHE.macro         = macroRaw;
 
-  // Scan: only update when timestamp changes (= new M5 candle from EA)
+  // Scan: only update when timestamp changes (~5s refresh from EA)
   const newTs = scanRaw?.[0]?.timestamp ?? null;
   if (newTs && newTs !== lastScanTimestamp) {
     CACHE.scan = scanRaw ?? [];

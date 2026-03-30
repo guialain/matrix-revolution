@@ -79,7 +79,7 @@ function readAllRowsCSV(filePath) {
 // READ ALL MT5 DATA
 // ============================================================================
 
-let lastScanTimestamp = null;   // gate: only push scan on new M5 candle
+let lastScanTimestamp = null;   // gate: only push scan on new timestamp (~5s)
 let lastScan = [];
 
 function readAllData() {

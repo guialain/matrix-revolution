@@ -29,7 +29,8 @@ function matchRoute(
   // s0 — bougie H1 en cours (optionnels, null si non disponibles)
   slope_h1_s0 = null, drsi_h1_s0 = null, zscore_h1_s0 = null,
   // H4 context — filtre continuation (s0 prioritaire sur s1)
-  drsi_h4 = null, drsi_h4_s0 = null
+  drsi_h4 = null, drsi_h4_s0 = null,
+  slope_h4_s0 = null
 ) {
   if (rsi === null || dslope_h1 === null || zscore_h1 === null)
     return null;
@@ -86,7 +87,8 @@ function matchRoute(
   // ── CONTINUATION [35-50] — BRK only ──────────────────────────────
   if (rsi >= 35 && rsi < 50
    && slope_buy !== null && slope_buy > 0.8      // s0 capte l'accélération
-   && dslope_h1 > 0.25
+   && slope_h1_s0 !== null && slope_h1_s0 > -0.5
+   && slope_h4_s0 !== null && slope_h4_s0 > 0
    && zscore > -1.5
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
@@ -98,7 +100,8 @@ function matchRoute(
   // RET — retracement bounce
   if (rsi >= 50 && rsi < 65
    && slope_h1 !== null && slope_h1 > -1.5      // contexte s1
-   && dslope_h1 > 0.25
+   && slope_h1_s0 !== null && slope_h1_s0 > -0.5
+   && slope_h4_s0 !== null && slope_h4_s0 > 0
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 65
@@ -108,7 +111,8 @@ function matchRoute(
   // BRK — breakout from below
   if (rsi >= 50 && rsi < 65
    && slope_buy !== null && slope_buy > -0.5      // légèrement négatif accepté
-   && dslope_h1 > 0.25
+   && slope_h1_s0 !== null && slope_h1_s0 > -0.5
+   && slope_h4_s0 !== null && slope_h4_s0 > 0
    && zscore > 0.3
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 > 0.05
@@ -120,7 +124,8 @@ function matchRoute(
   // RET
   if (rsi >= 65 && rsi < 70
    && slope_h1 !== null && slope_h1 > -1.0      // contexte s1
-   && dslope_h1 > 0.25
+   && slope_h1_s0 !== null && slope_h1_s0 > -0.5
+   && slope_h4_s0 !== null && slope_h4_s0 > 0
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 64
@@ -130,7 +135,8 @@ function matchRoute(
   // BRK
   if (rsi >= 65 && rsi < 70
    && slope_buy !== null && slope_buy > 1.2      // s0 capte l'accélération
-   && dslope_h1 > 0.25
+   && slope_h1_s0 !== null && slope_h1_s0 > -0.5
+   && slope_h4_s0 !== null && slope_h4_s0 > 0
    && zscore > 0.3
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
@@ -142,7 +148,8 @@ function matchRoute(
   // RET
   if (rsi >= 50 && rsi < 65
    && slope_h1 !== null && slope_h1 < 2.0       // contexte s1
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 65
@@ -152,7 +159,8 @@ function matchRoute(
   // BRK
   if (rsi >= 50 && rsi < 65
    && slope_sell !== null && slope_sell < 0.5     // légèrement positif accepté
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore < -0.3
    && zscore > -1.9
    && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05
@@ -164,7 +172,8 @@ function matchRoute(
   // RET
   if (rsi >= 35 && rsi < 50
    && slope_h1 !== null && slope_h1 < 1.5       // contexte s1
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 35
@@ -174,7 +183,8 @@ function matchRoute(
   // BRK
   if (rsi >= 35 && rsi < 50
    && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore < 1.5
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > 0.3
@@ -186,7 +196,8 @@ function matchRoute(
   // RET
   if (rsi >= 30 && rsi < 35
    && slope_h1 !== null && slope_h1 < 1.0       // contexte s1
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 < 0.5
    && prevLow3 !== null && prevLow3 < 30
@@ -196,7 +207,8 @@ function matchRoute(
   // BRK
   if (rsi >= 30 && rsi < 35
    && slope_sell !== null && slope_sell < -1.2   // s0 capte l'accélération
-   && dslope_h1 < -0.25
+   && slope_h1_s0 !== null && slope_h1_s0 < 0.5
+   && slope_h4_s0 !== null && slope_h4_s0 < 0
    && zscore < -0.3
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
@@ -290,7 +302,8 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       num(row?.zscore_h1_s0),
       // H4 context
       num(row?.drsi_h4),
-      num(row?.drsi_h4_s0)
+      num(row?.drsi_h4_s0),
+      num(row?.slope_h4_s0)
     );
     if (!match) continue;
 
@@ -333,6 +346,7 @@ export function evaluateTopOpportunities_H1(marketData = []) {
 
       // ── H4 context ──────────────────────────────────
       slope_h4:    num(row?.slope_h4),
+      slope_h4_s0: num(row?.slope_h4_s0),
       dslope_h4:   num(row?.dslope_h4),
       drsi_h4:     num(row?.drsi_h4),
 

@@ -113,7 +113,7 @@ function matchRoute(
    && dslope_h1 > 0.25
    && zscore < 1.8
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
-   && prevHigh3 !== null && prevHigh3 > 70)
+   && prevHigh3 !== null && prevHigh3 > 64)
     return { route: "BUY-C-[65-70]-RET", side: "BUY", type: "CONTINUATION" };
 
   // BRK
@@ -123,7 +123,7 @@ function matchRoute(
    && dslope_h1 > 0.25
    && zscore > 0.3
    && zscore < 1.8
-   && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
+   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevLow3 !== null && prevLow3 < 65)
     return { route: "BUY-C-[65-70]-BRK", side: "BUY", type: "CONTINUATION" };
 

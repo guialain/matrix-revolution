@@ -67,23 +67,23 @@ const SignalFilters = (() => {
 
     if (side === "BUY") {
       // s1 — bougie fermée
-      if (rsi    !== null && rsi    > 69)        return true;
+      if (rsi    !== null && rsi    > 68)        return true;
       if (slope  !== null && slope  < -slopeTh)  return true;
       if (drsi   !== null && drsi   < -2)         return true;
       if (dslope !== null && dslope < -2.0)       return true;
       // s0 — bougie en cours : renforce la détection
-      if (rsi_s0   !== null && rsi_s0   > 72)    return true;  // seuil légèrement plus lâche (s0 plus bruité)
+      if (rsi_s0   !== null && rsi_s0   > 68)    return true;
       if (slope_s0 !== null && slope_s0 < -slopeTh) return true;
     }
 
     if (side === "SELL") {
       // s1
-      if (rsi    !== null && rsi    < 31)        return true;
+      if (rsi    !== null && rsi    < 32)        return true;
       if (slope  !== null && slope  > slopeTh)   return true;
       if (drsi   !== null && drsi   > 2)          return true;
       if (dslope !== null && dslope > 2.0)        return true;
       // s0
-      if (rsi_s0   !== null && rsi_s0   < 28)   return true;
+      if (rsi_s0   !== null && rsi_s0   < 32)   return true;
       if (slope_s0 !== null && slope_s0 > slopeTh) return true;
     }
 
@@ -104,18 +104,18 @@ const SignalFilters = (() => {
 
     if (side === "BUY") {
       if (slope  !== null && slope  > 7)    return true;
-      if (zm5    !== null && zm5    > 2.0)  return true;
+      if (zm5    !== null && zm5    > 2.5)  return true;
       // s0 — capte l'extension qui se forme pendant la bougie
       if (slope_s0 !== null && slope_s0 > 7)   return true;
-      if (zm5_s0   !== null && zm5_s0   > 2.0) return true;
+      if (zm5_s0   !== null && zm5_s0   > 2.5) return true;
     }
 
     if (side === "SELL") {
       if (slope  !== null && slope  < -7)   return true;
-      if (zm5    !== null && zm5    < -2.0) return true;
+      if (zm5    !== null && zm5    < -2.5) return true;
       // s0
       if (slope_s0 !== null && slope_s0 < -7)   return true;
-      if (zm5_s0   !== null && zm5_s0   < -2.0) return true;
+      if (zm5_s0   !== null && zm5_s0   < -2.5) return true;
     }
 
     return false;

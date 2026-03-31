@@ -73,7 +73,7 @@ const RobotCore = {
       slope_h4:    row.slope_h4     ?? null,
       dslope_h4:   row.dslope_h4    ?? null,
       drsi_h4:     row.drsi_h4      ?? null,
-      // H1
+      // H1 s1
       slope_h1:    row.slope_h1     ?? null,
       dslope_h1:   row.dslope_h1    ?? null,
       zscore_h1:   row.zscore_h1    ?? null,
@@ -83,17 +83,29 @@ const RobotCore = {
       atr_h1:      row.atr_h1       ?? null,
       rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,
       rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
+      zscore_h1_min3:       row.zscore_h1_min3       ?? null,
+      zscore_h1_max3:       row.zscore_h1_max3       ?? null,
+      // H1 s0
+      rsi_h1_s0:   row.rsi_h1_s0    ?? null,
+      slope_h1_s0: row.slope_h1_s0  ?? null,
+      drsi_h1_s0:  row.drsi_h1_s0   ?? null,
+      zscore_h1_s0:row.zscore_h1_s0 ?? null,
       // M15
       atr_m15:     row.atr_m15      ?? null,
       rsi_m15:     row.rsi_m15      ?? null,
       slope_m15:   row.slope_m15    ?? null,
       dslope_m15:  row.dslope_m15   ?? null,
-      // M5
+      // M5 s1
       slope_m5:    row.slope_m5     ?? null,
       dslope_m5:   row.dslope_m5    ?? null,
       zscore_m5:   row.zscore_m5    ?? null,
       drsi_m5:     row.drsi_m5      ?? null,
       rsi_m5:      row.rsi_m5       ?? null,
+      // M5 s0
+      rsi_m5_s0:   row.rsi_m5_s0    ?? null,
+      slope_m5_s0: row.slope_m5_s0  ?? null,
+      drsi_m5_s0:  row.drsi_m5_s0   ?? null,
+      zscore_m5_s0:row.zscore_m5_s0 ?? null,
       // Other
       intraday_change: row.intraday_change ?? null,
     }));

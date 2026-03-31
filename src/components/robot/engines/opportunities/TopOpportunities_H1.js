@@ -107,7 +107,7 @@ function matchRoute(
 
   // BRK — breakout from below
   if (rsi >= 50 && rsi < 65
-   && slope_buy !== null && slope_buy > 1.2      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > -0.5      // légèrement négatif accepté
    && dslope_h1 > 0.25
    && zscore > 0.3
    && zscore < 1.9
@@ -151,7 +151,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 50 && rsi < 65
-   && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < 0.5     // légèrement positif accepté
    && dslope_h1 < -0.25
    && zscore < -0.3
    && zscore > -1.9

@@ -78,7 +78,7 @@ function matchRoute(
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
-   && zscore < 1.8
+   && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
    && prevLow3 !== null && prevLow3 < 30)
     return { route: "BUY-C-[35-50]-BRK", side: "BUY", type: "CONTINUATION" };
@@ -89,7 +89,7 @@ function matchRoute(
    && slope_h1 !== null && slope_h1 > -1.5      // contexte s1
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
-   && zscore < 1.8
+   && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 65)
     return { route: "BUY-C-[50-65]-RET", side: "BUY", type: "CONTINUATION" };
@@ -100,7 +100,7 @@ function matchRoute(
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
-   && zscore < 1.8
+   && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
    && prevLow3 !== null && prevLow3 < 50)
     return { route: "BUY-C-[50-65]-BRK", side: "BUY", type: "CONTINUATION" };
@@ -111,7 +111,7 @@ function matchRoute(
    && slope_h1 !== null && slope_h1 > -1.0      // contexte s1
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
-   && zscore < 1.8
+   && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 64)
     return { route: "BUY-C-[65-70]-RET", side: "BUY", type: "CONTINUATION" };
@@ -122,7 +122,7 @@ function matchRoute(
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
-   && zscore < 1.8
+   && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevLow3 !== null && prevLow3 < 65)
     return { route: "BUY-C-[65-70]-BRK", side: "BUY", type: "CONTINUATION" };

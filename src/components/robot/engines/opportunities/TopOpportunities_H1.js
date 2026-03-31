@@ -154,7 +154,7 @@ function matchRoute(
    && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
    && dslope_h1 < -0.25
    && zscore < -0.3
-   && zscore > -1.8
+   && zscore > -1.9
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
    && prevLow3 !== null && prevLow3 < 50
    && h4SellOk && h1SellOk)
@@ -178,7 +178,7 @@ function matchRoute(
    && zscore < 1.5
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > 0.3
-   && prevHigh3 !== null && prevHigh3 > 58
+   && prevHigh3 !== null && prevHigh3 > 42
    && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-BRK", side: "SELL", type: "CONTINUATION" };
 

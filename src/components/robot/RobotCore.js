@@ -207,11 +207,11 @@ const RobotCore = {
 
       const reason = !eligibility?.eligible
         ? "ELIGIBILITY"
-        : finalScore < 0
+        : finalScore < 5
         ? "LOW_SCORE"
         : "OK";
 
-      if (eligibility?.eligible && finalScore >= 0) {
+      if (eligibility?.eligible && finalScore >= 5) {
         tradableMarket.push(enriched);
       } else {
         notTradableMarket.push(enriched);

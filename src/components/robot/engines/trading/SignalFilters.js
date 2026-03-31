@@ -103,19 +103,19 @@ const SignalFilters = (() => {
     const zm5_s0   = num(opp?.zscore_m5_s0);
 
     if (side === "BUY") {
-      if (slope  !== null && slope  > 6)    return true;
-      if (zm5    !== null && zm5    > 1.8)  return true;
+      if (slope  !== null && slope  > 7)    return true;
+      if (zm5    !== null && zm5    > 2.0)  return true;
       // s0 — capte l'extension qui se forme pendant la bougie
-      if (slope_s0 !== null && slope_s0 > 6)   return true;
-      if (zm5_s0   !== null && zm5_s0   > 1.8) return true;
+      if (slope_s0 !== null && slope_s0 > 7)   return true;
+      if (zm5_s0   !== null && zm5_s0   > 2.0) return true;
     }
 
     if (side === "SELL") {
-      if (slope  !== null && slope  < -6)   return true;
-      if (zm5    !== null && zm5    < -1.8) return true;
+      if (slope  !== null && slope  < -7)   return true;
+      if (zm5    !== null && zm5    < -2.0) return true;
       // s0
-      if (slope_s0 !== null && slope_s0 < -6)   return true;
-      if (zm5_s0   !== null && zm5_s0   < -1.8) return true;
+      if (slope_s0 !== null && slope_s0 < -7)   return true;
+      if (zm5_s0   !== null && zm5_s0   < -2.0) return true;
     }
 
     return false;

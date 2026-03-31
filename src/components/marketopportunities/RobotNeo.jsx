@@ -60,9 +60,7 @@ function resolveBlockReason(op) {
 
   // Eligible but blocked by score
   const score = op.score ?? 0;
-  if (score < 0) return `Low score (${Math.round(score)})`;
-
-  return "Unknown";
+  return `Low score (${Math.round(score)})`;
 }
 
 function NotEligibleSection({ blocked }) {

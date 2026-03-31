@@ -65,6 +65,7 @@ function matchRoute(
   // [0-25] Extreme oversold — drsi_h1_s0 pour réactivité maximale
   if (rsi < 25
    && drsi_buy !== null && drsi_buy > 0
+   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
    && dslope_h1 > 0.25
    && zscore < -0.3)
     return { route: "BUY-R-[0-25]", side: "BUY", type: "REVERSAL" };
@@ -72,6 +73,7 @@ function matchRoute(
   // [25-30] Oversold
   if (rsi >= 25 && rsi < 30
    && drsi_buy !== null && drsi_buy > 0.5
+   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
    && dslope_h1 > 0.25
    && zscore < -0.3)
     return { route: "BUY-R-[25-30]", side: "BUY", type: "REVERSAL" };
@@ -80,6 +82,7 @@ function matchRoute(
   if (rsi >= 30 && rsi < 35
    && slope_h1 !== null && slope_h1 > -2        // s1 uniquement — filtre de contexte
    && drsi_buy !== null && drsi_buy > 0.5
+   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
    && dslope_h1 > 0.25
    && zscore < -0.8
    && prevLow3 !== null && prevLow3 < 30)
@@ -222,6 +225,7 @@ function matchRoute(
   if (rsi >= 65 && rsi < 70
    && slope_h1 !== null && slope_h1 < 2
    && drsi_sell !== null && drsi_sell < -0.5
+   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
    && dslope_h1 < -0.25
    && zscore > 0.8
    && prevHigh3 !== null && prevHigh3 > 70)
@@ -231,6 +235,7 @@ function matchRoute(
   if (rsi >= 70 && rsi < 75
    && slope_h1 !== null && slope_h1 < 2
    && drsi_sell !== null && drsi_sell < -0.5
+   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
    && dslope_h1 < -0.25
    && zscore > 0.3)
     return { route: "SELL-R-[75-70]", side: "SELL", type: "REVERSAL" };
@@ -238,6 +243,7 @@ function matchRoute(
   // [100-75] Extreme overbought — drsi_h1_s0 pour réactivité maximale
   if (rsi >= 75
    && drsi_sell !== null && drsi_sell < 0
+   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
    && dslope_h1 < -0.25
    && zscore > 0.3)
     return { route: "SELL-R-[100-75]", side: "SELL", type: "REVERSAL" };

@@ -74,7 +74,7 @@ function matchRoute(
 
   // ── CONTINUATION [35-50] — BRK only ──────────────────────────────
   if (rsi >= 35 && rsi < 50
-   && slope_buy !== null && slope_buy > 1.5      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > 0.8      // s0 capte l'accélération
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
@@ -86,7 +86,7 @@ function matchRoute(
   // ── CONTINUATION [50-65] — RET / BRK ──────────────────────────────
   // RET — retracement bounce
   if (rsi >= 50 && rsi < 65
-   && slope_h1 !== null && slope_h1 > -4.0      // contexte s1
+   && slope_h1 !== null && slope_h1 > -1.5      // contexte s1
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore < 1.8
@@ -96,7 +96,7 @@ function matchRoute(
 
   // BRK — breakout from below
   if (rsi >= 50 && rsi < 65
-   && slope_buy !== null && slope_buy > 2.0      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > 1.2      // s0 capte l'accélération
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
@@ -108,7 +108,7 @@ function matchRoute(
   // ── CONTINUATION [65-70] — RET / BRK ──────────────────────────────
   // RET
   if (rsi >= 65 && rsi < 70
-   && slope_h1 !== null && slope_h1 > -3.0      // contexte s1
+   && slope_h1 !== null && slope_h1 > -1.0      // contexte s1
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore < 1.8
@@ -118,7 +118,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 65 && rsi < 70
-   && slope_buy !== null && slope_buy > 2.0      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > 1.2      // s0 capte l'accélération
    && drsi_buy !== null && drsi_buy > 1
    && dslope_h1 > 0.25
    && zscore > 0.3
@@ -140,7 +140,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 50 && rsi < 65
-   && slope_sell !== null && slope_sell < -1.5   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
    && drsi_sell !== null && drsi_sell < -1
    && dslope_h1 < -0.25
    && zscore < -0.3
@@ -152,7 +152,7 @@ function matchRoute(
   // ── CONTINUATION SELL [50-35] — RET / BRK ─────────────────────────
   // RET
   if (rsi >= 35 && rsi < 50
-   && slope_h1 !== null && slope_h1 < 4.0       // contexte s1
+   && slope_h1 !== null && slope_h1 < 1.5       // contexte s1
    && drsi_sell !== null && drsi_sell < -1
    && dslope_h1 < -0.25
    && zscore > -1.8
@@ -162,7 +162,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 35 && rsi < 50
-   && slope_sell !== null && slope_sell < -1.5   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
    && drsi_sell !== null && drsi_sell < -1
    && dslope_h1 < -0.25
    && zscore < -0.3
@@ -174,7 +174,7 @@ function matchRoute(
   // ── CONTINUATION SELL [35-30] — RET / BRK ─────────────────────────
   // RET
   if (rsi >= 30 && rsi < 35
-   && slope_h1 !== null && slope_h1 < 3.0       // contexte s1
+   && slope_h1 !== null && slope_h1 < 1.0       // contexte s1
    && drsi_sell !== null && drsi_sell < -1
    && dslope_h1 < -0.25
    && zscore > -1.8
@@ -184,7 +184,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 30 && rsi < 35
-   && slope_sell !== null && slope_sell < -2.0   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < -1.2   // s0 capte l'accélération
    && drsi_sell !== null && drsi_sell < -1
    && dslope_h1 < -0.25
    && zscore < -0.3

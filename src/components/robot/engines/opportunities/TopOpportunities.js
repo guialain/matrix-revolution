@@ -60,7 +60,7 @@ function matchRoute(rsi, drsi_h4, slope_h1, dslope_h1, drsi_h1, zscore_h1, prevL
   // [30-35] miroir de BUY-C-[65-70]
   if (rsi >= 30 && rsi < 35
    && drsi_h4 < 0
-   && slope_h1 !== null && slope_h1 < -2
+   && slope_h1 !== null && slope_h1 < -1
    && drsi_h1 !== null && drsi_h1 < -1
    && dslope_h1 < -0.25
    && zscore_h1 > -1.8
@@ -118,7 +118,7 @@ function matchRoute(rsi, drsi_h4, slope_h1, dslope_h1, drsi_h1, zscore_h1, prevL
   // BUY
   if (rsi >= 65 && rsi < 70
    && drsi_h4 > 0
-   && slope_h1 !== null && slope_h1 > 2
+   && slope_h1 !== null && slope_h1 > 1
    && drsi_h1 !== null && drsi_h1 > 1
    && dslope_h1 > 0.25
    && zscore_h1 < 1.8

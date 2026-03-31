@@ -1,8 +1,13 @@
 // ============================================================================
-// SignalFilters.js — v4 (aligned with Neo-Backtest v8)
+// SignalFilters.js — v5 (s0 M5 intégré)
 //
 // Chain: Score → Weekend → Hours → Volatility → M5 Contrary → M5 Overextended → VALID
-// M5-only entry timing.
+//
+// v5: intégration s0 M5 (bougie en cours)
+//   - isM5Contrary    : utilise slope_m5_s0 en plus de slope_m5 (s1)
+//   - isM5Overextended: utilise zscore_m5_s0 en plus de zscore_m5 (s1)
+//   - m5Confidence    : "strong" si s1+s0 concordants, "normal" sinon
+//     → exposé dans l'objet opp pour usage downstream (AutoTrader, logs)
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -28,7 +33,6 @@ const SignalFilters = (() => {
   function isOutsideTradingHours() {
     const hours = TIMING_CONFIG.tradingHoursUTC;
     if (!hours) return false;
-
     const hourUTC = new Date().getUTCHours();
     return hourUTC < hours.open || hourUTC >= hours.close;
   }
@@ -42,33 +46,45 @@ const SignalFilters = (() => {
 
   function isBlockedVolatility(regime) {
     if (!regime) return false;
-    if (regime === "low") return true;
-    return false;
+    return regime === "low";
   }
 
   // =========================================================
   // M5 CONTRARY — momentum opposé au signal H1
+  // Utilise s1 ET s0 : bloque si l'un OU l'autre est contraire
   // =========================================================
   function isM5Contrary(opp, side, isReversal) {
-    const rsi    = num(opp?.rsi_m5);
-    const slope  = num(opp?.slope_m5);
-    const drsi   = num(opp?.drsi_m5);
-    const dslope = num(opp?.dslope_m5);
+    const rsi      = num(opp?.rsi_m5);
+    const slope    = num(opp?.slope_m5);
+    const drsi     = num(opp?.drsi_m5);
+    const dslope   = num(opp?.dslope_m5);
+
+    // s0 — bougie M5 en cours
+    const slope_s0 = num(opp?.slope_m5_s0);
+    const rsi_s0   = num(opp?.rsi_m5_s0);
 
     const slopeTh = isReversal ? 4 : 2;
 
     if (side === "BUY") {
-      if (rsi !== null && rsi > 69) return true;
-      if (slope !== null && slope < -slopeTh) return true;
-      if (drsi !== null && drsi < -2) return true;
-      if (dslope !== null && dslope < -2.0) return true;
+      // s1 — bougie fermée
+      if (rsi    !== null && rsi    > 69)        return true;
+      if (slope  !== null && slope  < -slopeTh)  return true;
+      if (drsi   !== null && drsi   < -2)         return true;
+      if (dslope !== null && dslope < -2.0)       return true;
+      // s0 — bougie en cours : renforce la détection
+      if (rsi_s0   !== null && rsi_s0   > 72)    return true;  // seuil légèrement plus lâche (s0 plus bruité)
+      if (slope_s0 !== null && slope_s0 < -slopeTh) return true;
     }
 
     if (side === "SELL") {
-      if (rsi !== null && rsi < 31) return true;
-      if (slope !== null && slope > slopeTh) return true;
-      if (drsi !== null && drsi > 2) return true;
-      if (dslope !== null && dslope > 2.0) return true;
+      // s1
+      if (rsi    !== null && rsi    < 31)        return true;
+      if (slope  !== null && slope  > slopeTh)   return true;
+      if (drsi   !== null && drsi   > 2)          return true;
+      if (dslope !== null && dslope > 2.0)        return true;
+      // s0
+      if (rsi_s0   !== null && rsi_s0   < 28)   return true;
+      if (slope_s0 !== null && slope_s0 > slopeTh) return true;
     }
 
     return false;
@@ -76,22 +92,65 @@ const SignalFilters = (() => {
 
   // =========================================================
   // M5 OVEREXTENDED — prix/momentum trop étiré
+  // Utilise s1 ET s0 pour détecter l'extension en cours
   // =========================================================
   function isM5Overextended(opp, side) {
-    const slope = num(opp?.slope_m5);
-    const zm5   = num(opp?.zscore_m5);
+    const slope    = num(opp?.slope_m5);
+    const zm5      = num(opp?.zscore_m5);
+
+    // s0
+    const slope_s0 = num(opp?.slope_m5_s0);
+    const zm5_s0   = num(opp?.zscore_m5_s0);
 
     if (side === "BUY") {
-      if (slope !== null && slope > 6) return true;
-      if (zm5   !== null && zm5   > 1.8) return true;
+      if (slope  !== null && slope  > 6)    return true;
+      if (zm5    !== null && zm5    > 1.8)  return true;
+      // s0 — capte l'extension qui se forme pendant la bougie
+      if (slope_s0 !== null && slope_s0 > 6)   return true;
+      if (zm5_s0   !== null && zm5_s0   > 1.8) return true;
     }
 
     if (side === "SELL") {
-      if (slope !== null && slope < -6) return true;
-      if (zm5   !== null && zm5   < -1.8) return true;
+      if (slope  !== null && slope  < -6)   return true;
+      if (zm5    !== null && zm5    < -1.8) return true;
+      // s0
+      if (slope_s0 !== null && slope_s0 < -6)   return true;
+      if (zm5_s0   !== null && zm5_s0   < -1.8) return true;
     }
 
     return false;
+  }
+
+  // =========================================================
+  // M5 CONFIDENCE — concordance s1 + s0
+  //
+  // "strong" : s1 et s0 pointent dans la même direction
+  //            → signal M5 haute confiance
+  // "normal" : s1 seul ou contradiction s1/s0
+  //
+  // Utilisé downstream pour sizing ou filtrage additionnel
+  // =========================================================
+  function getM5Confidence(opp, side) {
+    const dslope   = num(opp?.dslope_m5);   // s1
+    const rsi      = num(opp?.rsi_m5);      // s1
+    const slope_s0 = num(opp?.slope_m5_s0); // s0
+    const rsi_s0   = num(opp?.rsi_m5_s0);   // s0
+
+    if (dslope === null || slope_s0 === null) return "normal";
+
+    if (side === "BUY") {
+      // s1 haussier ET s0 haussier ET rsi_s0 pas suracheté
+      if (dslope > 0 && slope_s0 > 0 && (rsi_s0 === null || rsi_s0 < 65))
+        return "strong";
+    }
+
+    if (side === "SELL") {
+      // s1 baissier ET s0 baissier ET rsi_s0 pas survendu
+      if (dslope < 0 && slope_s0 < 0 && (rsi_s0 === null || rsi_s0 > 35))
+        return "strong";
+    }
+
+    return "normal";
   }
 
   // =========================================================
@@ -141,10 +200,14 @@ const SignalFilters = (() => {
         continue;
       }
 
+      // 6. M5 confidence — calculé sur les opportunités valides
+      const m5Confidence = getM5Confidence(opp, side);
+
       validOpportunities.push({
         ...opp,
-        state: "VALID",
-        volatilityRegime: regime ?? null
+        state:           "VALID",
+        volatilityRegime: regime ?? null,
+        m5Confidence,    // "strong" | "normal"
       });
     }
 

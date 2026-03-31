@@ -34,10 +34,9 @@ function matchRoute(
   if (rsi === null || dslope_h1 === null || zscore_h1 === null)
     return null;
 
-  // H4 divergence gate — bloque continuation si H4 diverge de la direction H1
-  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
-  const h4BuyOk  = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
-  const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <=  0.3;
+  // H4 divergence gate — s0 uniquement (bougie H4 en cours)
+  const h4BuyOk  = drsi_h4_s0 === null || drsi_h4_s0 >= -0.3;
+  const h4SellOk = drsi_h4_s0 === null || drsi_h4_s0 <=  0.3;
 
   // H1 directional gate — s0 prioritaire, sinon s1
   const drsi_h1_eff = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
@@ -112,7 +111,7 @@ function matchRoute(
    && dslope_h1 > 0.25
    && zscore > 0.3
    && zscore < 1.9
-   && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
+   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05
    && prevLow3 !== null && prevLow3 < 50
    && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[50-65]-BRK", side: "BUY", type: "CONTINUATION" };
@@ -156,7 +155,7 @@ function matchRoute(
    && dslope_h1 < -0.25
    && zscore < -0.3
    && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 > 0.3
+   && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
    && prevLow3 !== null && prevLow3 < 50
    && h4SellOk && h1SellOk)
     return { route: "SELL-C-[65-50]-BRK", side: "SELL", type: "CONTINUATION" };

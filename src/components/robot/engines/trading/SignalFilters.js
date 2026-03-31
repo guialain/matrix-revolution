@@ -63,7 +63,7 @@ const SignalFilters = (() => {
     const slope_s0 = num(opp?.slope_m5_s0);
     const rsi_s0   = num(opp?.rsi_m5_s0);
 
-    const slopeTh = isReversal ? 4 : 2;
+    const slopeTh = isReversal ? 5 : 5;
 
     if (side === "BUY") {
       // s1 — bougie fermée

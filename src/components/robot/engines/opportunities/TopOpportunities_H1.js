@@ -35,9 +35,10 @@ function matchRoute(
   if (rsi === null || dslope_h1 === null || zscore_h1 === null)
     return null;
 
-  // H4 divergence gate — s0 uniquement (bougie H4 en cours)
-  const h4BuyOk  = drsi_h4_s0 === null || drsi_h4_s0 >= -0.3;
-  const h4SellOk = drsi_h4_s0 === null || drsi_h4_s0 <=  0.3;
+  // H4 divergence gate — s0 prioritaire, fallback s1
+  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
+  const h4BuyOk  = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
+  const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <=  0.3;
 
   // H1 directional gate — s0 prioritaire, sinon s1
   const drsi_h1_eff = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;

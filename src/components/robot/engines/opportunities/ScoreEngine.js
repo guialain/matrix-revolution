@@ -80,7 +80,7 @@ function scoreIntradayContinuation(symbol, intraday_change, side) {
   const ratio = (intraday_change * dir) / sMax;
 
   if (ratio < 0) {
-    return clamp(ratio / 0.6, -1, 0) * 25;
+    return clamp(ratio / 0.6, -1, 0) * 10;
   } else if (ratio <= 0.75) {
     return (ratio / 0.75) * 25;
   } else if (ratio <= 1.0) {

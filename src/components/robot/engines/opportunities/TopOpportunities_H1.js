@@ -115,9 +115,9 @@ function matchRoute(
   // ── CONTINUATION [50-65] — RET / BRK ──────────────────────────────
   // RET — retracement bounce
   if (rsi >= 50 && rsi < 65
-   && slope_h1 !== null && slope_h1 > -1.5      // contexte s1
-   && h1SlopeAccel
-   && h4SlopeAccel
+   && slope_h1 !== null && slope_h1 > -0.5      // contexte s1
+   && dslope_h1_live !== null && dslope_h1_live > 1.5
+   && dslope_h4_live !== null && dslope_h4_live > 0.25
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 65
@@ -187,9 +187,9 @@ function matchRoute(
   // ── CONTINUATION SELL [50-35] — RET / BRK ─────────────────────────
   // RET
   if (rsi >= 35 && rsi < 50
-   && slope_h1 !== null && slope_h1 < 1.5       // contexte s1
-   && h1SlopeDecel
-   && h4SlopeDecel
+   && slope_h1 !== null && slope_h1 < 0.5        // contexte s1
+   && dslope_h1_live !== null && dslope_h1_live < -1.5
+   && dslope_h4_live !== null && dslope_h4_live < -0.25
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 35

@@ -150,7 +150,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 65 && rsi < 68
-   && slope_buy !== null && slope_buy > 1.2      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > 1.0      // s0 capte l'accélération
    && h1SlopeAccel
    && h4SlopeAccel
    && zscore > 0.3
@@ -222,7 +222,7 @@ function matchRoute(
 
   // BRK
   if (rsi >= 32 && rsi < 35
-   && slope_sell !== null && slope_sell < -1.2   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < -1.0   // s0 capte l'accélération
    && h1SlopeDecel
    && h4SlopeDecel
    && zscore < -0.3

@@ -93,8 +93,8 @@ function matchRoute(
   // [30-35] Reversal confirmed
   if (rsi >= 30 && rsi < 35
    && slope_h1 !== null && slope_h1 > -2        // s1 uniquement — filtre de contexte
-   && drsi_buy !== null && drsi_buy > 0.5
-   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
+   && drsi_buy !== null && drsi_buy > 1
+   && drsi_h4_s0 !== null && drsi_h4_s0 > 0.5
    && dslope_h1 > 0.25
    && zscore < -0.8
    && prevLow3 !== null && prevLow3 < 30)
@@ -236,8 +236,8 @@ function matchRoute(
   // [70-65] Confirmed
   if (rsi >= 65 && rsi < 70
    && slope_h1 !== null && slope_h1 < 2
-   && drsi_sell !== null && drsi_sell < -0.5
-   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
+   && drsi_sell !== null && drsi_sell < -1
+   && drsi_h4_s0 !== null && drsi_h4_s0 < -0.5
    && dslope_h1 < -0.25
    && zscore > 0.8
    && prevHigh3 !== null && prevHigh3 > 70)

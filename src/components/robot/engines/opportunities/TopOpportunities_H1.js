@@ -112,13 +112,13 @@ function matchRoute(
 
   // ── CONTINUATION [35-50] — BRK only ──────────────────────────────
   if (rsi >= 35 && rsi < 50
-   && slope_buy !== null && slope_buy > 0.8      // s0 capte l'accélération
+   && slope_buy !== null && slope_buy > 0.5      // s0 capte l'accélération
    && h1SlopeAccel
    && h4SlopeAccel
    && zscore > -1.5
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
-   && prevLow3 !== null && prevLow3 < 42
+   && prevLow3 !== null && prevLow3 < 45
    && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[35-50]-BRK", side: "BUY", type: "CONTINUATION" };
 
@@ -210,13 +210,13 @@ function matchRoute(
 
   // BRK
   if (rsi >= 35 && rsi < 50
-   && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
+   && slope_sell !== null && slope_sell < -0.5   // s0 capte l'accélération
    && h1SlopeDecel
    && h4SlopeDecel
    && zscore < -0.1
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
-   && prevHigh3 !== null && prevHigh3 > 42
+   && prevHigh3 !== null && prevHigh3 > 55
    && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-BRK", side: "SELL", type: "CONTINUATION" };
 

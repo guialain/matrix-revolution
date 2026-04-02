@@ -81,7 +81,7 @@ export const RISK_CONFIG = {
   // ── INDEX ─────────────────────────────────────────────────────────────────
 
   UK_100: {
-    tpAtr: 0.40, slAtr: 1.45, atrH1Cap: 43.6, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.25, atrH1Cap: 43.6, maxHoldH: 24, reversalEnabled: true,
     spread: 2.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 8500, baseToEUR: 1.076,
@@ -91,7 +91,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   GERMANY_40: {
-    tpAtr: 0.45, slAtr: 1.45, atrH1Cap: 145.8, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.35, atrH1Cap: 145.8, maxHoldH: 24, reversalEnabled: true,
     spread: 5.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 23910.5, baseToEUR: 1.000,
@@ -99,7 +99,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   FRANCE_40: {
-    tpAtr: 0.45, slAtr: 1.45, atrH1Cap: 53.3, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.35, atrH1Cap: 53.3, maxHoldH: 24, reversalEnabled: true,
     spread: 2.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 8008.5, baseToEUR: 1.000,
@@ -107,7 +107,7 @@ export const RISK_CONFIG = {
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
   },
   US_30: {
-    tpAtr: 0.40, slAtr: 1.45, atrH1Cap: 245.0, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.45, slAtr: 1.40, atrH1Cap: 245.0, maxHoldH: 24, reversalEnabled: true,
     spread: 7.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 10, refPrice: 47438, baseToEUR: 0.847,
@@ -115,7 +115,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   US_500: {
-    tpAtr: 0.45, slAtr: 1.45, atrH1Cap: 36.75, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.30, atrH1Cap: 36.75, maxHoldH: 24, reversalEnabled: true,
     spread: 1.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 6772.75, baseToEUR: 0.847,
@@ -123,7 +123,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
   US_TECH100: {
-    tpAtr: 0.40, slAtr: 1.45, atrH1Cap: 182.85, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.40, atrH1Cap: 182.85, maxHoldH: 24, reversalEnabled: true,
     spread: 2.25,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 24938.75, baseToEUR: 0.847,
@@ -131,7 +131,7 @@ export const RISK_CONFIG = {
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
   },
   JAPAN_225: {
-    tpAtr: 0.45, slAtr: 1.45, atrH1Cap: 350, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.35, atrH1Cap: 350, maxHoldH: 24, reversalEnabled: true,
     spread: 15.0,
     targetLeveragePerTrade: 1.0,
     contractSize: 100, refPrice: 36000, baseToEUR: 0.006,

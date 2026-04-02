@@ -206,6 +206,13 @@ for (const file of files) {
     if (isM5Contrary(r, match.side)) continue;
     if (isM5Overextended(r, match.side)) continue;
 
+    // Intraday gate — CONT only
+    const intra = num(r.intraday_change);
+    if (match.type === 'CONT' && intra !== null) {
+      if (match.side === 'SELL' && intra > 1.5) continue;
+      if (match.side === 'BUY'  && intra < -1.5) continue;
+    }
+
     // Max positions per symbol
     if (openPositions.length >= MAX_POS_PER_SYMBOL) continue;
 

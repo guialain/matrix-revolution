@@ -341,6 +341,13 @@ export function evaluateTopOpportunities_H1(marketData = []) {
 
     if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
+    // Intraday gate — CONT only: block SELL if intraday > 1.5%, BUY if < -1.5%
+    const intra = num(row?.intraday_change);
+    if (match.type === "CONTINUATION" && intra !== null) {
+      if (match.side === "SELL" && intra > 1.5) continue;
+      if (match.side === "BUY"  && intra < -1.5) continue;
+    }
+
     const scoreRow = {
       symbol,
       rsi_h1:               num(row?.rsi_h1),

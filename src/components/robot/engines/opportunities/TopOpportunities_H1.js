@@ -17,6 +17,7 @@
 import { getRiskConfig } from "../config/RiskConfig";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine";
 import { ALLOWED_SYMBOLS } from "../trading/AssetEligibility";
+import { INTRADAY_CONFIG } from "../config/IntradayConfig";
 
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
@@ -344,11 +345,12 @@ export function evaluateTopOpportunities_H1(marketData = []) {
 
     if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
-    // Intraday gate — CONT only: block SELL if intraday > 1.5%, BUY if < -1.5%
+    // Intraday gate — CONT only: block if intraday exceeds strongMax against direction
     const intra = num(row?.intraday_change);
+    const strongMax = (INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default).strongMax;
     if (match.type === "CONTINUATION" && intra !== null) {
-      if (match.side === "SELL" && intra > 1.5) continue;
-      if (match.side === "BUY"  && intra < -1.5) continue;
+      if (match.side === "SELL" && intra > strongMax) continue;
+      if (match.side === "BUY"  && intra < -strongMax) continue;
     }
 
     const scoreRow = {

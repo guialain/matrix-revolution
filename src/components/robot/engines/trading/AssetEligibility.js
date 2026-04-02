@@ -44,7 +44,7 @@ export const ALLOWED_SYMBOLS = [
   // INDEX
   "GERMANY_40", "FRANCE_40", "UK_100", "US_30", "US_500", "US_TECH100", "JAPAN_225",
   // CRYPTO
-  "BTCUSD", "BTCEUR", "ETHUSD",
+  "BTCUSD", "BTCEUR", "BTCJPY", "ETHUSD",
   // METAL
   "GOLD", "SILVER",
   // ENERGY

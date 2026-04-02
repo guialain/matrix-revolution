@@ -155,6 +155,13 @@ export const RISK_CONFIG = {
     contractSize: 10, refPrice: 73747.20, baseToEUR: 0.847,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
+  BTCJPY: {
+    tpAtr: 0.80, slAtr: 2.00, atrH1Cap: 1100, maxHoldH: 24, reversalEnabled: true,
+    spread: 5000,
+    targetLeveragePerTrade: 0.3,
+    contractSize: 10, refPrice: 11000000, baseToEUR: 0.006,
+    volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
+  },
   ETHUSD: {
     tpAtr: 0.80, slAtr: 1.84, atrH1Cap: 62.43, maxHoldH: 24, reversalEnabled: true,
     spread: 1.9,

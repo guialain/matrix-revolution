@@ -127,10 +127,11 @@ function matchRoute(
   // BRK — breakout from below
   if (rsi >= 50 && rsi < 65
    && slope_buy !== null && slope_buy > -0.5      // légèrement négatif accepté
+   && drsi_h1 !== null && Math.abs(drsi_h1) < 6   // anti-spike RSI
    && h1SlopeAccel
    && h4SlopeAccel
    && zscore > 0.3
-   && zscore < 1.9
+   && zscore < 1.6
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05
    && prevLow3 !== null && prevLow3 < 57
    && h4BuyOk && h1BuyOk)
@@ -175,10 +176,11 @@ function matchRoute(
   // BRK
   if (rsi >= 50 && rsi < 65
    && slope_sell !== null && slope_sell < 0.5     // légèrement positif accepté
+   && drsi_h1 !== null && Math.abs(drsi_h1) < 6   // anti-spike RSI
    && h1SlopeDecel
    && h4SlopeDecel
    && zscore < -0.3
-   && zscore > -1.9
+   && zscore > -1.6
    && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05
    && prevHigh3 !== null && prevHigh3 > 43
    && h4SellOk && h1SellOk)

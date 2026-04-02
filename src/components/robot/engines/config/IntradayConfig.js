@@ -19,6 +19,7 @@ export const INTRADAY_CONFIG = {
   GERMANY_40:  { strongMax: 0.94 },
   FRANCE_40:   { strongMax: 0.98 },
   UK_100:      { strongMax: 0.88 },
+  JAPAN_225:   { strongMax: 1.20 },
 
   // Crypto
   BTCUSD:      { strongMax: 2.97 },

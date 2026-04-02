@@ -109,6 +109,14 @@ export const RISK_CONFIG = {
     tickSize: 0.25,
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
   },
+  JAPAN_225: {
+    tpAtr: 0.45, slAtr: 1.45, atrH1Cap: 350, maxHoldH: 24, reversalEnabled: true,
+    spread: 15.0,
+    targetLeveragePerTrade: 1.0,
+    contractSize: 100, refPrice: 36000, baseToEUR: 0.006,
+    tickSize: 5.0,
+    volume_min: 0.01, volume_max: 100, volume_step: 0.01,
+  },
 
   // ── CRYPTO ────────────────────────────────────────────────────────────────
 

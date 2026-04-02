@@ -201,7 +201,7 @@ function matchRoute(
    && slope_sell !== null && slope_sell < -0.8   // s0 capte l'accélération
    && h1SlopeDecel
    && h4SlopeDecel
-   && zscore < 1.5
+   && zscore < -0.1
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
    && prevHigh3 !== null && prevHigh3 > 42

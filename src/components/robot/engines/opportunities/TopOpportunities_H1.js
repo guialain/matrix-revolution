@@ -67,8 +67,8 @@ function matchRoute(
   // H1 slope momentum — (s0 - s1) : accélération / décélération
   const dslope_h1_live = (slope_h1_s0 !== null && slope_h1 !== null)
     ? slope_h1_s0 - slope_h1 : null;
-  const h1SlopeAccel = dslope_h1_live === null || dslope_h1_live > 0.25;   // BUY
-  const h1SlopeDecel = dslope_h1_live === null || dslope_h1_live < -0.25;  // SELL
+  const h1SlopeAccel = dslope_h1_live === null || dslope_h1_live > 0.1;    // BUY
+  const h1SlopeDecel = dslope_h1_live === null || dslope_h1_live < -0.1;   // SELL
 
   // drsi effectif = s0 si disponible (plus réactif), sinon s1
   const drsi_buy  = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;

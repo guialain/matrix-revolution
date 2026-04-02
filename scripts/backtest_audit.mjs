@@ -68,8 +68,8 @@ function matchRoute(r) {
   const slope_buy  = (slope_h1_s0 !== null) ? Math.max(slope_h1 ?? -Infinity, slope_h1_s0) : slope_h1;
   const slope_sell = (slope_h1_s0 !== null) ? Math.min(slope_h1 ?? Infinity,  slope_h1_s0) : slope_h1;
   const dslope_h1_live = (slope_h1_s0 !== null && slope_h1 !== null) ? slope_h1_s0 - slope_h1 : null;
-  const h1SlopeAccel = dslope_h1_live === null || dslope_h1_live > 0.25;
-  const h1SlopeDecel = dslope_h1_live === null || dslope_h1_live < -0.25;
+  const h1SlopeAccel = dslope_h1_live === null || dslope_h1_live > 0.1;
+  const h1SlopeDecel = dslope_h1_live === null || dslope_h1_live < -0.1;
   const drsi_buy  = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
   const drsi_sell = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
   const zscore = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;

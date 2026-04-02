@@ -55,8 +55,8 @@ function matchRoute(r) {
   if (rsi === null || dslope_h1 === null || zscore_h1 === null) return null;
 
   const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null) ? slope_h4_s0 - slope_h4 : null;
-  const h4SlopeAccel = (dslope_h4_live === null || dslope_h4_live > 0)
-    && (slope_h4 === null || slope_h4 > -3.0 || (dslope_h4_live !== null && dslope_h4_live > 2.0));
+  const h4SlopeAccel = (dslope_h4_live === null || dslope_h4_live > 0.5)
+    && (slope_h4 === null || slope_h4 > -3.0);
   const h4SlopeDecel = (dslope_h4_live === null || dslope_h4_live < -2.0)
     && (slope_h4 === null || slope_h4 < 3.0);
   const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;

@@ -40,7 +40,7 @@ function resolveMarket(assetclass) {
 
 export const ALLOWED_SYMBOLS = [
   // FX
-  "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "USDCHF",
+  "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "USDCHF", "EURJPY", "GBPJPY", "AUDJPY",
   // INDEX
   "GERMANY_40", "FRANCE_40", "UK_100", "US_30", "US_500", "US_TECH100", "JAPAN_225",
   // CRYPTO

@@ -56,6 +56,27 @@ export const RISK_CONFIG = {
     contractSize: 100000, refPrice: 158.976, baseToEUR: 0.847,
     volume_min: 0.01, volume_max: 201, volume_step: 0.01,
   },
+  EURJPY: {
+    tpAtr: 0.45, slAtr: 1.50, atrH1Cap: 0.50, maxHoldH: 24, reversalEnabled: true,
+    spread: 0.020,
+    targetLeveragePerTrade: 3.0,
+    contractSize: 100000, refPrice: 162.0, baseToEUR: 1.000,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
+  },
+  GBPJPY: {
+    tpAtr: 0.45, slAtr: 1.50, atrH1Cap: 0.60, maxHoldH: 24, reversalEnabled: true,
+    spread: 0.030,
+    targetLeveragePerTrade: 3.0,
+    contractSize: 100000, refPrice: 190.0, baseToEUR: 1.076,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
+  },
+  AUDJPY: {
+    tpAtr: 0.45, slAtr: 1.50, atrH1Cap: 0.40, maxHoldH: 24, reversalEnabled: true,
+    spread: 0.020,
+    targetLeveragePerTrade: 3.0,
+    contractSize: 100000, refPrice: 95.0, baseToEUR: 0.847,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
+  },
 
   // ── INDEX ─────────────────────────────────────────────────────────────────
 

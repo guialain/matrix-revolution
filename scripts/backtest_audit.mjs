@@ -55,8 +55,10 @@ function matchRoute(r) {
   if (rsi === null || dslope_h1 === null || zscore_h1 === null) return null;
 
   const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null) ? slope_h4_s0 - slope_h4 : null;
-  const h4SlopeAccel = dslope_h4_live === null || dslope_h4_live > 0;
-  const h4SlopeDecel = dslope_h4_live === null || dslope_h4_live < 0;
+  const h4SlopeAccel = (dslope_h4_live === null || dslope_h4_live > 0)
+    && (slope_h4 === null || slope_h4 > -3.0 || (dslope_h4_live !== null && dslope_h4_live > 2.0));
+  const h4SlopeDecel = (dslope_h4_live === null || dslope_h4_live < -2.0)
+    && (slope_h4 === null || slope_h4 < 3.0);
   const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
   const h4BuyOk  = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
   const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <=  0.3;
@@ -118,10 +120,63 @@ function matchRoute(r) {
 }
 
 // ============================================================================
+// M5 FILTERS — mirror of SignalFilters.js
+// ============================================================================
+function isM5Contrary(r, side) {
+  const rsi    = num(r.rsi_m5);
+  const slope  = num(r.slope_m5);
+  const drsi   = num(r.drsi_m5);
+  const dslope = num(r.dslope_m5);
+  const rsi_s0   = num(r.rsi_m5_s0);
+  const slope_s0 = num(r.slope_m5_s0);
+  const slopeTh = 5;
+
+  if (side === 'BUY') {
+    if (rsi    !== null && rsi    > 68)       return true;
+    if (slope  !== null && slope  < -slopeTh) return true;
+    if (drsi   !== null && drsi   < -2)       return true;
+    if (dslope !== null && dslope < -2.0)     return true;
+    if (rsi_s0   !== null && rsi_s0   > 68)       return true;
+    if (slope_s0 !== null && slope_s0 < -slopeTh) return true;
+  }
+  if (side === 'SELL') {
+    if (rsi    !== null && rsi    < 32)       return true;
+    if (slope  !== null && slope  > slopeTh)  return true;
+    if (drsi   !== null && drsi   > 2)        return true;
+    if (dslope !== null && dslope > 2.0)      return true;
+    if (rsi_s0   !== null && rsi_s0   < 32)       return true;
+    if (slope_s0 !== null && slope_s0 > slopeTh)  return true;
+  }
+  return false;
+}
+
+function isM5Overextended(r, side) {
+  const slope    = num(r.slope_m5);
+  const zm5      = num(r.zscore_m5);
+  const slope_s0 = num(r.slope_m5_s0);
+  const zm5_s0   = num(r.zscore_m5_s0);
+
+  if (side === 'BUY') {
+    if (slope  !== null && slope  > 7)    return true;
+    if (zm5    !== null && zm5    > 2.5)  return true;
+    if (slope_s0 !== null && slope_s0 > 7)   return true;
+    if (zm5_s0   !== null && zm5_s0   > 2.5) return true;
+  }
+  if (side === 'SELL') {
+    if (slope  !== null && slope  < -7)   return true;
+    if (zm5    !== null && zm5    < -2.5) return true;
+    if (slope_s0 !== null && slope_s0 < -7)   return true;
+    if (zm5_s0   !== null && zm5_s0   < -2.5) return true;
+  }
+  return false;
+}
+
+// ============================================================================
 // SIMULATE — TP/SL ATR + maxHold
 // ============================================================================
-const COOLDOWN_BARS = 12;
+const COOLDOWN_BARS = 1; // 1 bar = 5min cooldown
 const MAX_HOLD_BARS = 288; // 24h fallback
+const MAX_POS_PER_SYMBOL = 3;
 const allTrades = [];
 
 for (const file of files) {
@@ -137,11 +192,22 @@ for (const file of files) {
   const symbol = basename(file).replace('neo_audit_', '').replace('.csv', '');
   const cfg = getCfg(symbol);
   const lastSignalBar = {};
+  const openPositions = []; // { closeBar }
 
   for (let i = 0; i < rows.length; i++) {
+    // Purge closed positions
+    while (openPositions.length > 0 && openPositions[0].closeBar <= i) openPositions.shift();
+
     const r = rows[i];
     const match = matchRoute(r);
     if (!match) continue;
+
+    // M5 filters
+    if (isM5Contrary(r, match.side)) continue;
+    if (isM5Overextended(r, match.side)) continue;
+
+    // Max positions per symbol
+    if (openPositions.length >= MAX_POS_PER_SYMBOL) continue;
 
     const lastBar = lastSignalBar[match.route] ?? -999;
     if (i - lastBar < COOLDOWN_BARS) continue;
@@ -188,6 +254,10 @@ for (const file of files) {
 
     const holdMin = holdBars * 5;
     const holdStr = holdMin >= 60 ? `${(holdMin / 60).toFixed(1)}h` : `${holdMin}min`;
+
+    // Track open position
+    openPositions.push({ closeBar: i + holdBars });
+    openPositions.sort((a, b) => a.closeBar - b.closeBar);
 
     allTrades.push({
       timestamp: r.timestamp, symbol, signal: match.route, type: match.type,

@@ -77,6 +77,9 @@ function matchRoute(
   // zscore effectif = s0 si disponible
   const zscore = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
 
+  // Anti-spike drsi s0 — bloque CONT si |drsi_h1_s0| >= 6
+  const drsiS0Safe = drsi_h1_s0 === null || Math.abs(drsi_h1_s0) < 6;
+
   // ── REVERSAL BUY (bas) ──────────────────────────────────────────────
   // [0-25] Extreme oversold — drsi_h1_s0 pour réactivité maximale
   if (rsi < 25
@@ -116,7 +119,7 @@ function matchRoute(
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
    && prevLow3 !== null && prevLow3 < 42
-   && h4BuyOk && h1BuyOk)
+   && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[35-50]-BRK", side: "BUY", type: "CONTINUATION" };
 
   // ── CONTINUATION [50-65] — RET / BRK ──────────────────────────────
@@ -128,7 +131,7 @@ function matchRoute(
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 65
-   && h4BuyOk && h1BuyOk)
+   && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[50-65]-RET", side: "BUY", type: "CONTINUATION" };
 
   // BRK — breakout from below
@@ -141,7 +144,7 @@ function matchRoute(
    && zscore < 1.6
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05
    && prevLow3 !== null && prevLow3 < 57
-   && h4BuyOk && h1BuyOk)
+   && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[50-65]-BRK", side: "BUY", type: "CONTINUATION" };
 
   // ── CONTINUATION [65-70] — RET / BRK ──────────────────────────────
@@ -153,7 +156,7 @@ function matchRoute(
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevHigh3 !== null && prevHigh3 > 64
-   && h4BuyOk && h1BuyOk)
+   && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[65-70]-RET", side: "BUY", type: "CONTINUATION" };
 
   // BRK
@@ -165,7 +168,7 @@ function matchRoute(
    && zscore < 1.9
    && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
    && prevLow3 !== null && prevLow3 < 65
-   && h4BuyOk && h1BuyOk)
+   && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[65-70]-BRK", side: "BUY", type: "CONTINUATION" };
 
   // ── CONTINUATION SELL [65-50] — RET / BRK ─────────────────────────
@@ -177,7 +180,7 @@ function matchRoute(
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 65
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[65-50]-RET", side: "SELL", type: "CONTINUATION" };
 
   // BRK
@@ -190,7 +193,7 @@ function matchRoute(
    && zscore > -1.6
    && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05
    && prevHigh3 !== null && prevHigh3 > 43
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[65-50]-BRK", side: "SELL", type: "CONTINUATION" };
 
   // ── CONTINUATION SELL [50-35] — RET / BRK ─────────────────────────
@@ -202,7 +205,7 @@ function matchRoute(
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 35
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-RET", side: "SELL", type: "CONTINUATION" };
 
   // BRK
@@ -214,7 +217,7 @@ function matchRoute(
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
    && prevHigh3 !== null && prevHigh3 > 42
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-BRK", side: "SELL", type: "CONTINUATION" };
 
   // ── CONTINUATION SELL [35-30] — RET / BRK ─────────────────────────
@@ -226,7 +229,7 @@ function matchRoute(
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 < 0.5
    && prevLow3 !== null && prevLow3 < 30
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[35-30]-RET", side: "SELL", type: "CONTINUATION" };
 
   // BRK
@@ -238,7 +241,7 @@ function matchRoute(
    && zscore > -1.8
    && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
    && prevHigh3 !== null && prevHigh3 > 35
-   && h4SellOk && h1SellOk)
+   && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[35-30]-BRK", side: "SELL", type: "CONTINUATION" };
 
   // ── REVERSAL SELL (haut) ──────────────────────────────────────────

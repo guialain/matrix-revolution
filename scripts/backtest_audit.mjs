@@ -73,6 +73,7 @@ function matchRoute(r) {
   const drsi_buy  = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
   const drsi_sell = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
   const zscore = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
+  const drsiS0Safe = drsi_h1_s0 === null || Math.abs(drsi_h1_s0) < 6;
 
   // REV BUY
   if (rsi < 25 && drsi_buy > 0 && slope_h4 !== null && slope_h4 > -3 && drsi_h4_s0 !== null && drsi_h4_s0 > 0 && dslope_h1 > 0.25 && zscore < -0.3)
@@ -83,29 +84,29 @@ function matchRoute(r) {
     return { route: "BUY-R-[30-35]", side: "BUY", type: "REV" };
 
   // CONT BUY
-  if (rsi >= 35 && rsi < 50 && slope_buy > 0.8 && h1SlopeAccel && h4SlopeAccel && zscore > -1.5 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3 && prevLow3 !== null && prevLow3 < 42 && h4BuyOk && h1BuyOk)
+  if (rsi >= 35 && rsi < 50 && slope_buy > 0.8 && h1SlopeAccel && h4SlopeAccel && zscore > -1.5 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3 && prevLow3 !== null && prevLow3 < 42 && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[35-50]-BRK", side: "BUY", type: "CONT" };
-  if (rsi >= 50 && rsi < 65 && slope_h1 > -0.5 && dslope_h1_live !== null && dslope_h1_live > 1.5 && dslope_h4_live !== null && dslope_h4_live > 0.25 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevHigh3 !== null && prevHigh3 > 65 && h4BuyOk && h1BuyOk)
+  if (rsi >= 50 && rsi < 65 && slope_h1 > -0.5 && dslope_h1_live !== null && dslope_h1_live > 1.5 && dslope_h4_live !== null && dslope_h4_live > 0.25 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevHigh3 !== null && prevHigh3 > 65 && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[50-65]-RET", side: "BUY", type: "CONT" };
-  if (rsi >= 50 && rsi < 65 && slope_buy > -0.5 && drsi_h1 !== null && Math.abs(drsi_h1) < 6 && h1SlopeAccel && h4SlopeAccel && zscore > 0.3 && zscore < 1.6 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05 && prevLow3 !== null && prevLow3 < 57 && h4BuyOk && h1BuyOk)
+  if (rsi >= 50 && rsi < 65 && slope_buy > -0.5 && drsi_h1 !== null && Math.abs(drsi_h1) < 6 && h1SlopeAccel && h4SlopeAccel && zscore > 0.3 && zscore < 1.6 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05 && prevLow3 !== null && prevLow3 < 57 && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[50-65]-BRK", side: "BUY", type: "CONT" };
-  if (rsi >= 65 && rsi < 70 && slope_h1 > -1.0 && h1SlopeAccel && h4SlopeAccel && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevHigh3 !== null && prevHigh3 > 64 && h4BuyOk && h1BuyOk)
+  if (rsi >= 65 && rsi < 70 && slope_h1 > -1.0 && h1SlopeAccel && h4SlopeAccel && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevHigh3 !== null && prevHigh3 > 64 && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[65-70]-RET", side: "BUY", type: "CONT" };
-  if (rsi >= 65 && rsi < 70 && slope_buy > 1.0 && h1SlopeAccel && h4SlopeAccel && zscore > 0.3 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevLow3 !== null && prevLow3 < 65 && h4BuyOk && h1BuyOk)
+  if (rsi >= 65 && rsi < 70 && slope_buy > 1.0 && h1SlopeAccel && h4SlopeAccel && zscore > 0.3 && zscore < 1.9 && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5 && prevLow3 !== null && prevLow3 < 65 && drsiS0Safe && h4BuyOk && h1BuyOk)
     return { route: "BUY-C-[65-70]-BRK", side: "BUY", type: "CONT" };
 
   // CONT SELL
-  if (rsi >= 50 && rsi < 65 && slope_h1 < 2.0 && dslope_h1_live !== null && dslope_h1_live < -1.5 && dslope_h4_live !== null && dslope_h4_live < -0.25 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 65 && h4SellOk && h1SellOk)
+  if (rsi >= 50 && rsi < 65 && slope_h1 < 2.0 && dslope_h1_live !== null && dslope_h1_live < -1.5 && dslope_h4_live !== null && dslope_h4_live < -0.25 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 65 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[65-50]-RET", side: "SELL", type: "CONT" };
-  if (rsi >= 50 && rsi < 65 && slope_sell < 0.5 && drsi_h1 !== null && Math.abs(drsi_h1) < 6 && h1SlopeDecel && h4SlopeDecel && zscore < -0.3 && zscore > -1.6 && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05 && prevHigh3 !== null && prevHigh3 > 43 && h4SellOk && h1SellOk)
+  if (rsi >= 50 && rsi < 65 && slope_sell < 0.5 && drsi_h1 !== null && Math.abs(drsi_h1) < 6 && h1SlopeDecel && h4SlopeDecel && zscore < -0.3 && zscore > -1.6 && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05 && prevHigh3 !== null && prevHigh3 > 43 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[65-50]-BRK", side: "SELL", type: "CONT" };
-  if (rsi >= 35 && rsi < 50 && slope_h1 < 0.5 && dslope_h1_live !== null && dslope_h1_live < -1.5 && dslope_h4_live !== null && dslope_h4_live < -0.25 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 35 && h4SellOk && h1SellOk)
+  if (rsi >= 35 && rsi < 50 && slope_h1 < 0.5 && dslope_h1_live !== null && dslope_h1_live < -1.5 && dslope_h4_live !== null && dslope_h4_live < -0.25 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 35 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-RET", side: "SELL", type: "CONT" };
-  if (rsi >= 35 && rsi < 50 && slope_sell < -0.8 && h1SlopeDecel && h4SlopeDecel && zscore < -0.1 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05 && prevHigh3 !== null && prevHigh3 > 42 && h4SellOk && h1SellOk)
+  if (rsi >= 35 && rsi < 50 && slope_sell < -0.8 && h1SlopeDecel && h4SlopeDecel && zscore < -0.1 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05 && prevHigh3 !== null && prevHigh3 > 42 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[50-35]-BRK", side: "SELL", type: "CONT" };
-  if (rsi >= 30 && rsi < 35 && slope_h1 < 1.0 && h1SlopeDecel && h4SlopeDecel && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 < 0.5 && prevLow3 !== null && prevLow3 < 30 && h4SellOk && h1SellOk)
+  if (rsi >= 30 && rsi < 35 && slope_h1 < 1.0 && h1SlopeDecel && h4SlopeDecel && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 < 0.5 && prevLow3 !== null && prevLow3 < 30 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[35-30]-RET", side: "SELL", type: "CONT" };
-  if (rsi >= 30 && rsi < 35 && slope_sell < -1.0 && h1SlopeDecel && h4SlopeDecel && zscore < -0.3 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 35 && h4SellOk && h1SellOk)
+  if (rsi >= 30 && rsi < 35 && slope_sell < -1.0 && h1SlopeDecel && h4SlopeDecel && zscore < -0.3 && zscore > -1.8 && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3 && prevHigh3 !== null && prevHigh3 > 35 && drsiS0Safe && h4SellOk && h1SellOk)
     return { route: "SELL-C-[35-30]-BRK", side: "SELL", type: "CONT" };
 
   // REV SELL

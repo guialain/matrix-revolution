@@ -39,30 +39,30 @@ const MaxHoldGuard = (() => {
       const rc = getRiskConfig(p.symbol);
       const maxH = rc.maxHoldH || DEFAULT_MAX_HOLD_H;
 
-      // ── FRIDAY CLOSE (priority) ────────────────────────────────────────
-      if (isFridayClose) {
-        toClose.push({
-          ticket:     p.ticket,
-          symbol:     p.symbol,
-          side:       p.side,
-          reason:     "FRIDAY_CLOSE",
-          duration_h: durationH,
-          maxHoldH:   maxH,
-        });
-        continue;
-      }
+      // ── FRIDAY CLOSE (disabled for weekend) ─────────────────────────
+      // if (isFridayClose) {
+      //   toClose.push({
+      //     ticket:     p.ticket,
+      //     symbol:     p.symbol,
+      //     side:       p.side,
+      //     reason:     "FRIDAY_CLOSE",
+      //     duration_h: durationH,
+      //     maxHoldH:   maxH,
+      //   });
+      //   continue;
+      // }
 
-      // ── MAX HOLD ───────────────────────────────────────────────────────
-      if (durationH >= maxH) {
-        toClose.push({
-          ticket:     p.ticket,
-          symbol:     p.symbol,
-          side:       p.side,
-          reason:     "MAX_HOLD",
-          duration_h: durationH,
-          maxHoldH:   maxH,
-        });
-      }
+      // ── MAX HOLD (disabled for weekend) ─────────────────────────────
+      // if (durationH >= maxH) {
+      //   toClose.push({
+      //     ticket:     p.ticket,
+      //     symbol:     p.symbol,
+      //     side:       p.side,
+      //     reason:     "MAX_HOLD",
+      //     duration_h: durationH,
+      //     maxHoldH:   maxH,
+      //   });
+      // }
     }
 
     return toClose;

@@ -1,17 +1,10 @@
 // ============================================================================
-// TopOpportunities_H1.js — H1-ONLY ROUTER (no H4 dependency)
-// Aligned with Neo-Backtest TopOpportunities_H1.js
+// TopOpportunities_H1.js — H1 ROUTER v4 — Intraday-Driven Type System
+// LIVE MODE — ported from Neo-Backtest v4
 //
-// Detection: slope_h1, dslope_h1, drsi_h1, zscore_h1, prevLow3/High3 (reversal only)
-// No drsi_h4, no slope_h4, no prevLow3/High3 on continuation
-// Filtering M5: delegated to SignalFilters.js
-//
-// v2: intégration s0 (bougie en cours) sur H1 et M5
-//   - matchRoute reçoit slope_h1_s0, drsi_h1_s0, zscore_h1_s0
-//   - REVERSAL extrêmes utilisent drsi_h1_s0 pour réactivité (comme prévu)
-//   - CONTINUATION utilise Math.max(slope_h1, slope_h1_s0) pour capter
-//     les moves qui s'accélèrent avant la fermeture H1
-//   - Objet opp expose tous les s0 pour SignalFilters
+// 10 routes RSI (5 BUY + 5 SELL miroir)
+// Type REVERSAL/CONTINUATION déterminé par contexte intraday
+// 4 niveaux de gates: STRICT / NORMAL / SOUPLE / RELAXED
 // ============================================================================
 
 import { getRiskConfig } from "../config/RiskConfig";
@@ -22,259 +15,250 @@ import { INTRADAY_CONFIG } from "../config/IntradayConfig";
 const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
 // ============================================================================
-// 17-ROUTE MATCHER — H1 ONLY + s0 intégré
+// NIVEAU 1 — INTRADAY LEVEL + TYPE RESOLUTION
 // ============================================================================
-function matchRoute(
-  rsi, slope_h1, dslope_h1, drsi_h1, zscore_h1,
+function getIntradayLevel(intra, cfg) {
+  if (intra === null) return "NEUTRE";
+  if (intra >= cfg.explosiveUp)  return "EXPLOSIVE_UP";
+  if (intra >= cfg.strongUp)     return "STRONG_UP";
+  if (intra >= cfg.dailyUp)      return "UP";
+  if (intra > cfg.dailyDown)     return "NEUTRE";
+  if (intra > cfg.strongDown)    return "DOWN";
+  if (intra > cfg.explosiveDown) return "STRONG_DOWN";
+  return "EXPLOSIVE_DOWN";
+}
+
+const INTRADAY_TABLE = {
+  EXPLOSIVE_DOWN: { BUY: { type: "REVERSAL",      mode: "relaxed" }, SELL: null },
+  STRONG_DOWN:    { BUY: { type: "REVERSAL",      mode: "normal"  }, SELL: { type: "CONTINUATION", mode: "relaxed" } },
+  DOWN:           { BUY: { type: "REVERSAL",      mode: "normal"  }, SELL: { type: "CONTINUATION", mode: "normal"  } },
+  NEUTRE:         { BUY: { type: "STANDARD",      mode: "normal"  }, SELL: { type: "STANDARD",     mode: "normal"  } },
+  UP:             { BUY: { type: "CONTINUATION",  mode: "normal"  }, SELL: { type: "REVERSAL",     mode: "normal"  } },
+  STRONG_UP:      { BUY: { type: "CONTINUATION",  mode: "relaxed" }, SELL: { type: "REVERSAL",     mode: "normal"  } },
+  EXPLOSIVE_UP:   { BUY: null,                                        SELL: { type: "REVERSAL",     mode: "relaxed" } },
+};
+
+function resolveType(level, side) {
+  return INTRADAY_TABLE[level]?.[side] ?? null;
+}
+
+// ============================================================================
+// GATE PRESETS — 4 niveaux calibrés sur données historiques
+// ============================================================================
+function buildGates(side, mode, type) {
+  const isRev = (type === "REVERSAL");
+  const isRelaxed = (mode === "relaxed");
+
+  if (isRev && isRelaxed) {
+    return {
+      slopeH4Min: -5, slopeH4Max: 6,
+      drsiH1S0Required: false,
+      h1AccelRequired: false, h1DecelRequired: false,
+      drsiH1Min: 0, dslopeRev: 0, zRev: -0.5,
+      slopeEff: 0, dslope: 0.5,
+      z3050: -1.5, z5070: -1.0,
+      slopeEff7075: 0.5, dslope7075: 0, z7075: 2.5,
+      drsiH4Sum: null,
+    };
+  }
+
+  if (isRev && !isRelaxed) {
+    return {
+      slopeH4Min: -3, slopeH4Max: 3,
+      drsiH1S0Required: true,
+      h1AccelRequired: false, h1DecelRequired: false,
+      drsiH1Min: 0.5, dslopeRev: 0.25, zRev: -0.3,
+      slopeEff: 0.5, dslope: 1.0,
+      z3050: -1.3, z5070: 0.5,
+      slopeEff7075: 1.0, dslope7075: 0.3, z7075: 2.0,
+      drsiH4Sum: null,
+    };
+  }
+
+  if (!isRev && isRelaxed) {
+    return {
+      slopeH4Min: -3, slopeH4Max: 3,
+      drsiH1S0Required: true,
+      h1AccelRequired: false, h1DecelRequired: false,
+      drsiH1Min: 0, dslopeRev: 0.25, zRev: -0.3,
+      slopeEff: 0, dslope: 0,
+      z3050: 2.0, z5070: 2.5,
+      slopeEff7075: 0.5, dslope7075: 0, z7075: 2.5,
+      drsiH4Sum: 0,
+    };
+  }
+
+  if (type === "STANDARD") {
+    return {
+      slopeH4Min: -3, slopeH4Max: 3,
+      drsiH1S0Required: true,
+      h1AccelRequired: true, h1DecelRequired: true,
+      drsiH1Min: 1.0, dslopeRev: 0.5, zRev: -1.0,
+      slopeEff: 1.0, dslope: 0.3,
+      z3050: 0.5, z5070: 1.5,
+      slopeEff7075: 1.0, dslope7075: 0.3, z7075: 2.0,
+      drsiH4Sum: 0.5,
+    };
+  }
+
+  return {
+    slopeH4Min: -3, slopeH4Max: 3,
+    drsiH1S0Required: true,
+    h1AccelRequired: true, h1DecelRequired: true,
+    drsiH1Min: 0.5, dslopeRev: 0.25, zRev: -0.3,
+    slopeEff: 0.5, dslope: 0,
+    z3050: 1.5, z5070: 2.0,
+    slopeEff7075: 0.5, dslope7075: 0, z7075: 2.3,
+    drsiH4Sum: 0,
+  };
+}
+
+// ============================================================================
+// BUY ROUTES
+// ============================================================================
+function matchBuyRoute(
+  rsi_s1, slope_h1, dslope_h1, drsi_h1, zscore_h1,
   prevLow3, prevHigh3, zscore_h1_min3, zscore_h1_max3,
-  // s0 — bougie H1 en cours (optionnels, null si non disponibles)
-  slope_h1_s0 = null, drsi_h1_s0 = null, zscore_h1_s0 = null,
-  // H4 context — filtre continuation (s0 prioritaire sur s1)
-  drsi_h4 = null, drsi_h4_s0 = null,
-  slope_h4 = null, slope_h4_s0 = null
+  slope_h1_s0, drsi_h1_s0, zscore_h1_s0,
+  drsi_h4, drsi_h4_s0, slope_h4, slope_h4_s0,
+  rsi_h1_s0, g
 ) {
-  if (rsi === null || dslope_h1 === null || zscore_h1 === null)
-    return null;
+  const rsi = rsi_h1_s0 !== null ? rsi_h1_s0 : rsi_s1;
+  if (rsi === null || dslope_h1 === null || zscore_h1 === null) return null;
 
-  // H4 slope momentum — (s0 - s1) : accélération / décélération
-  const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null)
-    ? slope_h4_s0 - slope_h4 : null;
-  // BUY: H4 accélère ET slope_h4 pas trop baissier
-  const h4SlopeAccel = (dslope_h4_live === null || dslope_h4_live > 0.25)
-    && (slope_h4 === null || slope_h4 > -5.0);
-  // SELL: H4 décélère ET slope_h4 pas trop haussier
-  const h4SlopeDecel = (dslope_h4_live === null || dslope_h4_live < -1.0)
-    && (slope_h4 === null || slope_h4 < 5.0);
+  const slope_eff = slope_h1_s0 !== null ? slope_h1_s0 : slope_h1;
+  const zscore    = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
+  const drsi_h1_live = (rsi_h1_s0 !== null && rsi_s1 !== null)
+    ? rsi_h1_s0 - rsi_s1 : drsi_h1;
 
-  // H4 divergence gate — s0 prioritaire, fallback s1
-  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
-  const h4BuyOk  = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
-  const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <=  0.3;
-
-  // H1 directional gate — s0 prioritaire, sinon s1
-  const drsi_h1_eff = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
-  const h1BuyOk  = drsi_h1_eff === null || drsi_h1_eff > 0.3;
-  const h1SellOk = drsi_h1_eff === null || drsi_h1_eff < -0.3;
-
-  // slope effectif = max(s1, s0) pour BUY, min(s1, s0) pour SELL
-  // → capte l'accélération en cours sans attendre la fermeture H1
-  const slope_buy  = (slope_h1_s0 !== null)
-    ? Math.max(slope_h1 ?? -Infinity, slope_h1_s0)
-    : slope_h1;
-  const slope_sell = (slope_h1_s0 !== null)
-    ? Math.min(slope_h1 ?? Infinity,  slope_h1_s0)
-    : slope_h1;
-
-  // H1 slope momentum — (s0 - s1) : accélération / décélération
   const dslope_h1_live = (slope_h1_s0 !== null && slope_h1 !== null)
     ? slope_h1_s0 - slope_h1 : null;
-  const h1SlopeAccel = dslope_h1_live === null || dslope_h1_live > 0.1;    // BUY
-  const h1SlopeDecel = dslope_h1_live === null || dslope_h1_live < -0.1;   // SELL
+  const h1SlopeAccel = g.h1AccelRequired
+    ? (dslope_h1_live === null || dslope_h1_live > 0.1) : true;
 
-  // drsi effectif = s0 si disponible (plus réactif), sinon s1
-  const drsi_buy  = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
-  const drsi_sell = drsi_h1_s0 !== null ? drsi_h1_s0 : drsi_h1;
+  const slope_h4_eff = slope_h4_s0 !== null ? slope_h4_s0 : slope_h4;
+  const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null)
+    ? slope_h4_s0 - slope_h4 : null;
+  const h4SlopeAccel = g.h1AccelRequired
+    ? ((dslope_h4_live === null || dslope_h4_live > 0.25)
+       && (slope_h4_eff === null || slope_h4_eff > -5.0)) : true;
 
-  // zscore effectif = s0 si disponible
-  const zscore = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
+  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
+  const h4BuyOk = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
 
-  // Anti-spike drsi s0 — bloque CONT si |drsi_h1_s0| >= 6
-  const drsiS0Safe = drsi_h1_s0 === null || Math.abs(drsi_h1_s0) < 6;
+  const slopeH4Ok = slope_h4_eff !== null && slope_h4_eff > g.slopeH4Min;
+  const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 > 0;
 
-  // ── REVERSAL BUY (bas) ──────────────────────────────────────────────
-  // [0-25] Extreme oversold — drsi_h1_s0 pour réactivité maximale
+  const drsiSafe = drsi_h1_live === null || Math.abs(drsi_h1_live) < 8;
+
   if (rsi < 25
-   && drsi_buy !== null && drsi_buy > 0
-   && slope_h4 !== null && slope_h4 > -3       // anti-trend baissier H4
-   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
-   && dslope_h1 > 0.25
-   && zscore < -0.3)
-    return { route: "BUY-R-[0-25]", side: "BUY", type: "REVERSAL" };
+   && drsi_h1_live !== null && drsi_h1_live > g.drsiH1Min
+   && slopeH4Ok && drsiH4Ok
+   && dslope_h1 > g.dslopeRev && zscore < g.zRev)
+    return { route: "BUY-[0-25]", side: "BUY" };
 
-  // [25-30] Oversold
   if (rsi >= 25 && rsi < 30
-   && drsi_buy !== null && drsi_buy > 0.5
-   && slope_h4 !== null && slope_h4 > -3       // anti-trend baissier H4
-   && drsi_h4_s0 !== null && drsi_h4_s0 > 0
-   && dslope_h1 > 0.25
-   && zscore < -0.3)
-    return { route: "BUY-R-[25-30]", side: "BUY", type: "REVERSAL" };
+   && drsi_h1_live !== null && drsi_h1_live > g.drsiH1Min
+   && slopeH4Ok && drsiH4Ok
+   && dslope_h1 > g.dslopeRev && zscore < g.zRev)
+    return { route: "BUY-[25-30]", side: "BUY" };
 
-  // [30-35] Reversal confirmed
-  if (rsi >= 30 && rsi < 35
-   && slope_h1 !== null && slope_h1 > -2        // s1 uniquement — filtre de contexte
-   && drsi_buy !== null && drsi_buy > 1
-   && slope_h4 !== null && slope_h4 > -3       // anti-trend baissier H4
-   && drsi_h4_s0 !== null && drsi_h4_s0 > 0.5
-   && dslope_h1 > 0.25
-   && zscore < -0.8
-   && prevLow3 !== null && prevLow3 < 30)
-    return { route: "BUY-R-[30-35]", side: "BUY", type: "REVERSAL" };
+  if (rsi >= 30 && rsi < 50
+   && slope_eff !== null && slope_eff > g.slopeEff
+   && h1SlopeAccel && h4SlopeAccel
+   && zscore < g.z3050 && dslope_h1 > g.dslope
+   && drsiSafe && h4BuyOk)
+    return { route: "BUY-[30-50]", side: "BUY" };
 
-  // ── CONTINUATION [35-50] — BRK only ──────────────────────────────
-  if (rsi >= 35 && rsi < 50
-   && slope_buy !== null && slope_buy > 0.5      // s0 capte l'accélération
-   && h1SlopeAccel
-   && h4SlopeAccel
-   && zscore > -1.5
-   && zscore < 1.9
-   && zscore_h1_min3 !== null && zscore_h1_min3 < -0.3
-   && prevLow3 !== null && prevLow3 < 45
-   && drsiS0Safe && h4BuyOk && h1BuyOk)
-    return { route: "BUY-C-[35-50]-BRK", side: "BUY", type: "CONTINUATION" };
+  if (rsi >= 50 && rsi < 70
+   && slope_eff !== null && slope_eff > g.slopeEff
+   && h1SlopeAccel && h4SlopeAccel
+   && zscore < g.z5070 && dslope_h1 > g.dslope
+   && drsiSafe && h4BuyOk)
+    return { route: "BUY-[50-70]", side: "BUY" };
 
-  // ── CONTINUATION [50-65] — RET / BRK ──────────────────────────────
-  // RET — retracement bounce
-  if (rsi >= 50 && rsi < 65
-   && slope_h1 !== null && slope_h1 > -0.5      // contexte s1
-   && dslope_h1_live !== null && dslope_h1_live > 1.5
-   && dslope_h4_live !== null && dslope_h4_live > 0.25
-   && zscore < 1.9
-   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
-   && prevHigh3 !== null && prevHigh3 > 65
-   && drsiS0Safe && h4BuyOk && h1BuyOk)
-    return { route: "BUY-C-[50-65]-RET", side: "BUY", type: "CONTINUATION" };
+  if (rsi >= 70 && rsi < 72
+   && slope_eff !== null && slope_eff > g.slopeEff7075
+   && h1SlopeAccel && h4SlopeAccel
+   && zscore > 0.3 && zscore < g.z7075
+   && dslope_h1 > g.dslope7075
+   && drsiSafe && h4BuyOk)
+    return { route: "BUY-[70-75]", side: "BUY" };
 
-  // BRK — breakout from below
-  if (rsi >= 50 && rsi < 65
-   && slope_buy !== null && slope_buy > -0.5      // légèrement négatif accepté
-   && drsi_h1 !== null && Math.abs(drsi_h1) < 6   // anti-spike RSI
-   && h1SlopeAccel
-   && h4SlopeAccel
-   && zscore > 0.3
-   && zscore < 1.6
-   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.05
-   && prevLow3 !== null && prevLow3 < 57
-   && drsiS0Safe && h4BuyOk && h1BuyOk)
-    return { route: "BUY-C-[50-65]-BRK", side: "BUY", type: "CONTINUATION" };
+  return null;
+}
 
-  // ── CONTINUATION [65-70] — RET / BRK ──────────────────────────────
-  // RET
-  if (rsi >= 65 && rsi < 70
-   && slope_h1 !== null && slope_h1 > -1.0      // contexte s1
-   && h1SlopeAccel
-   && h4SlopeAccel
-   && zscore < 1.9
-   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
-   && prevHigh3 !== null && prevHigh3 > 64
-   && drsiS0Safe && h4BuyOk && h1BuyOk)
-    return { route: "BUY-C-[65-70]-RET", side: "BUY", type: "CONTINUATION" };
+// ============================================================================
+// SELL ROUTES (miroir)
+// ============================================================================
+function matchSellRoute(
+  rsi_s1, slope_h1, dslope_h1, drsi_h1, zscore_h1,
+  prevLow3, prevHigh3, zscore_h1_min3, zscore_h1_max3,
+  slope_h1_s0, drsi_h1_s0, zscore_h1_s0,
+  drsi_h4, drsi_h4_s0, slope_h4, slope_h4_s0,
+  rsi_h1_s0, g
+) {
+  const rsi = rsi_h1_s0 !== null ? rsi_h1_s0 : rsi_s1;
+  if (rsi === null || dslope_h1 === null || zscore_h1 === null) return null;
 
-  // BRK
-  if (rsi >= 65 && rsi < 70
-   && slope_buy !== null && slope_buy > 1.0      // s0 capte l'accélération
-   && h1SlopeAccel
-   && h4SlopeAccel
-   && zscore > 0.3
-   && zscore < 1.9
-   && zscore_h1_min3 !== null && zscore_h1_min3 < 0.5
-   && prevLow3 !== null && prevLow3 < 65
-   && drsiS0Safe && h4BuyOk && h1BuyOk)
-    return { route: "BUY-C-[65-70]-BRK", side: "BUY", type: "CONTINUATION" };
+  const slope_eff = slope_h1_s0 !== null ? slope_h1_s0 : slope_h1;
+  const zscore    = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
+  const drsi_h1_live = (rsi_h1_s0 !== null && rsi_s1 !== null)
+    ? rsi_h1_s0 - rsi_s1 : drsi_h1;
 
-  // ── CONTINUATION SELL [65-50] — RET / BRK ─────────────────────────
-  // RET
-  if (rsi >= 50 && rsi < 65
-   && slope_h1 !== null && slope_h1 < 2.0       // contexte s1
-   && h1SlopeDecel
-   && h4SlopeDecel
-   && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
-   && prevHigh3 !== null && prevHigh3 > 65
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[65-50]-RET", side: "SELL", type: "CONTINUATION" };
+  const dslope_h1_live = (slope_h1_s0 !== null && slope_h1 !== null)
+    ? slope_h1_s0 - slope_h1 : null;
+  const h1SlopeDecel = g.h1DecelRequired
+    ? (dslope_h1_live === null || dslope_h1_live < -0.1) : true;
 
-  // BRK
-  if (rsi >= 50 && rsi < 65
-   && slope_sell !== null && slope_sell < 0.5     // légèrement positif accepté
-   && drsi_h1 !== null && Math.abs(drsi_h1) < 6   // anti-spike RSI
-   && h1SlopeDecel
-   && h4SlopeDecel
-   && zscore < -0.3
-   && zscore > -1.6
-   && zscore_h1_max3 !== null && zscore_h1_max3 < -0.05
-   && prevHigh3 !== null && prevHigh3 > 43
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[65-50]-BRK", side: "SELL", type: "CONTINUATION" };
+  const slope_h4_eff = slope_h4_s0 !== null ? slope_h4_s0 : slope_h4;
+  const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null)
+    ? slope_h4_s0 - slope_h4 : null;
+  const h4SlopeDecel = g.h1DecelRequired
+    ? ((dslope_h4_live === null || dslope_h4_live < -1.0)
+       && (slope_h4_eff === null || slope_h4_eff < 5.0)) : true;
 
-  // ── CONTINUATION SELL [50-35] — RET / BRK ─────────────────────────
-  // RET
-  if (rsi >= 35 && rsi < 50
-   && slope_h1 !== null && slope_h1 < 0.5        // contexte s1
-   && dslope_h1_live !== null && dslope_h1_live < -1.5
-   && dslope_h4_live !== null && dslope_h4_live < -0.25
-   && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
-   && prevHigh3 !== null && prevHigh3 > 35
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[50-35]-RET", side: "SELL", type: "CONTINUATION" };
+  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
+  const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <= 0.3;
 
-  // BRK
-  if (rsi >= 35 && rsi < 50
-   && slope_sell !== null && slope_sell < -0.5   // s0 capte l'accélération
-   && h1SlopeDecel
-   && h4SlopeDecel
-   && zscore < -0.1
-   && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 > -0.05
-   && prevHigh3 !== null && prevHigh3 > 55
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[50-35]-BRK", side: "SELL", type: "CONTINUATION" };
+  const slopeH4Ok = slope_h4_eff !== null && slope_h4_eff < g.slopeH4Max;
+  const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 < 0;
 
-  // ── CONTINUATION SELL [35-30] — RET / BRK ─────────────────────────
-  // RET
-  if (rsi >= 30 && rsi < 35
-   && slope_h1 !== null && slope_h1 < 1.0       // contexte s1
-   && h1SlopeDecel
-   && h4SlopeDecel
-   && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 < 0.5
-   && prevLow3 !== null && prevLow3 < 30
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[35-30]-RET", side: "SELL", type: "CONTINUATION" };
+  const drsiSafe = drsi_h1_live === null || Math.abs(drsi_h1_live) < 8;
 
-  // BRK
-  if (rsi >= 30 && rsi < 35
-   && slope_sell !== null && slope_sell < -1.0   // s0 capte l'accélération
-   && h1SlopeDecel
-   && h4SlopeDecel
-   && zscore < -0.3
-   && zscore > -1.8
-   && zscore_h1_max3 !== null && zscore_h1_max3 > -0.3
-   && prevHigh3 !== null && prevHigh3 > 35
-   && drsiS0Safe && h4SellOk && h1SellOk)
-    return { route: "SELL-C-[35-30]-BRK", side: "SELL", type: "CONTINUATION" };
-
-  // ── REVERSAL SELL (haut) ──────────────────────────────────────────
-  // [70-65] Confirmed
-  if (rsi >= 65 && rsi < 70
-   && slope_h1 !== null && slope_h1 < 2
-   && slope_h4 !== null && slope_h4 < 3        // anti-trend haussier H4
-   && drsi_sell !== null && drsi_sell < -1
-   && drsi_h4_s0 !== null && drsi_h4_s0 < -0.5
-   && dslope_h1 < -0.25
-   && zscore > 0.8
-   && prevHigh3 !== null && prevHigh3 > 70)
-    return { route: "SELL-R-[70-65]", side: "SELL", type: "REVERSAL" };
-
-  // [75-70] Overbought
-  if (rsi >= 70 && rsi < 75
-   && slope_h1 !== null && slope_h1 < 2
-   && slope_h4 !== null && slope_h4 < 3        // anti-trend haussier H4
-   && drsi_sell !== null && drsi_sell < -0.5
-   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
-   && dslope_h1 < -0.25
-   && zscore > 0.3)
-    return { route: "SELL-R-[75-70]", side: "SELL", type: "REVERSAL" };
-
-  // [100-75] Extreme overbought — drsi_h1_s0 pour réactivité maximale
   if (rsi >= 75
-   && drsi_sell !== null && drsi_sell < 0
-   && slope_h4 !== null && slope_h4 < 3        // anti-trend haussier H4
-   && drsi_h4_s0 !== null && drsi_h4_s0 < 0
-   && dslope_h1 < -0.25
-   && zscore > 0.3)
-    return { route: "SELL-R-[100-75]", side: "SELL", type: "REVERSAL" };
+   && drsi_h1_live !== null && drsi_h1_live < -g.drsiH1Min
+   && slopeH4Ok && drsiH4Ok
+   && dslope_h1 < -g.dslopeRev && zscore > -g.zRev)
+    return { route: "SELL-[75-100]", side: "SELL" };
+
+  if (rsi >= 70 && rsi < 75
+   && drsi_h1_live !== null && drsi_h1_live < -g.drsiH1Min
+   && slopeH4Ok && drsiH4Ok
+   && dslope_h1 < -g.dslopeRev && zscore > -g.zRev)
+    return { route: "SELL-[70-75]", side: "SELL" };
+
+  if (rsi >= 50 && rsi < 70
+   && slope_eff !== null && slope_eff < -g.slopeEff
+   && h1SlopeDecel && h4SlopeDecel
+   && zscore > -g.z3050 && dslope_h1 < -g.dslope
+   && drsiSafe && h4SellOk)
+    return { route: "SELL-[50-70]", side: "SELL" };
+
+  if (rsi >= 30 && rsi < 50
+   && slope_eff !== null && slope_eff < -g.slopeEff
+   && h1SlopeDecel && h4SlopeDecel
+   && zscore > -g.z5070 && dslope_h1 < -g.dslope
+   && drsiSafe && h4SellOk)
+    return { route: "SELL-[30-50]", side: "SELL" };
+
+  if (rsi >= 28 && rsi < 30
+   && slope_eff !== null && slope_eff < -g.slopeEff7075
+   && h1SlopeDecel && h4SlopeDecel
+   && zscore < -0.3 && zscore > -g.z7075
+   && dslope_h1 < -g.dslope7075
+   && drsiSafe && h4SellOk)
+    return { route: "SELL-[25-30]", side: "SELL" };
 
   return null;
 }
@@ -283,23 +267,16 @@ function matchRoute(
 // ROUTE → SIGNAL PHASE
 // ============================================================================
 const ROUTE_PHASE = {
-  "BUY-R-[0-25]":         "EXTREME_LOW",
-  "BUY-R-[25-30]":        "OVERSOLD",
-  "BUY-R-[30-35]":        "PULLBACK_LOW",
-  "BUY-C-[35-50]-BRK":    "TREND_UP_LOW_BRK",
-  "BUY-C-[50-65]-RET":    "TREND_UP_RET",
-  "BUY-C-[50-65]-BRK":    "TREND_UP_BRK",
-  "BUY-C-[65-70]-RET":    "TREND_UP_HIGH_RET",
-  "BUY-C-[65-70]-BRK":    "TREND_UP_HIGH_BRK",
-  "SELL-C-[65-50]-RET":   "TREND_DOWN_HIGH_RET",
-  "SELL-C-[65-50]-BRK":   "TREND_DOWN_HIGH_BRK",
-  "SELL-C-[50-35]-RET":   "TREND_DOWN_RET",
-  "SELL-C-[50-35]-BRK":   "TREND_DOWN_BRK",
-  "SELL-C-[35-30]-RET":   "TREND_DOWN_DEEP_RET",
-  "SELL-C-[35-30]-BRK":   "TREND_DOWN_DEEP_BRK",
-  "SELL-R-[70-65]":       "PULLBACK_HIGH",
-  "SELL-R-[75-70]":       "OVERBOUGHT",
-  "SELL-R-[100-75]":      "EXTREME_HIGH",
+  "BUY-[0-25]":     "EXTREME_LOW",
+  "BUY-[25-30]":    "OVERSOLD",
+  "BUY-[30-50]":    "LOW_MID",
+  "BUY-[50-70]":    "MID_HIGH",
+  "BUY-[70-75]":    "HIGH",
+  "SELL-[75-100]":  "EXTREME_HIGH",
+  "SELL-[70-75]":   "OVERBOUGHT",
+  "SELL-[50-70]":   "MID_HIGH",
+  "SELL-[30-50]":   "LOW_MID",
+  "SELL-[25-30]":   "LOW",
 };
 
 // ============================================================================
@@ -316,43 +293,102 @@ export function evaluateTopOpportunities_H1(marketData = []) {
     if (!ALLOWED_SYMBOLS.includes(symbol)) continue;
 
     const riskCfg = getRiskConfig(symbol);
+    const intCfg  = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
 
     const atrH1Cap = num(riskCfg?.atrH1Cap);
     const atrH1 = num(row?.atr_h1);
     if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 2 * atrH1Cap) continue;
 
-    const match = matchRoute(
-      num(row?.rsi_h1),
-      num(row?.slope_h1),
-      num(row?.dslope_h1),
-      num(row?.drsi_h1),
-      num(row?.zscore_h1),
-      num(row?.rsi_h1_previouslow3),
-      num(row?.rsi_h1_previoushigh3),
-      num(row?.zscore_h1_min3),
-      num(row?.zscore_h1_max3),
-      // s0 — nouveaux paramètres v2
-      num(row?.slope_h1_s0),
-      num(row?.drsi_h1_s0),
-      num(row?.zscore_h1_s0),
-      // H4 context
-      num(row?.drsi_h4),
-      num(row?.drsi_h4_s0),
-      num(row?.slope_h4),
-      num(row?.slope_h4_s0)
-    );
-    if (!match) continue;
-
-    if (match.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
-
-    // Intraday gate — CONT only: block if intraday exceeds strongMax against direction
+    // ── Niveau 1 : contexte intraday ────────────────────────────────
     const intra = num(row?.intraday_change);
-    const strongMax = (INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default).strongMax;
-    if (match.type === "CONTINUATION" && intra !== null) {
-      if (match.side === "SELL" && intra > strongMax) continue;
-      if (match.side === "BUY"  && intra < -strongMax) continue;
+    const intradayLevel = getIntradayLevel(intra, intCfg);
+
+    const args = [
+      num(row?.rsi_h1), num(row?.slope_h1), num(row?.dslope_h1),
+      num(row?.drsi_h1), num(row?.zscore_h1),
+      num(row?.rsi_h1_previouslow3), num(row?.rsi_h1_previoushigh3),
+      num(row?.zscore_h1_min3), num(row?.zscore_h1_max3),
+      num(row?.slope_h1_s0), num(row?.drsi_h1_s0), num(row?.zscore_h1_s0),
+      num(row?.drsi_h4), num(row?.drsi_h4_s0),
+      num(row?.slope_h4), num(row?.slope_h4_s0),
+      num(row?.rsi_h1_s0),
+    ];
+
+    // ── Try BUY ─────────────────────────────────────────────────────
+    let match = null;
+    let signalType = null;
+    let signalMode = null;
+    let gates = null;
+
+    const buyRes = resolveType(intradayLevel, "BUY");
+    if (buyRes) {
+      const gBuy = buildGates("BUY", buyRes.mode, buyRes.type);
+      match = matchBuyRoute(...args, gBuy);
+      if (match) { signalType = buyRes.type; signalMode = buyRes.mode; gates = gBuy; }
     }
 
+    if (!match) {
+      const sellRes = resolveType(intradayLevel, "SELL");
+      if (sellRes) {
+        const gSell = buildGates("SELL", sellRes.mode, sellRes.type);
+        match = matchSellRoute(...args, gSell);
+        if (match) { signalType = sellRes.type; signalMode = sellRes.mode; gates = gSell; }
+      }
+    }
+
+    if (!match) continue;
+
+    // ── Post-matchRoute gates ─────────────────────────────────────
+    const _drsi_h1_s0 = num(row?.drsi_h1_s0);
+    const _drsi_h4_s0 = num(row?.drsi_h4_s0);
+
+    // Anti-spike
+    const _drsi_h1 = num(row?.drsi_h1);
+    if (_drsi_h1 !== null && Math.abs(_drsi_h1) >= 8) continue;
+    if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= 8) continue;
+
+    // Gate universel drsi s0
+    if (match.side === "SELL" && ((_drsi_h1_s0 !== null && _drsi_h1_s0 > 0) || (_drsi_h4_s0 !== null && _drsi_h4_s0 > 0))) continue;
+    if (match.side === "BUY"  && ((_drsi_h1_s0 !== null && _drsi_h1_s0 < 0) || (_drsi_h4_s0 !== null && _drsi_h4_s0 < 0))) continue;
+
+    // Gate CONT/STANDARD
+    if (signalType === "CONTINUATION" || signalType === "STANDARD") {
+      const _sl_h1_s0 = num(row?.slope_h1_s0);
+      const _sl_h4_s0 = num(row?.slope_h4_s0);
+      if (match.side === "BUY"  && ((_sl_h1_s0 !== null && _sl_h1_s0 <= 0) || (_sl_h4_s0 !== null && _sl_h4_s0 <= 0))) continue;
+      if (match.side === "SELL" && ((_sl_h1_s0 !== null && _sl_h1_s0 >= 0) || (_sl_h4_s0 !== null && _sl_h4_s0 >= 0))) continue;
+      if (gates.drsiH4Sum !== null) {
+        const _drsiH4sum = (_drsi_h4_s0 ?? 0) + (num(row?.drsi_h4) ?? 0);
+        if (match.side === "BUY"  && _drsiH4sum < gates.drsiH4Sum) continue;
+        if (match.side === "SELL" && _drsiH4sum > -gates.drsiH4Sum) continue;
+      }
+    }
+
+    // Gate STANDARD slope combiné
+    if (signalType === "STANDARD") {
+      const _slH1sum = (num(row?.slope_h1_s0) ?? 0) + (num(row?.slope_h1) ?? 0);
+      const _slH4sum = (num(row?.slope_h4_s0) ?? 0) + (num(row?.slope_h4) ?? 0);
+      if (match.side === "BUY"  && (_slH1sum < 1 || _slH4sum < 1)) continue;
+      if (match.side === "SELL" && (_slH1sum > -1 || _slH4sum > -1)) continue;
+    }
+
+    // Gate [50-70] slope H4 combiné
+    if (match.route === "SELL-[50-70]" || match.route === "BUY-[50-70]") {
+      const _slH4sum = (num(row?.slope_h4_s0) ?? 0) + (num(row?.slope_h4) ?? 0);
+      if (match.side === "SELL" && _slH4sum >= 0) continue;
+      if (match.side === "BUY"  && _slH4sum <= 0) continue;
+    }
+
+    // Gate REVERSAL slope H1 s0
+    if (signalType === "REVERSAL") {
+      const _sl_h1_s0 = num(row?.slope_h1_s0);
+      if (match.side === "BUY"  && (_sl_h1_s0 === null || _sl_h1_s0 <= 0)) continue;
+      if (match.side === "SELL" && (_sl_h1_s0 === null || _sl_h1_s0 >= 0)) continue;
+    }
+
+    if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
+
+    // ── Score via ScoreEngine ─────────────────────────────────────
     const scoreRow = {
       symbol,
       rsi_h1:               num(row?.rsi_h1),
@@ -363,22 +399,23 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       dslope_h1:            num(row?.dslope_h1),
       atr_m15:              num(row?.atr_m15),
       close:                num(row?.close),
-      intraday_change:      num(row?.intraday_change),
+      intraday_change:      intra,
     };
 
     const scored =
-      match.type === "REVERSAL"     && match.side === "BUY"  ? scoreReversalBuy(scoreRow) :
-      match.type === "REVERSAL"     && match.side === "SELL" ? scoreReversalSell(scoreRow) :
-      match.type === "CONTINUATION" && match.side === "BUY"  ? scoreContinuationBuy(scoreRow) :
-      match.type === "CONTINUATION" && match.side === "SELL" ? scoreContinuationSell(scoreRow) :
+      signalType === "REVERSAL"     && match.side === "BUY"  ? scoreReversalBuy(scoreRow) :
+      signalType === "REVERSAL"     && match.side === "SELL" ? scoreReversalSell(scoreRow) :
+      (signalType === "CONTINUATION" || signalType === "STANDARD") && match.side === "BUY"  ? scoreContinuationBuy(scoreRow) :
+      (signalType === "CONTINUATION" || signalType === "STANDARD") && match.side === "SELL" ? scoreContinuationSell(scoreRow) :
       { total: 0, breakdown: {} };
 
     const score     = Math.round(scored.total);
     const breakdown = scored.breakdown;
 
     const opp = {
-      type:        match.type,
-      regime:      `${match.type}_${match.side}`,
+      type:        signalType,
+      mode:        signalMode,
+      regime:      `${signalType}_${match.side}`,
       route:       match.route,
       symbol,
       side:        match.side,
@@ -387,14 +424,17 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       engine:      "H1",
       score,
       breakdown,
+      intradayLevel,
 
-      // ── H4 context ──────────────────────────────────
+      // H4
       slope_h4:    num(row?.slope_h4),
       slope_h4_s0: num(row?.slope_h4_s0),
       dslope_h4:   num(row?.dslope_h4),
       drsi_h4:     num(row?.drsi_h4),
+      rsi_h4_s0:   num(row?.rsi_h4_s0),
+      drsi_h4_s0:  num(row?.drsi_h4_s0),
 
-      // ── H1 s1 ───────────────────────────────────────
+      // H1 s1
       rsi_h1:      num(row?.rsi_h1),
       slope_h1:    num(row?.slope_h1),
       dslope_h1:   num(row?.dslope_h1),
@@ -407,30 +447,30 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       zscore_h1_min3: num(row?.zscore_h1_min3),
       zscore_h1_max3: num(row?.zscore_h1_max3),
 
-      // ── H1 s0 (nouveau v2) ──────────────────────────
-      rsi_h1_s0:   num(row?.rsi_h1_s0),
-      slope_h1_s0: num(row?.slope_h1_s0),
-      drsi_h1_s0:  num(row?.drsi_h1_s0),
-      zscore_h1_s0:num(row?.zscore_h1_s0),
+      // H1 s0
+      rsi_h1_s0:    num(row?.rsi_h1_s0),
+      slope_h1_s0:  num(row?.slope_h1_s0),
+      drsi_h1_s0:   num(row?.drsi_h1_s0),
+      zscore_h1_s0: num(row?.zscore_h1_s0),
 
-      // ── M15 ─────────────────────────────────────────
+      // M15
       atr_m15:     num(row?.atr_m15),
 
-      // ── M5 s1 ───────────────────────────────────────
+      // M5 s1
       rsi_m5:      num(row?.rsi_m5),
       slope_m5:    num(row?.slope_m5),
       dslope_m5:   num(row?.dslope_m5),
       drsi_m5:     num(row?.drsi_m5),
       zscore_m5:   num(row?.zscore_m5),
 
-      // ── M5 s0 (nouveau v2) ──────────────────────────
+      // M5 s0
       rsi_m5_s0:   num(row?.rsi_m5_s0),
       slope_m5_s0: num(row?.slope_m5_s0),
       drsi_m5_s0:  num(row?.drsi_m5_s0),
       zscore_m5_s0:num(row?.zscore_m5_s0),
 
       close:           num(row?.close),
-      intraday_change: num(row?.intraday_change),
+      intraday_change: intra,
     };
 
     const existing = best.get(symbol);

@@ -15,7 +15,7 @@ const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
 
 function getStrongMax(symbol) {
   const cfg = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
-  return cfg.strongMax;
+  return cfg.strongUp ?? 1.0;
 }
 
 function getSlopeNorm(symbol) {

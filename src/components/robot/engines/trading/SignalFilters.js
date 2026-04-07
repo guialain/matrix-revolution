@@ -26,16 +26,16 @@ const SignalFilters = (() => {
   // =========================================================
   const M5_THRESHOLDS = {
     relaxed: {
-      contrary:     { rsi: 78, slopeAbs: 7, drsiAbs: 4, dslopeAbs: 4 },
-      overextended: { slopeAbs: 10, zscoreAbs: 3.0 },
+      contrary:     { rsi: 68, slopeAbs: 7, drsiAbs: 4, dslopeAbs: 4 },
+      overextended: { slopeAbs: 7, zscoreAbs: 2.2 },
     },
     normal: {
-      contrary:     { rsi: 68, slopeAbs: 5, drsiAbs: 2, dslopeAbs: 2 },
-      overextended: { slopeAbs: 7, zscoreAbs: 2.5 },
+      contrary:     { rsi: 65, slopeAbs: 5, drsiAbs: 2, dslopeAbs: 2 },
+      overextended: { slopeAbs: 7, zscoreAbs: 1.8 },
     },
     strict: {
-      contrary:     { rsi: 62, slopeAbs: 3, drsiAbs: 1.5, dslopeAbs: 1.5 },
-      overextended: { slopeAbs: 5, zscoreAbs: 2.0 },
+      contrary:     { rsi: 55, slopeAbs: 3, drsiAbs: 1.5, dslopeAbs: 1.5 },
+      overextended: { slopeAbs: 5, zscoreAbs: 1.5 },
     },
   };
 

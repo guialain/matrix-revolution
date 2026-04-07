@@ -13,7 +13,7 @@ export const VOLATILITY_CONFIG = {
   USDJPY:      { lowMax: 0.000423, medMax: 0.000837, highMax: 0.001474 },
   USDCHF:      { lowMax: 0.000369, medMax: 0.000715, highMax: 0.001175 },
   // INDEX
-  UK_100:      { lowMax: 0.000767, medMax: 0.001350, highMax: 0.002041 },
+  UK_100:      { lowMax: 0.000767, medMax: 0.001350, highMax: 0.005041 },
   GERMANY_40:  { lowMax: 0.000790, medMax: 0.001560, highMax: 0.002507 },
   FRANCE_40:   { lowMax: 0.000864, medMax: 0.001508, highMax: 0.002283 },
   US_30:       { lowMax: 0.000586, medMax: 0.001745, highMax: 0.003198 },

@@ -417,6 +417,7 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       mode:        signalMode,
       regime:      `${signalType}_${match.side}`,
       route:       match.route,
+      timestamp:   row?.timestamp,
       symbol,
       side:        match.side,
       signalType:  match.side,

@@ -107,7 +107,7 @@ function buildGates(side, mode, type) {
     h1AccelRequired: true, h1DecelRequired: true,
     drsiH1Min: 0.5, dslopeRev: 0.25, zRev: -0.3,
     slopeEff: 0.5, dslope: 0,
-    z3050: 1.5, z5070: 2.0,
+    z3050: 1.5, z5070: 1.8,
     slopeEff7075: 0.5, dslope7075: 0, z7075: 2.3,
     drsiH4Sum: 0,
   };
@@ -215,7 +215,7 @@ function matchSellRoute(
   const dslope_h4_live = (slope_h4_s0 !== null && slope_h4 !== null)
     ? slope_h4_s0 - slope_h4 : null;
   const h4SlopeDecel = g.h1DecelRequired
-    ? ((dslope_h4_live === null || dslope_h4_live < -1.0)
+    ? ((dslope_h4_live === null || dslope_h4_live < -0.25)
        && (slope_h4_eff === null || slope_h4_eff < 5.0)) : true;
 
   const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;

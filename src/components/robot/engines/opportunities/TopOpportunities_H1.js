@@ -96,7 +96,7 @@ function buildGates(side, mode, type) {
       drsiH1Min: 1.0, dslopeRev: 0.5, zRev: -1.0,
       slopeEff: 1.0, dslope: 0.3,
       z3050: 0.5, z5070: 1.5,
-      slopeEff7075: 1.0, dslope7075: 0.3, z7075: 2.0,
+      slopeEff7075: 0.5, dslope7075: 0.3, z7075: 2.0,
       drsiH4Sum: 0.5,
     };
   }

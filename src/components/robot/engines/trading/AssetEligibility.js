@@ -38,6 +38,11 @@ function resolveMarket(assetclass) {
   }
 }
 
+// Temporarily blocked — configs preserved, trading disabled
+export const BLOCKED_SYMBOLS = [
+  "JAPAN_225",
+];
+
 export const ALLOWED_SYMBOLS = [
   // FX
   "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "USDCHF", "EURJPY", "GBPJPY", "AUDJPY",
@@ -66,6 +71,14 @@ const AssetEligibility = {
         eligible: false,
         reasons: ["Missing asset symbol"],
         context: null
+      };
+    }
+
+    if (BLOCKED_SYMBOLS.includes(symbol)) {
+      return {
+        eligible: false,
+        reasons: [`Symbol temporarily blocked`],
+        context: { symbol }
       };
     }
 

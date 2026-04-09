@@ -3,13 +3,13 @@ const API_BASE = typeof window !== "undefined"
   : "http://localhost:3001";
 
 // Cooldown configurable (default 5 min, persisted in localStorage)
-const COOLDOWN_OPTIONS = [0, 1, 5, 10, 15, 30, 45, 60]; // minutes
+const COOLDOWN_OPTIONS = [1, 2, 5, 10, 15, 30, 45, 60]; // minutes
 
 function loadCooldownMinutes() {
   try {
     const v = parseInt(localStorage.getItem("neo_cooldown_min"), 10);
-    return COOLDOWN_OPTIONS.includes(v) ? v : 1;
-  } catch { return 1; }
+    return COOLDOWN_OPTIONS.includes(v) ? v : 5;
+  } catch { return 5; }
 }
 
 let cooldownMin = loadCooldownMinutes();
@@ -48,7 +48,6 @@ const SignalFrequency = {
   },
 
   canEmit(key) {
-    if (cooldownMin === 0) return true;
     refreshFrequency();
     const last = frequencyCache[key];
     if (!last) return true;
@@ -56,7 +55,6 @@ const SignalFrequency = {
   },
 
   getCooldownRemaining(key) {
-    if (cooldownMin === 0) return 0;
     refreshFrequency();
     const last = frequencyCache[key];
     if (!last) return 0;

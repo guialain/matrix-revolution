@@ -25,7 +25,7 @@ export const VOLATILITY_CONFIG = {
   ETHUSD:      { lowMax: 0.002203, medMax: 0.006829, highMax: 0.013044 },
   // METAL
   GOLD:        { lowMax: 0.001348, medMax: 0.003141, highMax: 0.008317 },
-  SILVER:      { lowMax: 0.003933, medMax: 0.008912, highMax: 0.020993 },
+  SILVER:      { lowMax: 0.001933, medMax: 0.008912, highMax: 0.020993 },
   // ENERGY
   CrudeOIL:    { lowMax: 0.002422, medMax: 0.004174, highMax: 0.006392 },
   BRENT_OIL:   { lowMax: 0.002422, medMax: 0.004174, highMax: 0.006392 },

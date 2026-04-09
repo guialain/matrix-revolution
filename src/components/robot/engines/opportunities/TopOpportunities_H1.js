@@ -154,26 +154,26 @@ function matchBuyRoute(
   if (rsi < 25
    && drsi_h1_live !== null && drsi_h1_live > g.drsiH1Min
    && slopeH4Ok && drsiH4Ok
-   && dslope_h1 > g.dslopeRev && zscore < g.zRev)
+   && (dslope_h1_live ?? dslope_h1) > g.dslopeRev && zscore < g.zRev)
     return { route: "BUY-[0-25]", side: "BUY" };
 
   if (rsi >= 25 && rsi < 30
    && drsi_h1_live !== null && drsi_h1_live > g.drsiH1Min
    && slopeH4Ok && drsiH4Ok
-   && dslope_h1 > g.dslopeRev && zscore < g.zRev)
+   && (dslope_h1_live ?? dslope_h1) > g.dslopeRev && zscore < g.zRev)
     return { route: "BUY-[25-30]", side: "BUY" };
 
   if (rsi >= 30 && rsi < 50
    && slope_eff !== null && slope_eff > g.slopeEff
    && h1SlopeAccel && h4SlopeAccel
-   && zscore < g.z3050 && dslope_h1 > g.dslope
+   && zscore < g.z3050 && (dslope_h1_live ?? dslope_h1) > g.dslope
    && drsiSafe && h4BuyOk)
     return { route: "BUY-[30-50]", side: "BUY" };
 
   if (rsi >= 50 && rsi < 70
    && slope_eff !== null && slope_eff > g.slopeEff
    && h1SlopeAccel && h4SlopeAccel
-   && zscore < g.z5070 && dslope_h1 > g.dslope
+   && zscore < g.z5070 && (dslope_h1_live ?? dslope_h1) > g.dslope
    && drsiSafe && h4BuyOk)
     return { route: "BUY-[50-70]", side: "BUY" };
 
@@ -181,7 +181,7 @@ function matchBuyRoute(
    && slope_eff !== null && slope_eff > g.slopeEff7075
    && h1SlopeAccel && h4SlopeAccel
    && zscore > 0.3 && zscore < g.z7075
-   && dslope_h1 > g.dslope7075
+   && (dslope_h1_live ?? dslope_h1) > g.dslope7075
    && drsiSafe && h4BuyOk)
     return { route: "BUY-[70-75]", side: "BUY" };
 
@@ -229,26 +229,26 @@ function matchSellRoute(
   if (rsi >= 75
    && drsi_h1_live !== null && drsi_h1_live < -g.drsiH1Min
    && slopeH4Ok && drsiH4Ok
-   && dslope_h1 < -g.dslopeRev && zscore > -g.zRev)
+   && (dslope_h1_live ?? dslope_h1) < -g.dslopeRev && zscore > -g.zRev)
     return { route: "SELL-[75-100]", side: "SELL" };
 
   if (rsi >= 70 && rsi < 75
    && drsi_h1_live !== null && drsi_h1_live < -g.drsiH1Min
    && slopeH4Ok && drsiH4Ok
-   && dslope_h1 < -g.dslopeRev && zscore > -g.zRev)
+   && (dslope_h1_live ?? dslope_h1) < -g.dslopeRev && zscore > -g.zRev)
     return { route: "SELL-[70-75]", side: "SELL" };
 
   if (rsi >= 50 && rsi < 70
    && slope_eff !== null && slope_eff < -g.slopeEff
    && h1SlopeDecel && h4SlopeDecel
-   && zscore > -g.z3050 && dslope_h1 < -g.dslope
+   && zscore > -g.z3050 && (dslope_h1_live ?? dslope_h1) < -g.dslope
    && drsiSafe && h4SellOk)
     return { route: "SELL-[50-70]", side: "SELL" };
 
   if (rsi >= 30 && rsi < 50
    && slope_eff !== null && slope_eff < -g.slopeEff
    && h1SlopeDecel && h4SlopeDecel
-   && zscore > -g.z5070 && dslope_h1 < -g.dslope
+   && zscore > -g.z5070 && (dslope_h1_live ?? dslope_h1) < -g.dslope
    && drsiSafe && h4SellOk)
     return { route: "SELL-[30-50]", side: "SELL" };
 
@@ -256,7 +256,7 @@ function matchSellRoute(
    && slope_eff !== null && slope_eff < -g.slopeEff7075
    && h1SlopeDecel && h4SlopeDecel
    && zscore < -0.3 && zscore > -g.z7075
-   && dslope_h1 < -g.dslope7075
+   && (dslope_h1_live ?? dslope_h1) < -g.dslope7075
    && drsiSafe && h4SellOk)
     return { route: "SELL-[25-30]", side: "SELL" };
 

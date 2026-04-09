@@ -364,12 +364,11 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       }
     }
 
-    // Gate STANDARD slope combiné
+    // Gate STANDARD slope combiné (H1 uniquement — H4 trop lent pour intraday 30-45min)
     if (signalType === "STANDARD") {
       const _slH1sum = (num(row?.slope_h1_s0) ?? 0) + (num(row?.slope_h1) ?? 0);
-      const _slH4sum = (num(row?.slope_h4_s0) ?? 0) + (num(row?.slope_h4) ?? 0);
-      if (match.side === "BUY"  && (_slH1sum < 1 || _slH4sum < 1)) continue;
-      if (match.side === "SELL" && (_slH1sum > -1 || _slH4sum > -1)) continue;
+      if (match.side === "BUY"  && _slH1sum < 1) continue;
+      if (match.side === "SELL" && _slH1sum > -1) continue;
     }
 
     // Gate [50-70] slope H4 combiné

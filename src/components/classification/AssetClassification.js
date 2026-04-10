@@ -20,9 +20,9 @@ export const ASSET_CLASSES = {
  */
 export const ASSETS_BY_CLASS = {
   [ASSET_CLASSES.FX]: [
-    "AUDCAD", "AUDNZD", "AUDUSD",
+    "AUDCAD", "AUDNZD", "AUDUSD", "AUDJPY",
     "EURAUD", "EURCAD", "EURCHF", "EURJPY",
-    "EURNOK", "EURNZD", "EURUSD",
+    "EURNOK", "EURNZD", "EURUSD", "EURGBP",
     "GBPNZD", "GBPJPY", "GBPUSD",
     "NZDUSD",
     "USDCAD", "USDCHF", "USDJPY",
@@ -41,7 +41,7 @@ export const ASSETS_BY_CLASS = {
   [ASSET_CLASSES.INDEX]: [
     "US_30", "US_500", "US_TECH100",
     "FRANCE_40", "GERMANY_40", "ITALY_40",
-    "UK_100", "DOLLAR_INDX"
+    "UK_100", "JAPAN_225", "DOLLAR_INDX"
   ],
 
   [ASSET_CLASSES.METAL]: [
@@ -49,6 +49,7 @@ export const ASSETS_BY_CLASS = {
   ],
 
   [ASSET_CLASSES.AGRI]: [
+    "WHEAT",
     "COCOA",
     "COFFEE_C"
   ],

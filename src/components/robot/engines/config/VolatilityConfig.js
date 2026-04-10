@@ -21,7 +21,7 @@ export const VOLATILITY_CONFIG = {
   US_TECH100:  { lowMax: 0.000859, medMax: 0.002227, highMax: 0.004454 },
   // CRYPTO
   BTCEUR:      { lowMax: 0.001561, medMax: 0.005038, highMax: 0.009660 },
-  BTCUSD:      { lowMax: 0.001531, medMax: 0.005003, highMax: 0.009439 },
+  BTCUSD:      { lowMax: 0.001383, medMax: 0.003352, highMax: 0.005554 },
   ETHUSD:      { lowMax: 0.002203, medMax: 0.006829, highMax: 0.013044 },
   // METAL
   GOLD:        { lowMax: 0.001348, medMax: 0.003141, highMax: 0.008317 },

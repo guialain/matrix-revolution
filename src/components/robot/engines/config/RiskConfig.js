@@ -36,7 +36,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 151, volume_step: 0.01,
   },
   USDCHF: {
-    tpAtr: 0.65, slAtr: 1.95, atrH1Cap: 0.00240, maxHoldH: 24, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.00240, maxHoldH: 24, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 0.789, baseToEUR: 0.847,

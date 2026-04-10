@@ -13,23 +13,23 @@ export const VOLATILITY_CONFIG = {
   USDJPY:      { lowMax: 0.000423, medMax: 0.000837, highMax: 0.001474 },
   USDCHF:      { lowMax: 0.000369, medMax: 0.000715, highMax: 0.001175 },
   // INDEX
-  UK_100:      { lowMax: 0.000767, medMax: 0.001350, highMax: 0.005041 },
-  GERMANY_40:  { lowMax: 0.000790, medMax: 0.001560, highMax: 0.002507 },
-  FRANCE_40:   { lowMax: 0.000864, medMax: 0.001508, highMax: 0.002283 },
-  US_30:       { lowMax: 0.000586, medMax: 0.001745, highMax: 0.003198 },
-  US_500:      { lowMax: 0.000614, medMax: 0.001579, highMax: 0.003150 },
-  US_TECH100:  { lowMax: 0.000859, medMax: 0.002227, highMax: 0.004454 },
+  UK_100:      { lowMax: 0.000602, medMax: 0.001551, highMax: 0.002781 },
+  GERMANY_40:  { lowMax: 0.000843, medMax: 0.002030, highMax: 0.003774 },
+  FRANCE_40:   { lowMax: 0.001213, medMax: 0.001841, highMax: 0.003359 },
+  US_30:       { lowMax: 0.000705, medMax: 0.002031, highMax: 0.002994 },
+  US_500:      { lowMax: 0.000746, medMax: 0.001969, highMax: 0.002870 },
+  US_TECH100:  { lowMax: 0.000929, medMax: 0.002156, highMax: 0.003422 },
   // CRYPTO
-  BTCEUR:      { lowMax: 0.001561, medMax: 0.005038, highMax: 0.009660 },
+  BTCEUR:      { lowMax: 0.001308, medMax: 0.003102, highMax: 0.005325 },
   BTCUSD:      { lowMax: 0.001383, medMax: 0.003352, highMax: 0.005554 },
-  ETHUSD:      { lowMax: 0.002203, medMax: 0.006829, highMax: 0.013044 },
+  ETHUSD:      { lowMax: 0.001883, medMax: 0.004443, highMax: 0.007501 },
   // METAL
-  GOLD:        { lowMax: 0.001348, medMax: 0.003141, highMax: 0.008317 },
-  SILVER:      { lowMax: 0.001933, medMax: 0.008912, highMax: 0.020993 },
+  GOLD:        { lowMax: 0.000280, medMax: 0.002920, highMax: 0.004457 },
+  SILVER:      { lowMax: 0.002047, medMax: 0.004944, highMax: 0.008747 },
   // ENERGY
-  CrudeOIL:    { lowMax: 0.002422, medMax: 0.004174, highMax: 0.006392 },
-  BRENT_OIL:   { lowMax: 0.002422, medMax: 0.004174, highMax: 0.006392 },
-  GASOLINE:    { lowMax: 0.002654, medMax: 0.004425, highMax: 0.006742 },
+  CrudeOIL:    { lowMax: 0.003162, medMax: 0.008548, highMax: 0.015038 },
+  BRENT_OIL:   { lowMax: 0.001392, medMax: 0.006946, highMax: 0.013604 },
+  GASOLINE:    { lowMax: 0.001796, medMax: 0.006127, highMax: 0.012005 },
   // DEFAULT
   default:     { lowMax: 0.000366, medMax: 0.000700, highMax: 0.005200 },
 };

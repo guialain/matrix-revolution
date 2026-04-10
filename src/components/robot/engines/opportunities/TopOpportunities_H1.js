@@ -342,9 +342,7 @@ export function evaluateTopOpportunities_H1(marketData = []) {
     const _drsi_h1_s0 = num(row?.drsi_h1_s0);
     const _drsi_h4_s0 = num(row?.drsi_h4_s0);
 
-    // Anti-spike
-    const _drsi_h1 = num(row?.drsi_h1);
-    if (_drsi_h1 !== null && Math.abs(_drsi_h1) >= 8) continue;
+    // Anti-spike (s0 only — s1 stale bar excluded)
     if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= 8) continue;
 
     // Gate universel drsi s0

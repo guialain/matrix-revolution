@@ -1,7 +1,6 @@
 // ============================================================================
 // MaxHoldGuard.js
 // Rôle : détecter les positions ouvertes dépassant maxHoldH (RiskConfig)
-//        et les positions ouvertes vendredi >= 20:30 UTC → FRIDAY_CLOSE
 // Retourne un tableau de { ticket, symbol, reason, duration_h, maxHoldH }
 //         à fermer via sendCloseToMT5
 // ============================================================================
@@ -9,7 +8,6 @@
 import { getRiskConfig, RISK_CONFIG } from "../config/RiskConfig";
 
 const DEFAULT_MAX_HOLD_H = RISK_CONFIG.default?.defaultMaxHoldH || 8;
-const FRIDAY_CLOSE_H = 21; // 21:00 UTC
 
 const MaxHoldGuard = (() => {
 
@@ -22,11 +20,6 @@ const MaxHoldGuard = (() => {
     if (!Array.isArray(positions) || !positions.length) return [];
 
     const now = Date.now();
-    const nowDate = new Date(now);
-    const isFriday = nowDate.getUTCDay() === 5;
-    const nowHourUTC = nowDate.getUTCHours() + nowDate.getUTCMinutes() / 60;
-    const isFridayClose = isFriday && nowHourUTC >= FRIDAY_CLOSE_H;
-
     const toClose = [];
 
     for (const p of positions) {
@@ -39,30 +32,16 @@ const MaxHoldGuard = (() => {
       const rc = getRiskConfig(p.symbol);
       const maxH = rc.maxHoldH || DEFAULT_MAX_HOLD_H;
 
-      // ── FRIDAY CLOSE (disabled for weekend) ─────────────────────────
-      // if (isFridayClose) {
-      //   toClose.push({
-      //     ticket:     p.ticket,
-      //     symbol:     p.symbol,
-      //     side:       p.side,
-      //     reason:     "FRIDAY_CLOSE",
-      //     duration_h: durationH,
-      //     maxHoldH:   maxH,
-      //   });
-      //   continue;
-      // }
-
-      // ── MAX HOLD (disabled for weekend) ─────────────────────────────
-      // if (durationH >= maxH) {
-      //   toClose.push({
-      //     ticket:     p.ticket,
-      //     symbol:     p.symbol,
-      //     side:       p.side,
-      //     reason:     "MAX_HOLD",
-      //     duration_h: durationH,
-      //     maxHoldH:   maxH,
-      //   });
-      // }
+      if (durationH >= maxH) {
+        toClose.push({
+          ticket:     p.ticket,
+          symbol:     p.symbol,
+          side:       p.side,
+          reason:     "MAX_HOLD",
+          duration_h: durationH,
+          maxHoldH:   maxH,
+        });
+      }
     }
 
     return toClose;

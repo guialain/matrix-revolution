@@ -345,9 +345,9 @@ export function evaluateTopOpportunities_H1(marketData = []) {
     // Anti-spike (s0 only — s1 stale bar excluded)
     if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= 8) continue;
 
-    // Gate universel drsi s0
-    if (match.side === "SELL" && ((_drsi_h1_s0 !== null && _drsi_h1_s0 > 0) || (_drsi_h4_s0 !== null && _drsi_h4_s0 > 0))) continue;
-    if (match.side === "BUY"  && ((_drsi_h1_s0 !== null && _drsi_h1_s0 < 0) || (_drsi_h4_s0 !== null && _drsi_h4_s0 < 0))) continue;
+    // Gate universel drsi H1 s0
+    if (match.side === "SELL" && _drsi_h1_s0 !== null && _drsi_h1_s0 > 0) continue;
+    if (match.side === "BUY"  && _drsi_h1_s0 !== null && _drsi_h1_s0 < 0) continue;
 
     // Gate CONT/STANDARD
     if (signalType === "CONTINUATION" || signalType === "STANDARD") {

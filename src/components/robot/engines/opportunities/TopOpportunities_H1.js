@@ -356,9 +356,8 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       if (match.side === "BUY"  && ((_sl_h1_s0 !== null && _sl_h1_s0 <= 0) || (_sl_h4_s0 !== null && _sl_h4_s0 <= 0))) continue;
       if (match.side === "SELL" && ((_sl_h1_s0 !== null && _sl_h1_s0 >= 0) || (_sl_h4_s0 !== null && _sl_h4_s0 >= 0))) continue;
       if (gates.drsiH4Sum !== null) {
-        const _drsiH4sum = (_drsi_h4_s0 ?? 0) + (num(row?.drsi_h4) ?? 0);
-        if (match.side === "BUY"  && _drsiH4sum < gates.drsiH4Sum) continue;
-        if (match.side === "SELL" && _drsiH4sum > -gates.drsiH4Sum) continue;
+        if (match.side === "BUY"  && (_drsi_h4_s0 === null || _drsi_h4_s0 < 1)) continue;
+        if (match.side === "SELL" && (_drsi_h4_s0 === null || _drsi_h4_s0 > -1)) continue;
       }
     }
 

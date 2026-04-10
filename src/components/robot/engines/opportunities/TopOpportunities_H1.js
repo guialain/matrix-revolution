@@ -368,6 +368,18 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       if (match.side === "SELL" && (_slH1s0 === null || _slH1s0 >= 0)) continue;
     }
 
+    // Gate STANDARD [30-50]/[50-70] slope H1 s0 renforcé (momentum faible filtré)
+    if (signalType === "STANDARD") {
+      if (match.route === "BUY-[30-50]") {
+        const _slH1s0 = num(row?.slope_h1_s0);
+        if (_slH1s0 === null || _slH1s0 < 2.0) continue;
+      }
+      if (match.route === "SELL-[50-70]") {
+        const _slH1s0 = num(row?.slope_h1_s0);
+        if (_slH1s0 === null || _slH1s0 > -2.0) continue;
+      }
+    }
+
     // Gate [50-70] slope H4 s0 (live only)
     if (match.route === "SELL-[50-70]" || match.route === "BUY-[50-70]") {
       const _slH4s0 = num(row?.slope_h4_s0);

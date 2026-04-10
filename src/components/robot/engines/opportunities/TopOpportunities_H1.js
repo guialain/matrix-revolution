@@ -361,18 +361,18 @@ export function evaluateTopOpportunities_H1(marketData = []) {
       }
     }
 
-    // Gate STANDARD slope combiné (H1 uniquement — H4 trop lent pour intraday 30-45min)
+    // Gate STANDARD slope H1 s0 (live only)
     if (signalType === "STANDARD") {
-      const _slH1sum = (num(row?.slope_h1_s0) ?? 0) + (num(row?.slope_h1) ?? 0);
-      if (match.side === "BUY"  && _slH1sum < 1) continue;
-      if (match.side === "SELL" && _slH1sum > -1) continue;
+      const _slH1s0 = num(row?.slope_h1_s0);
+      if (match.side === "BUY"  && (_slH1s0 === null || _slH1s0 <= 0)) continue;
+      if (match.side === "SELL" && (_slH1s0 === null || _slH1s0 >= 0)) continue;
     }
 
-    // Gate [50-70] slope H4 combiné
+    // Gate [50-70] slope H4 s0 (live only)
     if (match.route === "SELL-[50-70]" || match.route === "BUY-[50-70]") {
-      const _slH4sum = (num(row?.slope_h4_s0) ?? 0) + (num(row?.slope_h4) ?? 0);
-      if (match.side === "SELL" && _slH4sum >= 0) continue;
-      if (match.side === "BUY"  && _slH4sum <= 0) continue;
+      const _slH4s0 = num(row?.slope_h4_s0);
+      if (match.side === "SELL" && (_slH4s0 === null || _slH4s0 >= 0)) continue;
+      if (match.side === "BUY"  && (_slH4s0 === null || _slH4s0 <= 0)) continue;
     }
 
     // Gate REVERSAL slope H1 s0

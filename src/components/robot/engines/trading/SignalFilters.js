@@ -215,7 +215,23 @@ const SignalFilters = (() => {
         continue;
       }
 
-      // 6. M5 confidence — calculé sur les opportunités valides
+      // 6. M5 dslope — accélération M5 contraire = news/spike en cours
+      // CONT/EARLY seulement : pour REV l'impulsion est souvent le setup
+      const sigType    = String(opp?.type ?? "").toUpperCase();
+      const dslope_m5  = num(opp?.dslope_m5);
+      if (dslope_m5 !== null && sigType !== "REVERSAL") {
+        const dslopeThr = 2.0;
+        if (side === "BUY"  && dslope_m5 < -dslopeThr) {
+          waitOpportunities.push({ ...opp, state: "WAIT_M5_ACCEL", m5Level });
+          continue;
+        }
+        if (side === "SELL" && dslope_m5 >  dslopeThr) {
+          waitOpportunities.push({ ...opp, state: "WAIT_M5_ACCEL", m5Level });
+          continue;
+        }
+      }
+
+      // 7. M5 confidence — calculé sur les opportunités valides
       const m5Confidence = getM5Confidence(opp, side);
 
       validOpportunities.push({

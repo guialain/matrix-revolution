@@ -1,130 +1,132 @@
 // ============================================================================
-// IntradayConfig.js — calibration sur données H1 réelles MQL5 (5000+ barres)
+// IntradayConfig.js — calibration sur données H1 réelles MQL5 (zones mortes filtrées)
 //
-// Seuils signés asymétriques par symbole :
-//   dailyUp / dailyDown         = P85 / P15 — mouvement directionnel modéré
-//   strongUp / strongDown       = P95 / P5  — mouvement fort (block CONT contre)
-//   explosiveUp / explosiveDown = P99 / P1  — mouvement extrême
-//   neutral                     = abs P50   — amplitude neutre de référence
+// Seuils calibrés depuis context CSVs H1 (backtest V8R — 2026-04-12) :
+//   neutral       = P70  — borne NEUTRE (symétrique max(|P30|,P70))
+//   dailyUp/Down  = P80/P20 — mouvement directionnel modéré
+//   strongUp/Down = P95/P5  — mouvement fort
+//   explosiveUp/Down = P99/P1 — mouvement extrême
+//
+// Zones mortes filtrées : INDEX 07-22h, METAL/ENERGY 01-22h, AGRI 09-20h
 // ============================================================================
 
 export const INTRADAY_CONFIG = {
 
   // ── Forex ─────────────────────────────────────────────────────────────────
   EURUSD: {
-    neutral: 0.13, dailyUp: 0.21, dailyDown: -0.24,
-    strongUp: 0.45, strongDown: -0.48, explosiveUp: 0.82, explosiveDown: -0.73,
+    neutral: 0.11, dailyUp: 0.19, dailyDown: -0.19,
+    strongUp: 0.56, strongDown: -0.50, explosiveUp: 1.02, explosiveDown: -0.81,
   },
   GBPUSD: {
-    neutral: 0.14, dailyUp: 0.23, dailyDown: -0.26,
-    strongUp: 0.49, strongDown: -0.52, explosiveUp: 0.75, explosiveDown: -0.85,
+    neutral: 0.12, dailyUp: 0.21, dailyDown: -0.19,
+    strongUp: 0.54, strongDown: -0.54, explosiveUp: 0.87, explosiveDown: -0.87,
   },
   USDJPY: {
-    neutral: 0.20, dailyUp: 0.37, dailyDown: -0.31,
-    strongUp: 0.68, strongDown: -0.58, explosiveUp: 1.03, explosiveDown: -1.01,
+    neutral: 0.17, dailyUp: 0.30, dailyDown: -0.30,
+    strongUp: 0.72, strongDown: -0.67, explosiveUp: 1.19, explosiveDown: -1.17,
   },
   USDCHF: {
-    neutral: 0.14, dailyUp: 0.29, dailyDown: -0.24,
-    strongUp: 0.53, strongDown: -0.56, explosiveUp: 0.91, explosiveDown: -0.97,
+    neutral: 0.12, dailyUp: 0.22, dailyDown: -0.22,
+    strongUp: 0.56, strongDown: -0.64, explosiveUp: 0.98, explosiveDown: -1.16,
   },
   USDCAD: {
-    neutral: 0.09, dailyUp: 0.17, dailyDown: -0.13,
-    strongUp: 0.30, strongDown: -0.29, explosiveUp: 0.46, explosiveDown: -0.54,
+    neutral: 0.08, dailyUp: 0.13, dailyDown: -0.12,
+    strongUp: 0.31, strongDown: -0.36, explosiveUp: 0.51, explosiveDown: -0.70,
   },
   AUDUSD: {
-    neutral: 0.20, dailyUp: 0.35, dailyDown: -0.34,
-    strongUp: 0.62, strongDown: -0.64, explosiveUp: 0.94, explosiveDown: -0.97,
+    neutral: 0.20, dailyUp: 0.33, dailyDown: -0.27,
+    strongUp: 0.70, strongDown: -0.66, explosiveUp: 1.25, explosiveDown: -1.02,
   },
   NZDUSD: {
-    neutral: 0.21, dailyUp: 0.32, dailyDown: -0.39,
-    strongUp: 0.62, strongDown: -0.73, explosiveUp: 1.06, explosiveDown: -1.06,
+    neutral: 0.19, dailyUp: 0.31, dailyDown: -0.31,
+    strongUp: 0.75, strongDown: -0.73, explosiveUp: 1.31, explosiveDown: -1.12,
   },
 
   // ── Indices ───────────────────────────────────────────────────────────────
   UK_100: {
-    neutral: 0.19, dailyUp: 0.43, dailyDown: -0.30,
-    strongUp: 0.86, strongDown: -0.68, explosiveUp: 1.50, explosiveDown: -1.39,
+    neutral: 0.29, dailyUp: 0.46, dailyDown: -0.32,
+    strongUp: 1.07, strongDown: -0.86, explosiveUp: 1.88, explosiveDown: -2.25,
   },
   GERMANY_40: {
-    neutral: 0.26, dailyUp: 0.46, dailyDown: -0.56,
-    strongUp: 0.96, strongDown: -1.12, explosiveUp: 1.60, explosiveDown: -2.03,
+    neutral: 0.34, dailyUp: 0.54, dailyDown: -0.60,
+    strongUp: 1.18, strongDown: -1.48, explosiveUp: 2.09, explosiveDown: -3.04,
   },
   FRANCE_40: {
-    neutral: 0.35, dailyUp: 0.63, dailyDown: -0.52,
-    strongUp: 1.02, strongDown: -0.98, explosiveUp: 1.57, explosiveDown: -1.91,
+    neutral: 0.35, dailyUp: 0.55, dailyDown: -0.42,
+    strongUp: 1.08, strongDown: -1.15, explosiveUp: 1.85, explosiveDown: -2.63,
   },
   ITALY_40: {
     neutral: 0.67, dailyUp: 1.25, dailyDown: -0.91,
     strongUp: 2.04, strongDown: -1.75, explosiveUp: 4.26, explosiveDown: -2.98,
   },
   US_30: {
-    neutral: 0.18, dailyUp: 0.35, dailyDown: -0.34,
-    strongUp: 0.80, strongDown: -0.76, explosiveUp: 1.47, explosiveDown: -1.36,
+    neutral: 0.22, dailyUp: 0.39, dailyDown: -0.36,
+    strongUp: 1.04, strongDown: -0.95, explosiveUp: 1.91, explosiveDown: -2.05,
   },
   US_500: {
-    neutral: 0.20, dailyUp: 0.38, dailyDown: -0.34,
-    strongUp: 0.79, strongDown: -0.79, explosiveUp: 1.34, explosiveDown: -1.45,
+    neutral: 0.26, dailyUp: 0.42, dailyDown: -0.36,
+    strongUp: 1.03, strongDown: -1.01, explosiveUp: 2.01, explosiveDown: -2.09,
   },
   US_TECH100: {
-    neutral: 0.27, dailyUp: 0.52, dailyDown: -0.46,
-    strongUp: 1.06, strongDown: -1.08, explosiveUp: 1.77, explosiveDown: -1.88,
+    neutral: 0.36, dailyUp: 0.56, dailyDown: -0.46,
+    strongUp: 1.37, strongDown: -1.39, explosiveUp: 2.48, explosiveDown: -2.57,
   },
   JAPAN_225: {
-    neutral: 0.57, dailyUp: 1.08, dailyDown: -0.83,
-    strongUp: 1.86, strongDown: -1.66, explosiveUp: 3.05, explosiveDown: -2.89,
+    neutral: 0.60, dailyUp: 0.99, dailyDown: -0.73,
+    strongUp: 2.05, strongDown: -1.82, explosiveUp: 3.78, explosiveDown: -3.94,
   },
 
   // ── Crypto ────────────────────────────────────────────────────────────────
   BTCUSD: {
-    neutral: 0.65, dailyUp: 1.17, dailyDown: -1.36,
-    strongUp: 2.21, strongDown: -2.69, explosiveUp: 4.41, explosiveDown: -4.53,
+    neutral: 0.49, dailyUp: 0.89, dailyDown: -0.88,
+    strongUp: 2.27, strongDown: -2.59, explosiveUp: 4.56, explosiveDown: -4.44,
   },
   BTCEUR: {
-    neutral: 0.64, dailyUp: 1.18, dailyDown: -1.31,
-    strongUp: 2.24, strongDown: -2.69, explosiveUp: 4.10, explosiveDown: -4.52,
+    neutral: 0.48, dailyUp: 0.88, dailyDown: -0.86,
+    strongUp: 2.26, strongDown: -2.61, explosiveUp: 4.42, explosiveDown: -4.54,
   },
   BTCJPY: {
-    neutral: 0.66, dailyUp: 1.26, dailyDown: -1.27,
-    strongUp: 2.32, strongDown: -2.74, explosiveUp: 4.22, explosiveDown: -4.66,
+    neutral: 0.53, dailyUp: 0.94, dailyDown: -0.86,
+    strongUp: 2.36, strongDown: -2.68, explosiveUp: 4.60, explosiveDown: -4.67,
   },
   ETHUSD: {
-    neutral: 1.02, dailyUp: 1.88, dailyDown: -1.99,
-    strongUp: 3.94, strongDown: -4.26, explosiveUp: 7.45, explosiveDown: -6.55,
+    neutral: 0.82, dailyUp: 1.48, dailyDown: -1.42,
+    strongUp: 4.10, strongDown: -4.19, explosiveUp: 7.90, explosiveDown: -6.69,
   },
 
   // ── Metals ────────────────────────────────────────────────────────────────
   GOLD: {
-    neutral: 0.46, dailyUp: 0.93, dailyDown: -0.62,
-    strongUp: 1.65, strongDown: -1.63, explosiveUp: 2.88, explosiveDown: -4.42,
+    neutral: 0.51, dailyUp: 0.80, dailyDown: -0.53,
+    strongUp: 1.74, strongDown: -1.73, explosiveUp: 2.87, explosiveDown: -4.29,
   },
   SILVER: {
-    neutral: 0.91, dailyUp: 2.13, dailyDown: -1.16,
-    strongUp: 3.92, strongDown: -3.76, explosiveUp: 6.66, explosiveDown: -9.25,
+    neutral: 0.95, dailyUp: 1.56, dailyDown: -0.84,
+    strongUp: 3.84, strongDown: -3.63, explosiveUp: 6.40, explosiveDown: -8.94,
   },
 
   // ── Energy ────────────────────────────────────────────────────────────────
   CrudeOIL: {
-    neutral: 0.63, dailyUp: 1.24, dailyDown: -1.08,
-    strongUp: 2.58, strongDown: -2.25, explosiveUp: 6.44, explosiveDown: -4.48,
+    neutral: 0.52, dailyUp: 0.96, dailyDown: -0.85,
+    strongUp: 2.54, strongDown: -2.35, explosiveUp: 6.37, explosiveDown: -4.72,
   },
   BRENT_OIL: {
-    neutral: 0.62, dailyUp: 1.31, dailyDown: -1.00,
-    strongUp: 2.75, strongDown: -2.13, explosiveUp: 6.52, explosiveDown: -4.15,
+    neutral: 0.55, dailyUp: 0.98, dailyDown: -0.80,
+    strongUp: 2.70, strongDown: -2.28, explosiveUp: 6.44, explosiveDown: -4.58,
   },
   GASOLINE: {
-    neutral: 0.63, dailyUp: 1.45, dailyDown: -0.98,
-    strongUp: 2.90, strongDown: -2.14, explosiveUp: 5.22, explosiveDown: -4.26,
+    neutral: 0.48, dailyUp: 0.86, dailyDown: -0.62,
+    strongUp: 2.21, strongDown: -1.80, explosiveUp: 4.42, explosiveDown: -3.19,
   },
 
   // ── Agri ──────────────────────────────────────────────────────────────────
   WHEAT: {
-    neutral: 0.39, dailyUp: 0.65, dailyDown: -0.69,
-    strongUp: 1.46, strongDown: -1.39, explosiveUp: 2.60, explosiveDown: -2.26,
+    neutral: 0.51, dailyUp: 0.71, dailyDown: -0.83,
+    strongUp: 1.82, strongDown: -1.73, explosiveUp: 3.05, explosiveDown: -2.76,
   },
 
   // ── Default ───────────────────────────────────────────────────────────────
   default: {
-    neutral: 0.30, dailyUp: 0.50, dailyDown: -0.50,
+    neutral: 0.25, dailyUp: 0.50, dailyDown: -0.50,
     strongUp: 1.00, strongDown: -1.00, explosiveUp: 2.00, explosiveDown: -2.00,
   },
 };

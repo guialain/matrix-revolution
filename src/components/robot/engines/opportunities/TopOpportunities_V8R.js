@@ -439,9 +439,14 @@ const TopOpportunities_V8R = (() => {
     let opps = [];
     const drsiH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
     const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
+    const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
+
+      // Gate ATR — filtre volatilité extrême (> 4x cap)
+      const atrH1 = num(row?.atr_h1);
+      if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
 
       // Anti-spike AVANT resolve3D
       const _drsi_h1    = num(row?.drsi_h1);

@@ -86,8 +86,11 @@ const normalizePrice = (price) => {
 
   const cfg = getRiskConfig(mt5Symbol);
 
-  const slDistance = atr_h1 * cfg.slAtr;
-  const tpDistance = atr_h1 * cfg.tpAtr;
+  const atrCap = Number(cfg.atrH1Cap);
+  const atrCapped = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atr_h1, atrCap) : atr_h1;
+
+  const slDistance = atrCapped * cfg.slAtr;
+  const tpDistance = atrCapped * cfg.tpAtr;
 
   const entry = selectedSide === "BUY" ? ask : bid;
 

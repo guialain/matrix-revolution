@@ -154,9 +154,12 @@ function computeSLTP(op, cfg, snapshot) {
       ? (liveAsk > 0 ? liveAsk : Number(op.close))
       : (liveBid > 0 ? liveBid : Number(op.close));
 
-  const atr = Number(op.atr_h1);
+  const atrRaw = Number(op.atr_h1);
   if (!Number.isFinite(price) || price <= 0) return null;
-  if (!Number.isFinite(atr) || atr <= 0) return null;
+  if (!Number.isFinite(atrRaw) || atrRaw <= 0) return null;
+
+  const atrCap = Number(cfg.atrH1Cap);
+  const atr = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atrRaw, atrCap) : atrRaw;
 
   const slDist = atr * cfg.slAtr;
   const tpDist = atr * cfg.tpAtr;

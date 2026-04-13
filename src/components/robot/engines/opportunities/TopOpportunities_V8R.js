@@ -444,10 +444,6 @@ const TopOpportunities_V8R = (() => {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
-      // Gate ATR
-      const atrH1 = num(row?.atr_h1);
-      if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 2 * atrH1Cap) continue;
-
       // Anti-spike AVANT resolve3D — évite de construire les gates inutilement
       const _drsi_h1    = num(row?.drsi_h1);
       const _drsi_h1_s0 = num(row?.drsi_h1_s0);

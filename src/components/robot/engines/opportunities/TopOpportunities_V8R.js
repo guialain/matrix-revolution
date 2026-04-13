@@ -222,20 +222,22 @@ const TopOpportunities_V8R = (() => {
     }
 
     const { cont, rev, early } = getZscoreThresholds(mode);
-    const dzOkBuy  = dz === null || dz >= 0;
-    const dzOkSell = dz === null || dz <= 0;
+    const dzOkBuy      = dz === null || dz >= 0;
+    const dzOkSell     = dz === null || dz <= 0;
+    const dzOkBuyRelax = dz === null || dz >= -0.3;   // CONT/EARLY souple
+    const dzOkSellRelax= dz === null || dz <=  0.3;   // CONT/EARLY souple
 
     if (type === "CONTINUATION") {
-      if (side === "BUY")  return zscore < cont  && dzOkBuy;
-      if (side === "SELL") return zscore > -cont && dzOkSell;
+      if (side === "BUY")  return zscore < cont  && dzOkBuyRelax;
+      if (side === "SELL") return zscore > -cont && dzOkSellRelax;
     }
     if (type === "REVERSAL") {
       if (side === "BUY")  return zscore < -rev && dzOkBuy;
       if (side === "SELL") return zscore > rev  && dzOkSell;
     }
     if (type === "EARLY") {
-      if (side === "BUY")  return zscore < early  && dzOkBuy;
-      if (side === "SELL") return zscore > -early && dzOkSell;
+      if (side === "BUY")  return zscore < early  && dzOkBuyRelax;
+      if (side === "SELL") return zscore > -early && dzOkSellRelax;
     }
     return false;
   }

@@ -72,10 +72,10 @@ const TopOpportunities_V8R = (() => {
   //   CONT SELL : slopeH4 live DOWN + IC DOWN
   //   REV BUY   : slopeH4 stale DOWN + IC DOWN + dslope_h4 > +0.3 + dslope_h1 > +1
   //   REV SELL  : slopeH4 stale UP   + IC UP   + dslope_h4 < -0.3 + dslope_h1 < -1
-  //   EARLY BUY : IC NEUTRE + H4 STRONG_UP live + drsiH4S0 up
-  //   EARLY SELL: IC NEUTRE + H4 STRONG_DOWN live + drsiH4S0 down
+  //   EARLY BUY : IC NEUTRE + H4 ∈ SOFT_UP|STRONG_UP|EXPLOSIVE_UP + H1 idem
+  //   EARLY SELL: IC NEUTRE + H4 ∈ SOFT_DOWN|STRONG_DOWN|EXPLOSIVE_DOWN + H1 idem
   // ============================================================================
-  function resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, drsiH4S0, dslopeH4Live, dslopeH1Live, side, thr = 0.3) {
+  function resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, slopeH1Level, drsiH4S0, dslopeH4Live, dslopeH1Live, side, thr = 0.3) {
 
     const h4Up =
       slopeH4Level === "SOFT_UP" ||
@@ -112,10 +112,19 @@ const TopOpportunities_V8R = (() => {
       intradayLevel === "STRONG_DOWN" ||
       intradayLevel === "EXPLOSIVE_DOWN";
 
+    const h1Up =
+      slopeH1Level === "SOFT_UP" ||
+      slopeH1Level === "STRONG_UP" ||
+      slopeH1Level === "EXPLOSIVE_UP";
+
+    const h1Down =
+      slopeH1Level === "SOFT_DOWN" ||
+      slopeH1Level === "STRONG_DOWN" ||
+      slopeH1Level === "EXPLOSIVE_DOWN";
+
     if (side === "BUY") {
       if (intradayLevel === "NEUTRE") {
-        const h4Strong = slopeH4Level === "STRONG_UP" || slopeH4Level === "EXPLOSIVE_UP";
-        return dh4Up && h4Strong ? { type: "EARLY" } : null;
+        return (h4Up && h1Up) ? { type: "EARLY" } : null;
       }
 
       // CONT BUY — slopeH4 live UP + IC UP
@@ -134,8 +143,7 @@ const TopOpportunities_V8R = (() => {
 
     if (side === "SELL") {
       if (intradayLevel === "NEUTRE") {
-        const h4Strong = slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN";
-        return dh4Down && h4Strong ? { type: "EARLY" } : null;
+        return (h4Down && h1Down) ? { type: "EARLY" } : null;
       }
 
       // CONT SELL — slopeH4 live DOWN + IC DOWN
@@ -370,6 +378,9 @@ const TopOpportunities_V8R = (() => {
       const slopeH4Level   = getSlopeRegime(slope_h4_raw,    slopeCfg); // live — CONT/EARLY
       const slopeH4LevelS1 = getSlopeRegime(slope_h4_s1_val, slopeCfg); // stale — REVERSAL
 
+      const slope_h1_raw   = num(row?.slope_h1_s0) ?? num(row?.slope_h1);
+      const slopeH1Level   = getSlopeRegime(slope_h1_raw, slopeCfg);    // live — EARLY gate
+
       const dslopeH4Live = num(row?.dslope_h4);
       const dslopeH1Live = num(row?.dslope_h1);
 
@@ -390,7 +401,7 @@ const TopOpportunities_V8R = (() => {
       let signalMode = null;
 
       // Try BUY first
-      const buyRes = resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, drsi_h4_s0, dslopeH4Live, dslopeH1Live, "BUY", drsiH4Thr);
+      const buyRes = resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, slopeH1Level, drsi_h4_s0, dslopeH4Live, dslopeH1Live, "BUY", drsiH4Thr);
       if (buyRes) {
         const buyMode = computeMode(buyRes.type, "BUY", intradayLevel, slopeH4Level, drsi_h4_s0, drsiH4Thr);
         if (passZscoreGate({ side: "BUY", type: buyRes.type, mode: buyMode, zscore: zscore_h1, dz: dz_h1_live, zscoreH4: zscore_h4 })) {
@@ -401,7 +412,7 @@ const TopOpportunities_V8R = (() => {
 
       // Try SELL if no BUY match
       if (!match) {
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, drsi_h4_s0, dslopeH4Live, dslopeH1Live, "SELL", drsiH4Thr);
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, slopeH4LevelS1, slopeH1Level, drsi_h4_s0, dslopeH4Live, dslopeH1Live, "SELL", drsiH4Thr);
         if (sellRes) {
           const sellMode = computeMode(sellRes.type, "SELL", intradayLevel, slopeH4Level, drsi_h4_s0, drsiH4Thr);
           if (passZscoreGate({ side: "SELL", type: sellRes.type, mode: sellMode, zscore: zscore_h1, dz: dz_h1_live, zscoreH4: zscore_h4 })) {

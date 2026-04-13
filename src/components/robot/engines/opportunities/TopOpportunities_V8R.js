@@ -124,7 +124,8 @@ const TopOpportunities_V8R = (() => {
 
     if (side === "BUY") {
       if (intradayLevel === "NEUTRE") {
-        return (h4Up && h1Up) ? { type: "EARLY" } : null;
+        const dslopeH1Ok = dslopeH1Live !== null && dslopeH1Live > 0.5;
+        return (h4Up && h1Up && dslopeH1Ok) ? { type: "EARLY" } : null;
       }
 
       // CONT BUY — slopeH4 live UP + IC UP
@@ -143,7 +144,8 @@ const TopOpportunities_V8R = (() => {
 
     if (side === "SELL") {
       if (intradayLevel === "NEUTRE") {
-        return (h4Down && h1Down) ? { type: "EARLY" } : null;
+        const dslopeH1Ok = dslopeH1Live !== null && dslopeH1Live < -0.5;
+        return (h4Down && h1Down && dslopeH1Ok) ? { type: "EARLY" } : null;
       }
 
       // CONT SELL — slopeH4 live DOWN + IC DOWN

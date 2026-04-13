@@ -707,12 +707,16 @@ const TopOpportunities_V8R = (() => {
         EARLY_BUY: 0,        EARLY_SELL: 0,
       };
       for (const row of rows) {
+        const _sym  = row?.symbol;
+        const _ic   = INTRADAY_CONFIG[_sym] ?? INTRADAY_CONFIG.default;
+        const _sc   = getSlopeConfig(_sym);
+        const _thr  = _sc.dslopeH4Thr ?? 0.3;
         const intra = num(row?.intraday_change);
-        const il  = getIntradayLevel(intra, intCfg);
-        const sh4 = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), symbol);
+        const il  = getIntradayLevel(intra, _ic);
+        const sh4 = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
         const dh4 = num(row?.drsi_h4_s0);
-        const br  = resolve3D(il, sh4, dh4, "BUY",  drsiH4Thr);
-        const sr  = resolve3D(il, sh4, dh4, "SELL", drsiH4Thr);
+        const br  = resolve3D(il, sh4, dh4, "BUY",  _thr);
+        const sr  = resolve3D(il, sh4, dh4, "SELL", _thr);
         if (br) resolveBreakdown[`${br.type}_BUY`]  = (resolveBreakdown[`${br.type}_BUY`]  ?? 0) + 1;
         if (sr) resolveBreakdown[`${sr.type}_SELL`] = (resolveBreakdown[`${sr.type}_SELL`] ?? 0) + 1;
       }

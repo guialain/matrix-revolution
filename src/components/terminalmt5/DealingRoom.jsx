@@ -37,9 +37,11 @@ const [activePreset, setActivePreset] = useState(null);
   const account = data?.account ?? null;
   const openPositions = data?.openPositions ?? [];
 
-  const atr_h1 = Number.isFinite(data?.indicators?.atr?.H1)
-    ? data.indicators.atr.H1
-    : null;
+  const atr_h1 = Number.isFinite(draftDeal?.atr_h1) && draftDeal.atr_h1 > 0
+    ? draftDeal.atr_h1
+    : Number.isFinite(data?.indicators?.atr?.H1)
+      ? data.indicators.atr.H1
+      : null;
 
   const bid = Number.isFinite(asset?.bid) ? asset.bid : null;
   const ask = Number.isFinite(asset?.ask) ? asset.ask : null;

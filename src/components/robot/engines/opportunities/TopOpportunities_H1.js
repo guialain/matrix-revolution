@@ -19,10 +19,11 @@ const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 // ============================================================================
 function getIntradayLevel(intra, cfg) {
   if (intra === null) return "NEUTRE";
+  if (intra > cfg.spikeUp)       return "EXPLOSIVE_UP";
   if (intra >= cfg.explosiveUp)  return "EXPLOSIVE_UP";
   if (intra >= cfg.strongUp)     return "STRONG_UP";
-  if (intra >= cfg.dailyUp)      return "UP";
-  if (intra > cfg.dailyDown)     return "NEUTRE";
+  if (intra >= cfg.softUp)       return "UP";
+  if (intra > cfg.softDown)      return "NEUTRE";
   if (intra > cfg.strongDown)    return "DOWN";
   if (intra > cfg.explosiveDown) return "STRONG_DOWN";
   return "EXPLOSIVE_DOWN";

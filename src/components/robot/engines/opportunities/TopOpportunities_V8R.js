@@ -26,6 +26,7 @@
 import { getRiskConfig } from "../config/RiskConfig";
 import { INTRADAY_CONFIG } from "../config/IntradayConfig";
 import { getSlopeConfig } from "../config/SlopeConfig";
+import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine";
 
 const TopOpportunities_V8R = (() => {
   const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
@@ -431,13 +432,28 @@ const TopOpportunities_V8R = (() => {
       if (!drsiContextGate(match.side, signalType, intradayLevel, drsi_h1_s0, drsi_h4_s0)) continue;
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
-      const score =
-        signalType === "REVERSAL" ? 80 :
-        signalType === "EARLY"    ? 70 :
-        Math.max(0, Math.round(
-          Math.abs(num(row?.slope_h1) ?? 0) * 50 +
-          Math.abs((num(row?.rsi_h1)  ?? 50) - 50) * 2
-        ));
+      const scoreRow = {
+        symbol,
+        rsi_h1:               num(row?.rsi_h1),
+        rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
+        rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
+        zscore_h1:            num(row?.zscore_h1),
+        slope_h1:             num(row?.slope_h1),
+        dslope_h1:            num(row?.dslope_h1),
+        atr_m15:              num(row?.atr_m15),
+        close:                num(row?.close),
+        intraday_change:      intra,
+      };
+
+      const scored =
+        signalType === "REVERSAL" && match.side === "BUY"  ? scoreReversalBuy(scoreRow) :
+        signalType === "REVERSAL" && match.side === "SELL" ? scoreReversalSell(scoreRow) :
+        match.side === "BUY"  ? scoreContinuationBuy(scoreRow) :
+        match.side === "SELL" ? scoreContinuationSell(scoreRow) :
+        { total: 0, breakdown: {} };
+
+      const score     = Math.round(scored.total);
+      const breakdown = scored.breakdown;
 
       opps.push({
         type:        signalType,
@@ -450,6 +466,7 @@ const TopOpportunities_V8R = (() => {
         side:        match.side,
         signalType,
         score,
+        breakdown,
         intradayLevel,
         slopeH4Level,
         slopeH4LevelS1,

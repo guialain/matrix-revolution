@@ -192,8 +192,10 @@ function computeSLTP(op, cfg, snapshot) {
                  : (Number.isFinite(scanTick) && scanTick > 0) ? scanTick
                  : 0;
 
-  const digits  = tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
-                : Number.isFinite(scanRow?.digits) ? scanRow.digits
+  // Prioritise broker digits from scan row (handles non-power-of-10 ticks like 0.25)
+  const scanDigits = Number.isInteger(Number(scanRow?.digits)) ? Number(scanRow.digits) : null;
+  const digits  = scanDigits !== null ? scanDigits
+                : tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
                 : Math.max(0, Math.ceil(-Math.log10(atr)) + 2);
 
   if (tick > 0) {

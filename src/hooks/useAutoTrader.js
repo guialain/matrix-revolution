@@ -144,25 +144,30 @@ function validateAllocation(symbol, lots, notional, equity, openPositions, cfg) 
 // ============================================================================
 
 function computeSLTP(op, cfg, snapshot) {
-  const price = Number(op.close);
-  const atr   = Number(op.atr_h1);
+  const scanRow = snapshot?.marketWatch?.find(r => r.symbol === op.symbol);
+
+  // Prix live broker (bid/ask) — fallback sur op.close si absent
+  const liveAsk = Number(scanRow?.ask ?? 0);
+  const liveBid = Number(scanRow?.bid ?? 0);
+  const price =
+    op.side === "BUY"
+      ? (liveAsk > 0 ? liveAsk : Number(op.close))
+      : (liveBid > 0 ? liveBid : Number(op.close));
+
+  const atr = Number(op.atr_h1);
   if (!Number.isFinite(price) || price <= 0) return null;
   if (!Number.isFinite(atr) || atr <= 0) return null;
 
   const slDist = atr * cfg.slAtr;
   const tpDist = atr * cfg.tpAtr;
 
-  // Spread buffer from live scan
-  const scanRow = snapshot?.marketWatch?.find(r => r.symbol === op.symbol);
-  const spread  = Number(scanRow?.spread ?? 0);
-
   let sl, tp;
   if (op.side === "BUY") {
-    sl = price - slDist - spread;
-    tp = price + tpDist + spread;
+    sl = price - slDist;
+    tp = price + tpDist;
   } else {
-    sl = price + slDist + spread;
-    tp = price - tpDist - spread;
+    sl = price + slDist;
+    tp = price - tpDist;
   }
 
   // Enforce broker stopsLevel (minimum distance from entry)

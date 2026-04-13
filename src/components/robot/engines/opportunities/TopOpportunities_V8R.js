@@ -28,6 +28,8 @@ import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
 import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
 import { getDrsiConfig } from "../config/DrsiConfig.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
+import GlobalMarketHours from "../trading/GlobalMarketHours.js";
+import { resolveMarket } from "../trading/AssetEligibility.js";
 
 const TopOpportunities_V8R = (() => {
 
@@ -439,6 +441,10 @@ const TopOpportunities_V8R = (() => {
 
       const symbol   = row?.symbol;
       if (!symbol) continue;
+
+      // Gate horaire — filtre marché fermé (inclus symbolOverrides ex: WHEAT)
+      const marketKey = resolveMarket(row?.assetclass);
+      if (!GlobalMarketHours.check(marketKey, new Date(), symbol).allowed) continue;
 
       const riskCfg  = getRiskConfig(symbol);
       const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;

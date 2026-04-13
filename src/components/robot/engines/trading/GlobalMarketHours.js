@@ -43,6 +43,13 @@ const GlobalMarketHours = {
   },
 
   // =========================
+  // SYMBOL OVERRIDES (heures spécifiques par actif)
+  // =========================
+  symbolOverrides: {
+    WHEAT: { label: "CBOT Wheat", open: 13.5, close: 18.34 },
+  },
+
+  // =========================
   // UTILS TEMPORELLES
   // =========================
   getHour(now = new Date()) {
@@ -56,14 +63,14 @@ const GlobalMarketHours = {
   // =========================
   // CHECK GLOBAL (NEO + MARKET)
   // =========================
-  check(marketKey, now = new Date()) {
+  check(marketKey, now = new Date(), symbol = null) {
     const hour = this.getHour(now);
 
     // --- Neo open ? ---
     const neoOpen = this.inRange(hour, this.neo.open, this.neo.close);
 
-    // --- Market known ? ---
-    const market = this.markets[marketKey];
+    // --- Symbol override > market key ---
+    const market = (symbol && this.symbolOverrides?.[symbol]) || this.markets[marketKey];
     if (!market) {
       return {
         allowed: false,

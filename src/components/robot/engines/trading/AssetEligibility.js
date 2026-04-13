@@ -23,7 +23,7 @@ function findMarketWatchRow(snapshot, symbol) {
 // ============================================================================
 // Helper — normalise assetclass → clé GlobalMarketHours
 // ============================================================================
-function resolveMarket(assetclass) {
+export function resolveMarket(assetclass) {
   switch (assetclass?.toUpperCase()) {
     case 'FX':     return 'FX';
     case 'INDEX':  return 'INDEX';
@@ -107,7 +107,7 @@ const AssetEligibility = {
     // =========================
     // 2) HEURES DE MARCHÉ
     // =========================
-    const hours = GlobalMarketHours.check(marketKey, now);
+    const hours = GlobalMarketHours.check(marketKey, now, symbol);
     if (!hours?.allowed) {
       return {
         eligible: false,

@@ -36,7 +36,7 @@ const INTRADAY_TABLE = {
   NEUTRE:         { BUY: { type: "STANDARD",      mode: "normal"  }, SELL: { type: "STANDARD",     mode: "normal"  } },
   UP:             { BUY: { type: "CONTINUATION",  mode: "normal"  }, SELL: { type: "REVERSAL",     mode: "normal"  } },
   STRONG_UP:      { BUY: { type: "CONTINUATION",  mode: "relaxed" }, SELL: { type: "REVERSAL",     mode: "normal"  } },
-  EXPLOSIVE_UP:   { BUY: null,                                        SELL: { type: "REVERSAL",     mode: "relaxed" } },
+  EXPLOSIVE_UP:   { BUY: { type: "CONTINUATION",  mode: "relaxed" },  SELL: { type: "REVERSAL",     mode: "relaxed" } },
 };
 
 function resolveType(level, side) {

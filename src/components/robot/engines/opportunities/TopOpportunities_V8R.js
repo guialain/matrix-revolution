@@ -208,7 +208,7 @@ const TopOpportunities_V8R = (() => {
     return isRev ? {
       drsiH1Min: 0.5, drsiRev: 0.3, zRev: 99,
       drsi: 0.5,
-      z3050: 99, z5070:99,
+      z3050: 99, z5070: 99,
       drsiH4Sum: null,
       antiSpike,
     } : {
@@ -437,18 +437,17 @@ const TopOpportunities_V8R = (() => {
     };
 
     let opps = [];
-    const drsiH4Thr     = slopeCfg.dslopeH4Thr    ?? 0.3;
+    const drsiH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
     const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
-    const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
-      // Anti-spike AVANT resolve3D — évite de construire les gates inutilement
+      // Anti-spike AVANT resolve3D
       const _drsi_h1    = num(row?.drsi_h1);
       const _drsi_h1_s0 = num(row?.drsi_h1_s0);
       const _drsi_h4_s0 = num(row?.drsi_h4_s0);
-      if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)             continue;
+      if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)              continue;
       if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
 
       const intra = num(row?.intraday_change);
@@ -503,17 +502,17 @@ const TopOpportunities_V8R = (() => {
       const scoreRow = {
         symbol,
         type: signalType, side: match.side,
-        slope_h1:      num(row?.slope_h1),
-        dslope_h1:     num(row?.dslope_h1),
-        zscore_h1:     num(row?.zscore_h1),
-        rsi_h1:        num(row?.rsi_h1),
+        slope_h1:             num(row?.slope_h1),
+        dslope_h1:            num(row?.dslope_h1),
+        zscore_h1:            num(row?.zscore_h1),
+        rsi_h1:               num(row?.rsi_h1),
         rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
         rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-        zscore_h1_min3: num(row?.zscore_h1_min3),
-        zscore_h1_max3: num(row?.zscore_h1_max3),
-        intraday_change: intra,
-        atr_m15: num(row?.atr_m15),
-        close:   num(row?.close),
+        zscore_h1_min3:       num(row?.zscore_h1_min3),
+        zscore_h1_max3:       num(row?.zscore_h1_max3),
+        intraday_change:      intra,
+        atr_m15:              num(row?.atr_m15),
+        close:                num(row?.close),
       };
 
       let scored;
@@ -554,13 +553,13 @@ const TopOpportunities_V8R = (() => {
         drsi_h4_s0:  num(row?.drsi_h4_s0),
 
         // H1 s1
-        rsi_h1:      num(row?.rsi_h1),
-        slope_h1:    num(row?.slope_h1),
-        dslope_h1:   num(row?.dslope_h1),
-        drsi_h1:     num(row?.drsi_h1),
-        zscore_h1:   num(row?.zscore_h1),
-        dz_h1:       num(row?.dz_h1),
-        atr_h1:      num(row?.atr_h1),
+        rsi_h1:         num(row?.rsi_h1),
+        slope_h1:       num(row?.slope_h1),
+        dslope_h1:      num(row?.dslope_h1),
+        drsi_h1:        num(row?.drsi_h1),
+        zscore_h1:      num(row?.zscore_h1),
+        dz_h1:          num(row?.dz_h1),
+        atr_h1:         num(row?.atr_h1),
         zscore_h1_min3: num(row?.zscore_h1_min3),
         zscore_h1_max3: num(row?.zscore_h1_max3),
 
@@ -571,17 +570,17 @@ const TopOpportunities_V8R = (() => {
         zscore_h1_s0: num(row?.zscore_h1_s0),
 
         // M15
-        atr_m15:     num(row?.atr_m15),
-        rsi_m15:     num(row?.rsi_m15),
-        slope_m15:   num(row?.slope_m15),
-        dslope_m15:  num(row?.dslope_m15),
+        atr_m15:    num(row?.atr_m15),
+        rsi_m15:    num(row?.rsi_m15),
+        slope_m15:  num(row?.slope_m15),
+        dslope_m15: num(row?.dslope_m15),
 
         // M5 s1
-        rsi_m5:      num(row?.rsi_m5),
-        slope_m5:    num(row?.slope_m5),
-        dslope_m5:   num(row?.dslope_m5),
-        drsi_m5:     num(row?.drsi_m5),
-        zscore_m5:   num(row?.zscore_m5),
+        rsi_m5:    num(row?.rsi_m5),
+        slope_m5:  num(row?.slope_m5),
+        dslope_m5: num(row?.dslope_m5),
+        drsi_m5:   num(row?.drsi_m5),
+        zscore_m5: num(row?.zscore_m5),
 
         // M5 s0
         rsi_m5_s0:    num(row?.rsi_m5_s0),
@@ -606,27 +605,23 @@ const TopOpportunities_V8R = (() => {
     // DEBUG PIPELINE
     // ============================================================================
     if (TOP_CFG.debug) {
-      let cTotal = 0, cAtr = 0, cAntiSpike = 0, cResolve = 0, cDrsiGate = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
+      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cDrsiGate = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         cTotal++;
 
-        const atrH1 = num(row?.atr_h1);
-        if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 2 * atrH1Cap) continue;
-        cAtr++;
-
         const _drsi_h1    = num(row?.drsi_h1);
         const _drsi_h1_s0 = num(row?.drsi_h1_s0);
-        if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)             continue;
+        if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)              continue;
         if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
         cAntiSpike++;
 
-        const intra        = num(row?.intraday_change);
+        const intra         = num(row?.intraday_change);
         const intradayLevel = getIntradayLevel(intra, intCfg);
-        const slope_h4_raw = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
-        const slopeH4Level = getSlopeRegime(slope_h4_raw, slopeCfg.h4);
-        const drsiH4S0     = num(row?.drsi_h4_s0);
+        const slope_h4_raw  = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
+        const slopeH4Level  = getSlopeRegime(slope_h4_raw, slopeCfg.h4);
+        const drsiH4S0      = num(row?.drsi_h4_s0);
 
         const buyRes  = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY",  drsiH4Thr);
         const sellRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "SELL", drsiH4Thr);
@@ -682,13 +677,12 @@ const TopOpportunities_V8R = (() => {
 
       console.table({
         "0 — total rows":         { count: cTotal,        pct: "100%" },
-        "1 — after ATR cap":      { count: cAtr,           pct: ((cAtr/cTotal)*100).toFixed(1)+"%" },
-        "2 — after anti-spike":   { count: cAntiSpike,     pct: ((cAntiSpike/cAtr)*100).toFixed(1)+"%" },
-        "3 — after resolve3D":    { count: cResolve,       pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "4 — after drsiGate":     { count: cDrsiGate,      pct: ((cDrsiGate/cResolve)*100).toFixed(1)+"%" },
-        "5 — after reversalKill": { count: cReversalKill,  pct: ((cReversalKill/cDrsiGate)*100).toFixed(1)+"%" },
-        "6 — after scoreMin":     { count: cScore,         pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
-        "7 — after matchRoute":   { count: cFinal,         pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
+        "1 — after anti-spike":   { count: cAntiSpike,    pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
+        "2 — after resolve3D":    { count: cResolve,      pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
+        "3 — after drsiGate":     { count: cDrsiGate,     pct: ((cDrsiGate/cResolve)*100).toFixed(1)+"%" },
+        "4 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cDrsiGate)*100).toFixed(1)+"%" },
+        "5 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
+        "6 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });
 
       const resolveBreakdown = {

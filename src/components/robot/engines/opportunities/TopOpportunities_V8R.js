@@ -425,12 +425,6 @@ const TopOpportunities_V8R = (() => {
     const rows = Array.isArray(marketData) ? marketData : [];
     if (!rows.length) return [];
 
-    const symbol = rows[0]?.symbol;
-    if (!symbol) return [];
-
-    const riskCfg  = getRiskConfig(symbol);
-    const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
-    const slopeCfg = getSlopeConfig(symbol);
     const TOP_CFG = {
       minSignalSpacingMinutes: num(opts?.minSignalSpacingMinutes) ?? 0,
       maxSignals:              num(opts?.maxSignals) ?? Infinity,
@@ -439,12 +433,19 @@ const TopOpportunities_V8R = (() => {
     };
 
     let opps = [];
-    const drsiH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
-    const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
-    const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
+
+      const symbol   = row?.symbol;
+      if (!symbol) continue;
+
+      const riskCfg  = getRiskConfig(symbol);
+      const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
+      const slopeCfg = getSlopeConfig(symbol);
+      const drsiH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
+      const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
+      const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
       // Gate ATR — filtre volatilité extrême (> 4x cap)
       const atrH1 = num(row?.atr_h1);
@@ -616,33 +617,41 @@ const TopOpportunities_V8R = (() => {
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
+        const sym = row?.symbol;
+        if (!sym) continue;
         cTotal++;
+
+        const _riskCfg     = getRiskConfig(sym);
+        const _intCfg      = INTRADAY_CONFIG[sym] ?? INTRADAY_CONFIG.default;
+        const _slopeCfg    = getSlopeConfig(sym);
+        const _drsiH4Thr   = _slopeCfg.dslopeH4Thr ?? 0.3;
+        const _antiSpike   = num(_slopeCfg?.antiSpikeH1S0) ?? 8;
 
         const _drsi_h1    = num(row?.drsi_h1);
         const _drsi_h1_s0 = num(row?.drsi_h1_s0);
-        if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)              continue;
-        if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
+        if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)          continue;
+        if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= _antiSpike) continue;
         cAntiSpike++;
 
         const intra         = num(row?.intraday_change);
-        const intradayLevel = getIntradayLevel(intra, intCfg);
+        const intradayLevel = getIntradayLevel(intra, _intCfg);
         const slope_h4_raw  = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
-        const slopeH4Level  = getSlopeLevel(slope_h4_raw, symbol);
+        const slopeH4Level  = getSlopeLevel(slope_h4_raw, sym);
         const drsiH4S0      = num(row?.drsi_h4_s0);
 
-        const buyRes  = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY",  drsiH4Thr);
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "SELL", drsiH4Thr);
+        const buyRes  = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY",  _drsiH4Thr);
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "SELL", _drsiH4Thr);
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
         const _drsi_h4_s0 = num(row?.drsi_h4_s0);
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
-        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, drsiH4S0, drsiH4Thr);
-        if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _drsi_h4_s0, symbol)) continue;
+        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, drsiH4S0, _drsiH4Thr);
+        if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _drsi_h4_s0, sym)) continue;
         cDrsiGate++;
 
-        if (activeRes.type === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
+        if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
         cReversalKill++;
 
         const score = activeRes.type === "REVERSAL" ? 80
@@ -663,7 +672,7 @@ const TopOpportunities_V8R = (() => {
           num(row?.slope_h4), num(row?.slope_h4_s0),
           num(row?.rsi_h1_s0),
         ];
-        const g = buildGates(activeSide, activeMode, activeRes.type, antiSpikeH1S0);
+        const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
         const routeMatch = activeSide === "BUY"
           ? matchBuyRoute(...args, g)
           : matchSellRoute(...args, g);

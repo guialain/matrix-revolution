@@ -144,8 +144,7 @@ function matchBuyRoute(
     ? ((dslope_h4_live === null || dslope_h4_live > 0.20)
        && (slope_h4_eff === null || slope_h4_eff > -5.0)) : true;
 
-  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
-  const h4BuyOk = drsi_h4_eff === null || drsi_h4_eff >= -0.3;
+  const h4BuyOk = drsi_h4_s0 === null || drsi_h4_s0 > -0.3;
 
   const slopeH4Ok = slope_h4_eff !== null && slope_h4_eff > g.slopeH4Min;
   const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 > 0;
@@ -219,8 +218,7 @@ function matchSellRoute(
     ? ((dslope_h4_live === null || dslope_h4_live < -0.20)
        && (slope_h4_eff === null || slope_h4_eff < 5.0)) : true;
 
-  const drsi_h4_eff = drsi_h4_s0 !== null ? drsi_h4_s0 : drsi_h4;
-  const h4SellOk = drsi_h4_eff === null || drsi_h4_eff <= 0.3;
+  const h4SellOk = drsi_h4_s0 === null || drsi_h4_s0 < 0.3;
 
   const slopeH4Ok = slope_h4_eff !== null && slope_h4_eff < g.slopeH4Max;
   const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 < 0;

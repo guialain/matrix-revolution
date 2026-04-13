@@ -8,7 +8,8 @@
 
 // ================= MARKET / ASSET ======================
 // import { evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities";
-import { evaluateTopOpportunities_H1 as evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities_H1";
+// import { evaluateTopOpportunities_H1 as evaluateTopOpportunities } from "./engines/opportunities/TopOpportunities_H1";
+import TopOpportunities_V8R from "./engines/opportunities/TopOpportunities_V8R";
 import AssetBrain       from "./engines/asset/AssetBrain";
 
 // ================= CONFIDENCE / SCORING =================
@@ -75,6 +76,9 @@ const RobotCore = {
       dslope_h4:   row.dslope_h4    ?? null,
       drsi_h4:     row.drsi_h4      ?? null,
       drsi_h4_s0:  row.drsi_h4_s0   ?? null,
+      rsi_h4_s0:   row.rsi_h4_s0    ?? null,
+      zscore_h4:   row.zscore_h4    ?? null,
+      zscore_h4_s0:row.zscore_h4_s0 ?? null,
       // H1 s1
       slope_h1:    row.slope_h1     ?? null,
       dslope_h1:   row.dslope_h1    ?? null,
@@ -112,7 +116,7 @@ const RobotCore = {
       intraday_change: row.intraday_change ?? null,
     }));
 
-    const allOpps = evaluateTopOpportunities(topRows, { scoreMin: 0 });
+    const allOpps = TopOpportunities_V8R.evaluate(topRows);
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

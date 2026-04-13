@@ -700,7 +700,7 @@ const TopOpportunities_V8R = (() => {
       for (const row of rows) {
         const intra = num(row?.intraday_change);
         const il  = getIntradayLevel(intra, intCfg);
-        const sh4 = getSlopeRegime(num(row?.slope_h4_s0) ?? num(row?.slope_h4), slopeCfg.h4);
+        const sh4 = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), symbol);
         const dh4 = num(row?.drsi_h4_s0);
         const br  = resolve3D(il, sh4, dh4, "BUY",  drsiH4Thr);
         const sr  = resolve3D(il, sh4, dh4, "SELL", drsiH4Thr);

@@ -182,7 +182,7 @@ const TopOpportunities_V8R = (() => {
       } : {
         drsiH1Min: 0.2, drsiRev: 0.1, zRev: -99,
         drsi: 0.2,
-        z3050: -99, z5070: -99,
+        z3050: 1.8, z5070: 1.8,
         drsiH4Sum: 0,
         antiSpike,
       };
@@ -198,7 +198,7 @@ const TopOpportunities_V8R = (() => {
       } : {
         drsiH1Min: 0.3, drsiRev: 0.2, zRev: -99,
         drsi: 0.3,
-        z3050: -99, z5070: -99,
+        z3050: 1.8, z5070: 1.8,
         drsiH4Sum: 0,
         antiSpike,
       };
@@ -208,13 +208,13 @@ const TopOpportunities_V8R = (() => {
     return isRev ? {
       drsiH1Min: 0.5, drsiRev: 0.3, zRev: -99,
       drsi: 0.5,
-      z3050: -99, z5070: -99,
+      z3050: 99, z5070:99,
       drsiH4Sum: null,
       antiSpike,
     } : {
       drsiH1Min: 0.5, drsiRev: 0.3, zRev: -99,
       drsi: 0.5,
-      z3050: -99, z5070: -99,
+      z3050: 1.8, z5070: 1.8,
       drsiH4Sum: 0,
       antiSpike,
     };

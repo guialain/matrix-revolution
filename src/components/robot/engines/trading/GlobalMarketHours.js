@@ -14,8 +14,8 @@ const GlobalMarketHours = {
   // =========================
   neo: {
     label: "NEO MATRIX HOURS",
-    open: 0.0,    // 00h00 UTC (Asian session incluse)
-    close: 21.0   // 21h00 UTC
+    open: 0.0,    // 00h00 UTC
+    close: 24.0   // 24h/24
   },
 
   // =========================
@@ -30,7 +30,7 @@ const GlobalMarketHours = {
     CRYPTO: { label: "Crypto Market", open: 0.0,  close: 24.0 },
 
     // ---------- INDICES ----------
-    INDEX:  { label: "Index Market",  open: 7.0,  close: 21.0 },
+    INDEX:  { label: "Index Market",  open: 0.0,  close: 21.0 },
 
     // ---------- METALS ----------
     METAL:  { label: "Metals (COMEX)", open: 0.5, close: 21.0 },

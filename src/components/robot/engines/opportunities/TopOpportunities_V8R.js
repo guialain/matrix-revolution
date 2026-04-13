@@ -25,7 +25,7 @@
 
 import { getRiskConfig } from "../config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
-import { getSlopeConfig } from "../config/SlopeConfig.js";
+import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
 import { getDrsiConfig } from "../config/DrsiConfig.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 
@@ -49,17 +49,19 @@ const TopOpportunities_V8R = (() => {
     return "SPIKE_DOWN";
   }
 
-  function getSlopeRegime(slope, cfg) {
-    if (slope === null || !cfg) return "NEUTRE";
-    if (slope >  cfg.spikeUp)       return "SPIKE_UP";
-    if (slope >= cfg.explosiveUp)   return "EXPLOSIVE_UP";
-    if (slope >= cfg.strongUp)      return "STRONG_UP";
-    if (slope >= cfg.softUp)        return "SOFT_UP";
-    if (slope >  cfg.softDown)      return "NEUTRE";
-    if (slope >  cfg.strongDown)    return "SOFT_DOWN";
-    if (slope >  cfg.explosiveDown) return "STRONG_DOWN";
-    if (slope >  cfg.spikeDown)     return "EXPLOSIVE_DOWN";
-    return "SPIKE_DOWN";
+  const SLOPE_CLASS_TO_LEVEL = {
+    up_extreme:   "EXPLOSIVE_UP",
+    up_strong:    "STRONG_UP",
+    up_weak:      "SOFT_UP",
+    flat:         "NEUTRE",
+    down_weak:    "SOFT_DOWN",
+    down_strong:  "STRONG_DOWN",
+    down_extreme: "EXPLOSIVE_DOWN",
+  };
+
+  function getSlopeLevel(slope, symbol) {
+    if (slope === null) return "NEUTRE";
+    return SLOPE_CLASS_TO_LEVEL[getSlopeClass(slope, symbol)] ?? "NEUTRE";
   }
 
   // ============================================================================
@@ -460,7 +462,7 @@ const TopOpportunities_V8R = (() => {
 
       const slope_h4_raw = num(row?.slope_h4_s0) !== null
         ? num(row.slope_h4_s0) : num(row?.slope_h4);
-      const slopeH4Level = getSlopeRegime(slope_h4_raw, slopeCfg.h4);
+      const slopeH4Level = getSlopeLevel(slope_h4_raw, symbol);
 
       const drsiH4S0 = num(row?.drsi_h4_s0);
 
@@ -625,7 +627,7 @@ const TopOpportunities_V8R = (() => {
         const intra         = num(row?.intraday_change);
         const intradayLevel = getIntradayLevel(intra, intCfg);
         const slope_h4_raw  = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
-        const slopeH4Level  = getSlopeRegime(slope_h4_raw, slopeCfg.h4);
+        const slopeH4Level  = getSlopeLevel(slope_h4_raw, symbol);
         const drsiH4S0      = num(row?.drsi_h4_s0);
 
         const buyRes  = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY",  drsiH4Thr);

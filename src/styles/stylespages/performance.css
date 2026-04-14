@@ -1,0 +1,50 @@
+/* ============================================================================
+   Performance Page — layout 2 colonnes 50/50
+   ============================================================================ */
+
+.perf-page {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 80px);   /* sous le header */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.perf-page-col {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* Colonne gauche : ClosedTrades prend toute la hauteur */
+.perf-page-left {
+  overflow: hidden;
+}
+
+.perf-page-left > * {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Colonne droite : KPI + OpenPositions, scroll si besoin */
+.perf-page-right {
+  overflow-y: auto;
+}
+
+/* États de chargement */
+.perf-page-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 80px);
+  font-size: 1rem;
+  color: #888;
+}
+
+.perf-page-error  { color: #f87171; }
+.perf-page-loading { color: #60a5fa; }

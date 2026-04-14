@@ -213,6 +213,7 @@ const marketStatus = useMemo(() => {
     <NavLink to="/" end>Matrix Analysis</NavLink>
     <NavLink to="/opportunities">Market Opportunities</NavLink>
     <NavLink to="/terminal">Terminal MT5</NavLink>
+    <NavLink to="/performance">Performance</NavLink>
   </nav>
 
 </header>

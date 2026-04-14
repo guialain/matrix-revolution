@@ -5,6 +5,7 @@ import Header from "./components/pages/Header";
 import MatrixAnalysis from "./components/pages/MatrixAnalysis";
 import MarketOpportunities from "./components/pages/MarketOpportunities";
 import TerminalMT5 from "./components/pages/TerminalMT5";
+import Performance from "./components/pages/Performance";
 
 import useMT5Data from "./hooks/useMT5Data";
 
@@ -36,6 +37,8 @@ export default function App() {
           path="/terminal"
           element={<TerminalMT5 snapshot={snapshot} />}
         />
+
+        <Route path="/performance" element={<Performance />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

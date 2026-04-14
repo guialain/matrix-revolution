@@ -16,31 +16,37 @@
   font-family: 'Courier New', Courier, monospace;
 }
 
-/* ─── 2-COLUMN GRID ─────────────────────────────────────── */
+/* ─── 2-COLUMN GRID : 60% / 40% ─────────────────────────── */
 
 .matrix-layout {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: 60fr 40fr;
   gap: 8px;
-  padding: 2px 4px 4px;
+  padding: 4px 6px 6px;
   min-height: 0;
   overflow: hidden;
-  align-items: start;
 }
 
-/* ─── COLUMN ─────────────────────────────────────────────── */
+/* ─── COLUMNS ────────────────────────────────────────────── */
 
 .matrix-col {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 100%;
   min-height: 0;
-  max-height: 100%;
   overflow: hidden;
+  height: 100%;
 }
+
+/* ─── LEFT COL — blocs proportionnels ───────────────────── */
+
+/* ConvergenceMultiTF : prend le plus de place */
+.matrix-col:first-child > *:nth-child(1) { flex: 2 1 0; min-height: 0; overflow: hidden; }
+/* IndicatorsMatrix */
+.matrix-col:first-child > *:nth-child(2) { flex: 2 1 0; min-height: 0; overflow: hidden; }
+/* Bottom row (AccountLevels + MarketTrend) */
+.matrix-col:first-child > *:nth-child(3) { flex: 1 0 auto; min-height: 0; }
 
 /* ─── BOTTOM ROW (AccountLevels + MarketTrend) ───────────── */
 
@@ -48,36 +54,15 @@
   display: grid;
   grid-template-columns: 45fr 55fr;
   gap: 8px;
-  flex-shrink: 0;
-}
-
-/* ─── CLOSED TRADES SCROLL WRAPPER ───────────────────────── */
-
-.matrix-col:last-child {
-  height: 100%;
-  max-height: 100%;
-}
-
-.closedtrades-scroll {
-  flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
-.ma-placeholder {
-  flex: 1;
-  min-height: 120px;
-  border: 1px dashed #1e2a38;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #374151;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+/* ─── RIGHT COL — MarketWatch full height ────────────────── */
+
+.matrix-col:last-child > * {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ─── ERROR / LOADING STATES ─────────────────────────────── */
@@ -90,5 +75,5 @@
   background: #000;
 }
 
-.ma-state-error { color: #f87171; }
+.ma-state-error   { color: #f87171; }
 .ma-state-loading { color: #888; }

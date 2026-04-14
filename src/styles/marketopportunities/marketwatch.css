@@ -8,7 +8,8 @@
 .panel-topmovers {
   display: flex;
   flex-direction: column;
-  height: clamp(380px, 42vh, 520px);
+  height: 100%;
+  flex: 1;
   min-height: 0;
 
   background: radial-gradient(
@@ -85,8 +86,8 @@
 ============================================================ */
 .mw-table thead th {
   text-align: center;
-  padding: 0.18rem 0.20rem;
-  font-size: 0.62rem;
+  padding: 0.30rem 0.20rem;
+  font-size: 0.66rem;
   font-weight: 300;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -117,13 +118,13 @@
    BODY
 ============================================================ */
 .mw-table tbody td {
-  padding: 0.12rem 0.20rem;
+  padding: 0.32rem 0.20rem;
   border-bottom: 1px dashed rgba(255,255,255,0.04);
   text-align: center;
-  font-size: 0.73rem;
+  font-size: 0.78rem;
   font-weight: 300;
   color: #ffe9c2;
-  line-height: 0.9;
+  line-height: 1.2;
   font-family: "JetBrains Mono", monospace;
   font-variant-numeric: tabular-nums;
 }
@@ -146,7 +147,7 @@ td.sym {
    GROUP TITLE
 ============================================================ */
 .mw-group-title {
-  font-size: 0.70rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.10em;
   text-transform: uppercase;
@@ -154,7 +155,7 @@ td.sym {
   color: #c8a800;
   background: #1a1400;
 
-  padding: 4px 8px 3px;
+  padding: 6px 8px 5px;
 
   border-top: 1px solid #3a3000;
   border-bottom: 1px solid rgba(200,168,0,0.15);

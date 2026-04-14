@@ -8,6 +8,10 @@ import path from "path";
 import cookieParser from "cookie-parser";
 import { decodeJwt } from "jose";
 import Anthropic from "@anthropic-ai/sdk";
+import nodeFetch from "node-fetch";
+
+// Use native fetch if available (Node 18+), otherwise node-fetch
+const _fetch = globalThis.fetch ?? nodeFetch;
 
 const app = express();
 
@@ -765,6 +769,65 @@ app.post("/api/signals/publish", (req, res) => {
 });
 
 // GET /api/signals — returns current signal store for user (TTL 30s)
+// ============================================================================
+// NEWS — RSS proxy (Reuters)
+// ============================================================================
+
+const NEWS_FEEDS = [
+  "https://feeds.reuters.com/reuters/businessNews",
+  "https://feeds.reuters.com/reuters/topNews",
+];
+
+let newsCache = { items: [], fetchedAt: 0 };
+
+function parseRSS(xml) {
+  const items = [];
+  const itemRx = /<item[\s>]([\s\S]*?)<\/item>/g;
+  const tagRx  = name => new RegExp(`<${name}[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/${name}>`, "i");
+
+  let m;
+  while ((m = itemRx.exec(xml)) !== null) {
+    const block = m[1];
+    const title   = (tagRx("title").exec(block)?.[1]   ?? "").trim();
+    const link    = (tagRx("link").exec(block)?.[1]    ?? "").trim()
+                  || (/<link\s*\/?>([^<]+)/.exec(block)?.[1] ?? "").trim();
+    const pubDate = (tagRx("pubDate").exec(block)?.[1] ?? "").trim();
+    if (title) items.push({ title, link, pubDate });
+  }
+  return items;
+}
+
+app.get("/api/news", async (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  try {
+    const now = Date.now();
+    if (now - newsCache.fetchedAt < 55_000) {
+      return res.json({ items: newsCache.items, fetchedAt: newsCache.fetchedAt });
+    }
+
+    let items = [];
+    for (const feed of NEWS_FEEDS) {
+      try {
+        const r = await _fetch(feed, {
+          headers: { "User-Agent": "Mozilla/5.0" },
+          timeout: 8000,
+        });
+        if (!r.ok) continue;
+        const xml = await r.text();
+        const parsed = parseRSS(xml);
+        if (parsed.length) { items = parsed; break; }
+      } catch { continue; }
+    }
+
+    items = items.slice(0, 20);
+    newsCache = { items, fetchedAt: now };
+    res.json({ items, fetchedAt: now });
+  } catch (err) {
+    console.error("[/api/news]", err.message);
+    res.json({ items: [], fetchedAt: 0, error: err.message });
+  }
+});
+
 app.get("/api/signals", (req, res) => {
   const key = getSignalKey(req);
   ensureSignalBuckets(key);

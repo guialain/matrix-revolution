@@ -6,7 +6,7 @@
 import React from "react";
 import useMT5Data from "../../hooks/useMT5Data";
 import useRobotCore from "../../hooks/useRobotCore";
-import MarketWatch from "../marketopportunities/MarketWatch";
+import NewsFeed from "../marketopportunities/NewsFeed";
 import TopOpportunities from "../marketopportunities/TopOpportunities";
 import RobotNeo from "../marketopportunities/RobotNeo";
 import { sendSwitchSymbol } from "../../utilitaires/sendMT5Instructions";
@@ -59,9 +59,9 @@ export default function MarketOpportunities() {
   return (
     <div className="mo-page">
 
-      {/* ====== LEFT (40%) — MARKET WATCH ====== */}
+      {/* ====== LEFT (40%) — NEWS FEED ====== */}
       <section className="mo-section mo-market-watch">
-        <MarketWatch onSwitchSymbol={handleSwitchSymbol} />
+        <NewsFeed />
       </section>
 
       {/* ====== CENTER (20%) — Robot + Wait + Not Eligible ====== */}

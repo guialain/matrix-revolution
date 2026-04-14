@@ -1,0 +1,108 @@
+/* ============================================================================
+   NewsFeed — Reuters RSS panel
+============================================================================ */
+
+.nf-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: radial-gradient(circle at top, rgba(255,215,140,0.04), rgba(0,0,0,0.95));
+  border: 1px solid rgba(255, 200, 120, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── Header ── */
+.nf-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255, 200, 120, 0.1);
+  flex-shrink: 0;
+}
+
+.nf-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #f5c26b;
+  text-transform: uppercase;
+}
+
+.nf-source {
+  font-size: 0.62rem;
+  color: #f87171;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.nf-updated {
+  font-size: 0.58rem;
+  color: #374151;
+  margin-left: auto;
+}
+
+/* ── Body ── */
+.nf-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.nf-body::-webkit-scrollbar { width: 4px; }
+.nf-body::-webkit-scrollbar-track { background: transparent; }
+.nf-body::-webkit-scrollbar-thumb { background: #1e2a38; border-radius: 2px; }
+
+/* ── Item ── */
+.nf-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 8px;
+  align-items: start;
+  padding: 6px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  text-decoration: none;
+  transition: background 0.12s;
+  cursor: pointer;
+}
+
+.nf-item:hover {
+  background: rgba(255, 200, 120, 0.06);
+}
+
+.nf-item-time {
+  font-size: 0.58rem;
+  color: #374151;
+  white-space: nowrap;
+  padding-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+.nf-item-title {
+  font-size: 0.70rem;
+  color: #d1d5db;
+  line-height: 1.45;
+  transition: color 0.12s;
+}
+
+.nf-item:hover .nf-item-title {
+  color: #f5c26b;
+}
+
+/* ── Status ── */
+.nf-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  font-size: 0.72rem;
+  color: #4b5563;
+  padding: 20px;
+}
+
+.nf-error { color: #f87171; }

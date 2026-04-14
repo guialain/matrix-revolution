@@ -9,6 +9,7 @@ import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
 import AccountLevels from "../matrixanalysis/AccountLevels";
 import MarketTrend from "../matrixanalysis/MarketTrend";
 import ConvergenceMultiTF from "../matrixanalysis/ConvergenceMultiTF";
+import MarketWatch from "../marketopportunities/MarketWatch";
 
 // styles
 import "../../styles/stylespages/matrixanalysis.css";
@@ -63,8 +64,7 @@ export default function MatrixAnalysis() {
         </div>
 
         <div className="matrix-col">
-          <div className="ma-placeholder">Performance</div>
-          <div className="ma-placeholder">Results</div>
+          <MarketWatch />
         </div>
 
       </div>

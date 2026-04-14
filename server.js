@@ -1,12 +1,16 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import fs from "fs";
 import cors from "cors";
 import path from "path";
 import cookieParser from "cookie-parser";
 import { decodeJwt } from "jose";
+import Anthropic from "@anthropic-ai/sdk";
 
 const app = express();
+
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
@@ -818,16 +822,14 @@ app.post("/api/trading-mode", (req, res) => {
 // Body: { messages, context: { marketData, signals, account, openPositions } }
 // ============================================================================
 
-import Anthropic from "@anthropic-ai/sdk";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
 const CLAUDE_SYSTEM = `You are NEO, an expert trading assistant embedded in a live MT5 trading terminal.
 You have access to real-time market data, active trading signals, account state, and open positions.
 Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.`;
 
 app.post("/api/claude", async (req, res) => {
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
+    const anthropic = new Anthropic({ apiKey });
     const { messages = [], context = {} } = req.body ?? {};
 
     const { marketData = [], signals = [], account = {}, openPositions = [] } = context;

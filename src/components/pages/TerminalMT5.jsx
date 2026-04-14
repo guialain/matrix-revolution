@@ -16,7 +16,7 @@ import useAutoTrader from "../../hooks/useAutoTrader";
 // components
 import DealPipeline from "../terminalmt5/DealPipeline";
 import DealingRoom from "../terminalmt5/DealingRoom";
-import OpenPositions from "../terminalmt5/OpenPositions";
+import LiveAIAnalysis from "../terminalmt5/LiveAIAnalysis";
 import ExposureDistribution from "../terminalmt5/ExposureDistribution";
 import AccountHealth from "../terminalmt5/AccountHealth";
 import CapitalAllocationPanel from "../terminalmt5/CapitalAllocation";
@@ -122,8 +122,8 @@ export default function TerminalMT5({ snapshot }) {
       {/* ================= RIGHT ================= */}
       <div className="right-column">
 
-        <div className="terminal-block open-positions">
-          <OpenPositions />
+        <div className="terminal-block live-ai-analysis">
+          <LiveAIAnalysis snapshot={snapshot} robot={robot} />
         </div>
 
         <div className="terminal-block capital-allocation">

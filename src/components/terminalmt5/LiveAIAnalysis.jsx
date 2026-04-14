@@ -18,31 +18,37 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
 
   function buildContext() {
     const account = snapshot?.account ?? {};
-    const opps    = robot?.validOpportunities ?? [];
-    const blocked = robot?.blockedOpportunities ?? [];
     const pos     = snapshot?.openPositions ?? [];
+    const mw      = snapshot?.marketWatch ?? [];
+    const opps    = robot?.validOpportunities ?? [];
 
     return {
       account: {
-        balance:  account.balance,
-        equity:   account.equity,
-        margin:   account.margin,
-        freeMargin: account.free_margin,
+        balance:    account.balance,
+        equity:     account.equity,
+        margin:     account.margin,
+        free_margin: account.free_margin,
       },
       openPositions: pos.map(p => ({
         symbol: p.symbol,
         side:   p.side,
         lots:   p.lots,
-        pnl:    p.pnl_eur,
+        pnl_eur: p.pnl_eur,
       })),
-      validOpportunities: opps.map(o => ({
+      signals: opps.map(o => ({
         symbol: o.symbol,
         side:   o.side,
         type:   o.type,
         score:  o.score,
         phase:  o.signalPhase ?? o.signalType,
       })),
-      blockedCount: blocked.length,
+      marketData: mw.map(r => ({
+        symbol:         r.symbol,
+        rsi_h1:         r.rsi_h1,
+        slope_h1:       r.slope_h1,
+        zscore_h1:      r.zscore_h1,
+        intraday_change: r.intraday_change,
+      })),
     };
   }
 
@@ -56,7 +62,7 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/ai/analyze`, {
+      const res = await fetch(`${API_BASE}/api/claude`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

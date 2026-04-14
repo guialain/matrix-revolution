@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import fs from "fs";
 import cors from "cors";
@@ -812,6 +813,62 @@ app.post("/api/trading-mode", (req, res) => {
 
 // ============================================================================
 // STATIC FRONTEND (Vite build)
+// ============================================================================
+// CLAUDE API — /api/claude
+// Body: { messages, context: { marketData, signals, account, openPositions } }
+// ============================================================================
+
+import Anthropic from "@anthropic-ai/sdk";
+
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const CLAUDE_SYSTEM = `You are NEO, an expert trading assistant embedded in a live MT5 trading terminal.
+You have access to real-time market data, active trading signals, account state, and open positions.
+Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.`;
+
+app.post("/api/claude", async (req, res) => {
+  try {
+    const { messages = [], context = {} } = req.body ?? {};
+
+    const { marketData = [], signals = [], account = {}, openPositions = [] } = context;
+
+    const contextBlock = [
+      `## Account`,
+      `Balance: ${account.balance ?? "—"} | Equity: ${account.equity ?? "—"} | Free Margin: ${account.free_margin ?? "—"}`,
+      ``,
+      `## Open Positions (${openPositions.length})`,
+      openPositions.length
+        ? openPositions.map(p => `- ${p.symbol} ${p.side} ${p.lots} lots | PnL: ${p.pnl_eur ?? "—"}€`).join("\n")
+        : "None",
+      ``,
+      `## Active Signals (${signals.length})`,
+      signals.length
+        ? signals.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} phase=${s.phase ?? "—"}`).join("\n")
+        : "None",
+      ``,
+      `## Market Data (top movers, ${marketData.length} assets)`,
+      marketData.slice(0, 15).map(r =>
+        `- ${r.symbol} | RSI_H1=${r.rsi_h1 ?? "—"} slope_H1=${r.slope_h1 ?? "—"} zscore_H1=${r.zscore_h1 ?? "—"} intraday=${r.intraday_change ?? "—"}%`
+      ).join("\n"),
+    ].join("\n");
+
+    const systemPrompt = `${CLAUDE_SYSTEM}\n\n--- LIVE CONTEXT ---\n${contextBlock}`;
+
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+    });
+
+    const content = response.content?.[0]?.text ?? "";
+    res.json({ content });
+  } catch (err) {
+    console.error("[/api/claude]", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ============================================================================
 
 const __root = path.resolve();

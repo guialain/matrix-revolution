@@ -832,7 +832,9 @@ app.post("/api/claude", async (req, res) => {
     const anthropic = new Anthropic({ apiKey });
     const { messages = [], context = {} } = req.body ?? {};
 
-    const { marketData = [], signals = [], account = {}, openPositions = [] } = context;
+    const { marketData = [], signals = [], waitOpportunities = [], account = {}, openPositions = [] } = context;
+
+    const fmt = v => v != null ? Number(v).toFixed(2) : "—";
 
     const contextBlock = [
       `## Account`,
@@ -845,12 +847,20 @@ app.post("/api/claude", async (req, res) => {
       ``,
       `## Active Signals (${signals.length})`,
       signals.length
-        ? signals.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} phase=${s.phase ?? "—"}`).join("\n")
+        ? signals.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} phase=${s.phase ?? "—"} vol=${s.volatilityLevel ?? "—"}`).join("\n")
         : "None",
       ``,
-      `## Market Data (top movers, ${marketData.length} assets)`,
-      marketData.slice(0, 15).map(r =>
-        `- ${r.symbol} | RSI_H1=${r.rsi_h1 ?? "—"} slope_H1=${r.slope_h1 ?? "—"} zscore_H1=${r.zscore_h1 ?? "—"} intraday=${r.intraday_change ?? "—"}%`
+      `## Wait Signals (${waitOpportunities.length})`,
+      waitOpportunities.length
+        ? waitOpportunities.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} wait=${s.waitState ?? "—"} vol=${s.volatilityLevel ?? "—"}`).join("\n")
+        : "None",
+      ``,
+      `## Market Data (${marketData.length} assets)`,
+      marketData.slice(0, 20).map(r =>
+        `- ${r.symbol.padEnd(12)} | intra=${fmt(r.intraday_change)}%` +
+        ` | H4: rsi=${fmt(r.rsi_h4)} slope=${fmt(r.slope_h4)} dslope=${fmt(r.dslope_h4)} z=${fmt(r.zscore_h4)}` +
+        ` | H1: rsi=${fmt(r.rsi_h1)} slope=${fmt(r.slope_h1)} dslope=${fmt(r.dslope_h1)} z=${fmt(r.zscore_h1)}` +
+        ` | M5: rsi=${fmt(r.rsi_m5)} slope=${fmt(r.slope_m5)} dslope=${fmt(r.dslope_m5)}`
       ).join("\n"),
     ].join("\n");
 

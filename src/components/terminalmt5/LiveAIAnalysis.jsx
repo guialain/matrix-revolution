@@ -36,18 +36,39 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
         pnl_eur: p.pnl_eur,
       })),
       signals: opps.map(o => ({
-        symbol: o.symbol,
-        side:   o.side,
-        type:   o.type,
-        score:  o.score,
-        phase:  o.signalPhase ?? o.signalType,
+        symbol:          o.symbol,
+        side:            o.side,
+        type:            o.type,
+        score:           o.score,
+        phase:           o.signalPhase ?? o.signalType,
+        volatilityLevel: o.volatilityLevel ?? null,
+      })),
+      waitOpportunities: (robot?.waitOpportunities ?? []).map(o => ({
+        symbol:          o.symbol,
+        side:            o.side,
+        type:            o.type,
+        score:           o.score,
+        waitState:       o.waitState ?? null,
+        volatilityLevel: o.volatilityLevel ?? null,
       })),
       marketData: mw.map(r => ({
-        symbol:         r.symbol,
-        rsi_h1:         r.rsi_h1,
-        slope_h1:       r.slope_h1,
-        zscore_h1:      r.zscore_h1,
+        symbol:          r.symbol,
         intraday_change: r.intraday_change,
+        // H4
+        rsi_h4:          r.rsi_h4,
+        slope_h4:        r.slope_h4,
+        dslope_h4:       r.dslope_h4,
+        zscore_h4:       r.zscore_h4,
+        // H1
+        rsi_h1:          r.rsi_h1,
+        slope_h1:        r.slope_h1,
+        dslope_h1:       r.dslope_h1,
+        zscore_h1:       r.zscore_h1,
+        // M5
+        rsi_m5:          r.rsi_m5,
+        slope_m5:        r.slope_m5,
+        dslope_m5:       r.dslope_m5,
+        zscore_m5:       r.zscore_m5,
       })),
     };
   }

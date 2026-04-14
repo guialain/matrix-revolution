@@ -116,6 +116,10 @@ export default function TerminalMT5({ snapshot }) {
             <ExposureDistribution exposureData={exposureData} />
           </div>
 
+          <div className="terminal-block capital-allocation">
+            <CapitalAllocationPanel allocation={capitalAllocation} />
+          </div>
+
         </div>
       </div>
 
@@ -124,10 +128,6 @@ export default function TerminalMT5({ snapshot }) {
 
         <div className="terminal-block live-ai-analysis">
           <LiveAIAnalysis snapshot={snapshot} robot={robot} />
-        </div>
-
-        <div className="terminal-block capital-allocation">
-          <CapitalAllocationPanel allocation={capitalAllocation} />
         </div>
 
       </div>

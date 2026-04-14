@@ -59,7 +59,7 @@ export default function NewsFeed() {
     <div className="nf-container">
       <div className="nf-header">
         <span className="nf-title">LIVE NEWS</span>
-        <span className="nf-source">Reuters</span>
+        <span className="nf-source">FinancialJuice</span>
         {lastUpdate && <span className="nf-updated">↻ {lastUpdate}</span>}
       </div>
 

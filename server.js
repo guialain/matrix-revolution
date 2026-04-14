@@ -9,6 +9,7 @@ import cookieParser from "cookie-parser";
 import { decodeJwt } from "jose";
 import Anthropic from "@anthropic-ai/sdk";
 import nodeFetch from "node-fetch";
+import { XMLParser } from "fast-xml-parser";
 
 // Use native fetch if available (Node 18+), otherwise node-fetch
 const _fetch = globalThis.fetch ?? nodeFetch;
@@ -774,27 +775,29 @@ app.post("/api/signals/publish", (req, res) => {
 // ============================================================================
 
 const NEWS_FEEDS = [
+  "https://www.financialjuice.com/feed.ashx?xy=rss",
   "https://feeds.reuters.com/reuters/businessNews",
   "https://feeds.reuters.com/reuters/topNews",
 ];
 
 let newsCache = { items: [], fetchedAt: 0 };
 
-function parseRSS(xml) {
-  const items = [];
-  const itemRx = /<item[\s>]([\s\S]*?)<\/item>/g;
-  const tagRx  = name => new RegExp(`<${name}[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/${name}>`, "i");
+const xmlParser = new XMLParser({ ignoreAttributes: false, cdataPropName: "__cdata" });
 
-  let m;
-  while ((m = itemRx.exec(xml)) !== null) {
-    const block = m[1];
-    const title   = (tagRx("title").exec(block)?.[1]   ?? "").trim();
-    const link    = (tagRx("link").exec(block)?.[1]    ?? "").trim()
-                  || (/<link\s*\/?>([^<]+)/.exec(block)?.[1] ?? "").trim();
-    const pubDate = (tagRx("pubDate").exec(block)?.[1] ?? "").trim();
-    if (title) items.push({ title, link, pubDate });
+function parseRSS(xml) {
+  try {
+    const doc   = xmlParser.parse(xml);
+    const rawItems = doc?.rss?.channel?.item ?? doc?.feed?.entry ?? [];
+    const arr = Array.isArray(rawItems) ? rawItems : [rawItems];
+    return arr.map(it => ({
+      title:   (it.title?.__cdata ?? it.title ?? "").toString().trim(),
+      link:    (it.link?.__cdata  ?? it.link  ?? "").toString().trim(),
+      pubDate: (it.pubDate ?? it.updated ?? it["dc:date"] ?? "").toString().trim(),
+    })).filter(it => it.title);
+  } catch (e) {
+    console.error("[parseRSS]", e.message);
+    return [];
   }
-  return items;
 }
 
 app.get("/api/news", async (req, res) => {
@@ -808,22 +811,25 @@ app.get("/api/news", async (req, res) => {
     let items = [];
     for (const feed of NEWS_FEEDS) {
       try {
-        const r = await _fetch(feed, {
-          headers: { "User-Agent": "Mozilla/5.0" },
-          timeout: 8000,
-        });
+        const r = await _fetch(feed, { headers: { "User-Agent": "Mozilla/5.0" } });
+        console.log(`[/api/news] ${feed} → ${r.status}`);
         if (!r.ok) continue;
         const xml = await r.text();
+        console.log(`[/api/news] XML length=${xml.length} preview=${xml.slice(0, 120)}`);
         const parsed = parseRSS(xml);
+        console.log(`[/api/news] parsed=${parsed.length} items`);
         if (parsed.length) { items = parsed; break; }
-      } catch { continue; }
+      } catch (e) {
+        console.error(`[/api/news] fetch error ${feed}:`, e.message);
+        continue;
+      }
     }
 
     items = items.slice(0, 20);
     newsCache = { items, fetchedAt: now };
     res.json({ items, fetchedAt: now });
   } catch (err) {
-    console.error("[/api/news]", err.message);
+    console.error("[/api/news] fatal:", err.message);
     res.json({ items: [], fetchedAt: 0, error: err.message });
   }
 });

@@ -67,15 +67,16 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // 3D RESOLUTION : intradayLevel x slopeH4Level x drsiH4S0 => { type, mode }
+  // 3D RESOLUTION : intradayLevel x slopeH4Level x dslopeH4 => { type, mode }
+  // dslopeH4 = slope_h4_s0 - slope_h4 (accélération H4 live)
   // H1 → timing seulement (route RSI Gate 2)
   // ============================================================================
-  function resolve3D(intradayLevel, slopeH4Level, drsiH4S0, side, thr = 0.3) {
+  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 0.5) {
     const h4Up   = slopeH4Level === "SOFT_UP"   || slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP";
     const h4Down = slopeH4Level === "SOFT_DOWN" || slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN";
 
-    const dh4Up   = drsiH4S0 !== null && drsiH4S0 >=  thr;
-    const dh4Down = drsiH4S0 !== null && drsiH4S0 <= -thr;
+    const dh4Up   = dslopeH4 !== null && dslopeH4 >=  thr;
+    const dh4Down = dslopeH4 !== null && dslopeH4 <= -thr;
     const dh4OkBuy  = dh4Up || (!dh4Up && !dh4Down);
     const dh4OkSell = dh4Down || (!dh4Up && !dh4Down);
 
@@ -471,7 +472,9 @@ const TopOpportunities_V8R = (() => {
         ? num(row.slope_h4_s0) : num(row?.slope_h4);
       const slopeH4Level = getSlopeLevel(slope_h4_raw, symbol);
 
-      const drsiH4S0 = num(row?.drsi_h4_s0);
+      const _sh4s0  = num(row?.slope_h4_s0);
+      const _sh4s1  = num(row?.slope_h4);
+      const dslopeH4 = (_sh4s0 !== null && _sh4s1 !== null) ? _sh4s0 - _sh4s1 : null;
 
       const args = [
         num(row?.rsi_h1), num(row?.slope_h1),
@@ -487,20 +490,20 @@ const TopOpportunities_V8R = (() => {
       let signalType = null;
       let signalMode = null;
 
-      const buyRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY", drsiH4Thr);
+      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY");
       if (buyRes) {
         const buyMode = buyRes.mode ?? computeMode(
-          buyRes.type, "BUY", intradayLevel, slopeH4Level, drsiH4S0, drsiH4Thr);
+          buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
         match = matchBuyRoute(...args, gBuy);
         if (match) { signalType = buyRes.type; signalMode = buyMode; }
       }
 
       if (!match) {
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "SELL", drsiH4Thr);
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL");
         if (sellRes) {
           const sellMode = sellRes.mode ?? computeMode(
-            sellRes.type, "SELL", intradayLevel, slopeH4Level, drsiH4S0, drsiH4Thr);
+            sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
           match = matchSellRoute(...args, gSell);
           if (match) { signalType = sellRes.type; signalMode = sellMode; }
@@ -643,10 +646,12 @@ const TopOpportunities_V8R = (() => {
         const intradayLevel = getIntradayLevel(intra, _intCfg);
         const slope_h4_raw  = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
         const slopeH4Level  = getSlopeLevel(slope_h4_raw, sym);
-        const drsiH4S0      = num(row?.drsi_h4_s0);
+        const _ds0 = num(row?.slope_h4_s0);
+        const _ds1 = num(row?.slope_h4);
+        const _dsh4 = (_ds0 !== null && _ds1 !== null) ? _ds0 - _ds1 : null;
 
-        const buyRes  = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "BUY",  _drsiH4Thr);
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, drsiH4S0, "SELL", _drsiH4Thr);
+        const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY");
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL");
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
@@ -719,10 +724,11 @@ const TopOpportunities_V8R = (() => {
         const _thr  = _sc.dslopeH4Thr ?? 0.3;
         const intra = num(row?.intraday_change);
         const il  = getIntradayLevel(intra, _ic);
-        const sh4 = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
-        const dh4 = num(row?.drsi_h4_s0);
-        const br  = resolve3D(il, sh4, dh4, "BUY",  _thr);
-        const sr  = resolve3D(il, sh4, dh4, "SELL", _thr);
+        const sh4  = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
+        const _s0  = num(row?.slope_h4_s0), _s1 = num(row?.slope_h4);
+        const dsh4 = (_s0 !== null && _s1 !== null) ? _s0 - _s1 : null;
+        const br  = resolve3D(il, sh4, dsh4, "BUY");
+        const sr  = resolve3D(il, sh4, dsh4, "SELL");
         if (br) resolveBreakdown[`${br.type}_BUY`]  = (resolveBreakdown[`${br.type}_BUY`]  ?? 0) + 1;
         if (sr) resolveBreakdown[`${sr.type}_SELL`] = (resolveBreakdown[`${sr.type}_SELL`] ?? 0) + 1;
       }

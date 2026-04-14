@@ -6,7 +6,7 @@
 
 .terminal-mt5-grid {
   display: grid;
-  grid-template-columns: 65fr 35fr;
+  grid-template-columns: 75fr 25fr;
   gap: 12px;
   height: calc(100vh - 72px);
   padding: 12px;
@@ -19,7 +19,7 @@
 /* ── Colonne gauche : 2 lignes ── */
 .left-column {
   display: grid;
-  grid-template-rows: 1fr minmax(200px, 240px);
+  grid-template-rows: minmax(280px, 0.55fr) minmax(280px, 0.45fr);
   gap: 12px;
   min-height: 0;
   overflow: hidden;

@@ -71,7 +71,7 @@ const TopOpportunities_V8R = (() => {
   // dslopeH4 = slope_h4_s0 - slope_h4 (accélération H4 live)
   // H1 → timing seulement (route RSI Gate 2)
   // ============================================================================
-  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 0.5) {
+  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0) {
     const h4Up   = slopeH4Level === "SOFT_UP"   || slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP";
     const h4Down = slopeH4Level === "SOFT_DOWN" || slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN";
 

@@ -3,7 +3,7 @@
 // Props : snapshot, robot
 // ============================================================================
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import "../../styles/stylesterminalMT5/liveaianalysis.css";
 
 const API_BASE = window.location.hostname === "localhost"
@@ -11,10 +11,22 @@ const API_BASE = window.location.hostname === "localhost"
   : window.location.origin;
 
 export default function LiveAIAnalysis({ snapshot, robot }) {
-  const [messages, setMessages]   = useState([]);
-  const [input, setInput]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const bottomRef                 = useRef(null);
+  const STORAGE_KEY = "neo_ai_messages";
+
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [input, setInput]   = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef             = useRef(null);
+
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); }
+    catch { /* quota exceeded */ }
+  }, [messages]);
 
   function buildContext() {
     const account = snapshot?.account ?? {};

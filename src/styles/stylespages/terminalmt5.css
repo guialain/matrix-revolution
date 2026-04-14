@@ -1,71 +1,54 @@
 /* ============================================================================
-   TERMINAL MT5 — MAIN GRID (2x2)
+   TERMINAL MT5 — LAYOUT
+   Gauche (65%) : Pipeline + DealingRoom | AccountHealth + Exposure + Capital
+   Droite (35%) : LiveAI full height
 ============================================================================ */
 
 .terminal-mt5-grid {
   display: grid;
-  grid-template-columns: 72fr 28fr;     /* gauche / droite */
+  grid-template-columns: 65fr 35fr;
   gap: 12px;
   height: calc(100vh - 72px);
   padding: 12px;
+  box-sizing: border-box;
   min-height: 0;
+  overflow: hidden;
   font-family: 'Courier New', Courier, monospace;
 }
 
-
+/* ── Colonne gauche : 2 lignes ── */
 .left-column {
   display: grid;
-  grid-template-rows:
-    minmax(370px, 0.78fr)
-    minmax(220px, 0.6fr);
+  grid-template-rows: 1fr minmax(200px, 240px);
   gap: 12px;
   min-height: 0;
   overflow: hidden;
 }
 
-/* ============================================================================
-   BAS GAUCHE — Account Health + Exposure Distribution
-============================================================================ */
-
-.left-bottom-row {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr 1fr; /* AccountHealth | Exposure | CapitalAlloc */
-  gap: 12px;
-  min-height: 220px;
-}
-
-/* Sécurité interne */
-.terminal-block.account-health,
-.terminal-block.exposure-distribution {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-
-/* ============================================================================
-   COLONNE DROITE
-   - Haut : Open Positions
-   - Bas  : Capital Allocation
-============================================================================ */
-
-.right-column {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-}
-
-
-/* ============================================================================
-   GAUCHE HAUT — PIPELINE + DEALING ROOM
-============================================================================ */
-
+/* ── Haut gauche : Pipeline + DealingRoom ── */
 .left-top-row {
   display: grid;
   grid-template-columns: 1.2fr 0.9fr;
   gap: 12px;
   min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Bas gauche : AccountHealth + Exposure + CapitalAllocation ── */
+.left-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr 1fr;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Colonne droite : LiveAI full height ── */
+.right-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ============================================================================
@@ -81,39 +64,48 @@
     rgba(255, 215, 140, 0.08),
     rgba(0, 0, 0, 0.92)
   );
+  box-sizing: border-box;
   min-height: 0;
+  overflow: hidden;
 }
 
-/* ============================================================================
-   BLOCS HAUT — FLEX COLUMN (remplissent leur cellule)
-============================================================================ */
-
+/* Pipeline + DealingRoom : flex column, remplissent leur cellule */
 .terminal-block.pipeline,
-.terminal-block.dealing,
-.terminal-block.live-ai-analysis {
+.terminal-block.dealing {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
 }
 
-.terminal-block.live-ai-analysis {
-  flex: 1;
-}
-
 .terminal-block.pipeline {
   overflow-y: auto;
 }
 
+/* AccountHealth + ExposureDistribution */
+.terminal-block.account-health,
+.terminal-block.exposure-distribution {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
 
-
-/* ============================================================================
-   CAPITAL ALLOCATION — BAS DROITE (AGRANDI)
-============================================================================ */
-
+/* CapitalAllocation */
 .terminal-block.capital-allocation {
-  padding: 14px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* LiveAI : prend toute la hauteur droite */
+.terminal-block.live-ai-analysis {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }

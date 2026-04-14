@@ -658,7 +658,7 @@ const TopOpportunities_V8R = (() => {
         const _drsi_h4_s0 = num(row?.drsi_h4_s0);
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
-        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, drsiH4S0, _drsiH4Thr);
+        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
         if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _drsi_h4_s0, sym)) continue;
         cDrsiGate++;
 

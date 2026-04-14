@@ -18,7 +18,6 @@ import DealPipeline from "../terminalmt5/DealPipeline";
 import DealingRoom from "../terminalmt5/DealingRoom";
 import LiveAIAnalysis from "../terminalmt5/LiveAIAnalysis";
 import ExposureDistribution from "../terminalmt5/ExposureDistribution";
-import AccountHealth from "../terminalmt5/AccountHealth";
 import CapitalAllocationPanel from "../terminalmt5/CapitalAllocation";
 
 // styles
@@ -90,6 +89,8 @@ export default function TerminalMT5({ snapshot }) {
               robot={robot}
               draftDeal={draftDeal}
               onSelectDeal={handleSelectDeal}
+              account={account}
+              totalExposure={totalExposure}
             />
           </div>
 
@@ -104,13 +105,6 @@ export default function TerminalMT5({ snapshot }) {
         </div>
 
         <div className="left-bottom-row">
-
-          <div className="terminal-block account-health">
-            <AccountHealth
-              account={account}
-              totalExposure={totalExposure}
-            />
-          </div>
 
           <div className="terminal-block exposure-distribution">
             <ExposureDistribution exposureData={exposureData} />

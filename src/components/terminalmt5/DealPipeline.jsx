@@ -4,9 +4,10 @@ import React, { useState, useEffect } from "react";
 import useTrinityVoice from "../../hooks/useTrinityVoice";
 import useTradingMode from "../../hooks/useTradingMode";
 import SignalFrequency from "../robot/engines/trading/SignalFrequency";
+import AccountHealth from "./AccountHealth";
 import "../../styles/stylesterminalMT5/dealpipeline.css";
 
-export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
+export default function DealPipeline({ robot, draftDeal, onSelectDeal, account, totalExposure }) {
 
   // ================= TRADING MODE =================
   const { mode, setMode } = useTradingMode();
@@ -198,14 +199,9 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal }) {
             />
             <div className="trinity-label">TRINITY</div>
           </div>
-          <div className="trinity-advice">
-            <div className="trinity-advice-title">TRINITY ADVICE</div>
-            <ul className="trinity-advice-list">
-              <li>Reduce exposure on volatile assets</li>
-              <li>Monitor drawdown limits</li>
-              <li>Respect position sizing</li>
-              <li>Wait for confirmation before entry</li>
-            </ul>
+
+          <div className="pipeline-account-health">
+            <AccountHealth account={account} totalExposure={totalExposure} />
           </div>
         </div>
 

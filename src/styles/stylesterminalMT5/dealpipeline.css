@@ -38,6 +38,12 @@
   min-height: 0;
 }
 
+.pipeline-account-health {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 /* ================= TRINITY ADVICE ================= */
 
 .trinity-advice {

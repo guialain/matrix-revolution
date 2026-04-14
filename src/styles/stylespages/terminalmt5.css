@@ -37,7 +37,7 @@
 /* ── Bas gauche : AccountHealth + Exposure + CapitalAllocation ── */
 .left-bottom-row {
   display: grid;
-  grid-template-columns: 1fr 1.1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 12px;
   min-height: 0;
   overflow: hidden;

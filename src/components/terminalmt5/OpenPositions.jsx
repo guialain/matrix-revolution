@@ -173,6 +173,9 @@ function closePosition(p, e) {
               <th onClick={() => requestSort("symbol")}>
                 Symbol<SortArrow column="symbol" />
               </th>
+              <th onClick={() => requestSort("open_time")}>
+                Open<SortArrow column="open_time" />
+              </th>
               <th onClick={() => requestSort("side")}>
                 Side<SortArrow column="side" />
               </th>
@@ -225,6 +228,8 @@ function closePosition(p, e) {
 
 
                 <td>{p.symbol}</td>
+
+                <td>{fmtOpenTime(p.open_time)}</td>
 
                 <td
                   className={
@@ -290,6 +295,24 @@ function closePosition(p, e) {
 // ============================================================================
 // HELPERS
 // ============================================================================
+
+/** Format open_time: same day → "HH:MM", else → "MM/DD HH:MM" */
+function fmtOpenTime(open_time) {
+  if (!open_time) return "—";
+  const d = new Date(open_time.replace(/\./g, "-").replace(" ", "T"));
+  if (isNaN(d.getTime())) return "—";
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  if (sameDay) return `${hh}:${mm}`;
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${mo}/${dd} ${hh}:${mm}`;
+}
 
 function computeDurationHours(open_time) {
   if (!open_time) return null;

@@ -905,7 +905,15 @@ app.post("/api/claude", async (req, res) => {
 
     const fmt = v => v != null ? Number(v).toFixed(2) : "—";
 
+    const recentNews = newsCache.items.slice(0, 10);
+    const newsBlock = recentNews.length
+      ? recentNews.map(n => `- ${n.title ?? ""}`.replace(/^- FinancialJuice:\s*/i, "- ")).join("\n")
+      : "Aucune news disponible";
+
     const contextBlock = [
+      `## Dernières news macro :`,
+      newsBlock,
+      ``,
       `## Account`,
       `Balance: ${account.balance ?? "—"} | Equity: ${account.equity ?? "—"} | Free Margin: ${account.free_margin ?? "—"}`,
       ``,

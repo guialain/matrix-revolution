@@ -12,7 +12,7 @@ export default function AccountHealth({ account = {}, totalExposure = 0 }) {
   const drawdown     = balance > 0 ? Math.max(0, (balance - equity) / balance) : 0;
 
   const fmtEUR = v => `${v >= 0 ? "+" : ""}${Math.round(v).toLocaleString("fr-FR")}€`;
-  const fmtK   = v => `${(v / 1000).toFixed(1)}k€`;
+  const fmtK   = v => `${Math.round(v).toLocaleString("fr-FR")}€`;
 
   // ── color thresholds ──
   const green  = "#00ff88";

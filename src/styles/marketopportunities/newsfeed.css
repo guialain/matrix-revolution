@@ -40,7 +40,7 @@
 
 .nf-updated {
   font-size: 0.58rem;
-  color: #374151;
+  color: #00bfff;
   margin-left: auto;
 }
 
@@ -64,8 +64,8 @@
   grid-template-columns: 44px 1fr;
   gap: 8px;
   align-items: start;
-  padding: 6px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding: 7px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
   text-decoration: none;
   transition: background 0.12s;
   cursor: pointer;
@@ -76,22 +76,23 @@
 }
 
 .nf-item-time {
-  font-size: 0.58rem;
-  color: #374151;
+  font-size: 0.60rem;
+  color: #f97316;
   white-space: nowrap;
   padding-top: 2px;
   letter-spacing: 0.02em;
+  font-weight: 600;
 }
 
 .nf-item-title {
-  font-size: 0.70rem;
-  color: #d1d5db;
+  font-size: 0.85rem;
+  color: #ffffff;
   line-height: 1.45;
   transition: color 0.12s;
 }
 
 .nf-item:hover .nf-item-title {
-  color: #f5c26b;
+  color: #00ff88;
 }
 
 /* ── Status ── */

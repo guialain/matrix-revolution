@@ -79,7 +79,7 @@ export default function NewsFeed() {
             rel="noopener noreferrer"
           >
             <span className="nf-item-time">{fmtTime(item.pubDate)}</span>
-            <span className="nf-item-title">{item.title}</span>
+            <span className="nf-item-title">{(item.title ?? "").replace(/^FinancialJuice:\s*/i, "")}</span>
           </a>
         ))}
       </div>

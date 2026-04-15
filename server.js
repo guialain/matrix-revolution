@@ -905,7 +905,14 @@ app.post("/api/claude", async (req, res) => {
 
     const fmt = v => v != null ? Number(v).toFixed(2) : "—";
 
-    const recentNews = newsCache.items.slice(0, 10);
+    let recentNews = [];
+    try {
+      const nr = await _fetch("http://localhost:3001/api/news");
+      if (nr.ok) {
+        const nd = await nr.json();
+        recentNews = (nd.items ?? []).slice(0, 10);
+      }
+    } catch (_) { /* news unavailable */ }
     const fmtPubDate = s => {
       if (!s) return "";
       const d = new Date(s);

@@ -10,6 +10,7 @@ import { decodeJwt } from "jose";
 import Anthropic from "@anthropic-ai/sdk";
 import nodeFetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
+import { getRiskConfig } from "./src/components/robot/engines/config/RiskConfig.js";
 
 // Use native fetch if available (Node 18+), otherwise node-fetch
 const _fetch = globalThis.fetch ?? nodeFetch;
@@ -218,6 +219,87 @@ setInterval(updateCache, 1000);
 console.log("⏳ Loading MT5 data...");
 updateCache();
 console.log("✅ MT5 cache ready (local polling active)");
+
+// ============================================================================
+// TRAILING STOP (background, runs every 1s)
+// Requires neo_openpositions.csv to expose `sl` column for full comparison.
+// Until then, uses an in-process cache of last written SL per ticket.
+// ============================================================================
+
+const TRAILING_CACHE = {}; // { ticket: lastWrittenSL }
+
+function runTrailingStop() {
+  try {
+    const positions = CACHE.openpositions ?? [];
+    const scan      = CACHE.scan ?? [];
+    if (!positions.length || !scan.length) return;
+
+    const scanBySymbol = Object.fromEntries(
+      scan.filter(r => r.symbol).map(r => [r.symbol, r])
+    );
+
+    for (const pos of positions) {
+      const ticket = num(pos.ticket);
+      const symbol = pos.symbol;
+      const side   = pos.side;
+      if (!ticket || !symbol || (side !== "BUY" && side !== "SELL")) continue;
+
+      const scanRow = scanBySymbol[symbol];
+      if (!scanRow) continue;
+
+      const price  = num(scanRow.price);
+      const atr_h1 = num(scanRow.atr_h1);
+      if (!price || !atr_h1) continue;
+
+      const config = getRiskConfig(symbol);
+      const slAtr  = config?.slAtr;
+      if (!slAtr) continue;
+
+      const digits = num(scanRow.digits) ?? 5;
+      const rawSL  = side === "BUY"
+        ? price - atr_h1 * slAtr
+        : price + atr_h1 * slAtr;
+      const newSL  = Number(rawSL.toFixed(digits));
+
+      // currentSL from CSV if exported, fallback to last written value
+      const csvSL    = num(pos.sl) ?? 0;
+      const lastSL   = TRAILING_CACHE[ticket] ?? csvSL;
+
+      const improves = side === "BUY"
+        ? newSL > lastSL
+        : (lastSL === 0 || newSL < lastSL);
+
+      if (!improves) continue;
+
+      TRAILING_CACHE[ticket] = newSL;
+
+      const modifyCmd = {
+        action:    "MODIFY",
+        ticket,
+        symbol,
+        sl:        newSL,
+        source:    "NEO_TRAILING",
+        timestamp: Date.now(),
+      };
+
+      const filePath = path.join(MT5_DIR, `neo_modify_${ticket}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(modifyCmd));
+      console.log(`[TRAILING] ${symbol} ${side} ticket=${ticket} newSL=${newSL}`);
+    }
+
+    // Cleanup: remove closed tickets from cache
+    const activeTickets = new Set(
+      positions.map(p => num(p.ticket)).filter(Boolean)
+    );
+    for (const t of Object.keys(TRAILING_CACHE)) {
+      if (!activeTickets.has(Number(t))) delete TRAILING_CACHE[t];
+    }
+  } catch (err) {
+    console.error("[TRAILING_STOP] Error:", err.message);
+  }
+}
+
+setInterval(runTrailingStop, 1000);
 
 // ============================================================================
 // TIMEFRAME MAPPER
@@ -471,6 +553,14 @@ app.get("/api/mt5data", (req, res) => {
           price:           num(r.price),
           close:           num(r.close),
           intraday_change: num(r.intraday_change),
+          // D1
+          rsi_d1:          num(r.rsi_d1),
+          slope_d1:        num(r.slope_d1),
+          dslope_d1:       num(r.dslope_d1),
+          drsi_d1:         num(r.drsi_d1),
+          rsi_d1_s0:       num(r.rsi_d1_s0),
+          slope_d1_s0:     num(r.slope_d1_s0),
+          drsi_d1_s0:      num(r.drsi_d1_s0),
           // H4
           rsi_h4:          num(r.rsi_h4),
           slope_h4:        num(r.slope_h4),

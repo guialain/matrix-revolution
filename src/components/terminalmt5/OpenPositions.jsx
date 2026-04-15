@@ -157,12 +157,6 @@ function closePosition(p, e) {
     <div className="open-positions">
       <div className="open-positions-title">OPEN POSITIONS</div>
 
-      {maxHoldAlerts.length > 0 && (
-        <div style={{ background: "#442200", border: "1px solid #ff8800", borderRadius: 6, padding: "6px 12px", marginBottom: 8, fontSize: "0.85em", color: "#ffaa33" }}>
-          ⏰ TRINITY ADVICE — {maxHoldAlerts.length} position{maxHoldAlerts.length > 1 ? "s" : ""} en fermeture automatique :
-          {maxHoldAlerts.map(a => ` ${a.symbol} (${a.reason}, ${a.duration_h.toFixed(1)}h)`).join(",")}
-        </div>
-      )}
 
       <div className="portfolio-table-wrapper">
         <table className="portfolio-table">

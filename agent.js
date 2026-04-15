@@ -152,6 +152,10 @@ async function pollOrders() {
         const filePath = path.join(mt5_dir, "neo_symbol.txt");
         fs.writeFileSync(filePath, cmd.payload.symbol.trim());
         console.log(`📥 Symbol switch: ${cmd.payload.symbol}`);
+      } else if (cmd.action === "MODIFY") {
+        const filePath = path.join(mt5_dir, `neo_modify_${cmd.payload.ticket}.json`);
+        fs.writeFileSync(filePath, JSON.stringify(cmd.payload));
+        console.log(`📥 Modify written: ticket=${cmd.payload.ticket} sl=${cmd.payload.sl}`);
       }
     }
   } catch (err) {

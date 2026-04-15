@@ -28,6 +28,10 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
     catch { /* quota exceeded */ }
   }, [messages]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
   function buildContext() {
     const account = snapshot?.account ?? {};
     const pos     = snapshot?.openPositions ?? [];
@@ -118,7 +122,6 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
       ]);
     } finally {
       setLoading(false);
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
   }
 

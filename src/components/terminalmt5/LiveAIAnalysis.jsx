@@ -19,7 +19,9 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
-  const [input, setInput]   = useState("");
+  const DRAFT_KEY = "claude_input_draft";
+
+  const [input, setInput] = useState(() => localStorage.getItem(DRAFT_KEY) ?? "");
   const [loading, setLoading] = useState(false);
   const bottomRef             = useRef(null);
 
@@ -27,6 +29,11 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); }
     catch { /* quota exceeded */ }
   }, [messages]);
+
+  useEffect(() => {
+    try { localStorage.setItem(DRAFT_KEY, input); }
+    catch { /* quota exceeded */ }
+  }, [input]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -96,6 +103,7 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
     const next = [...messages, userMsg];
     setMessages(next);
     setInput("");
+    localStorage.removeItem(DRAFT_KEY);
     setLoading(true);
 
     try {

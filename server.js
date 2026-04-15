@@ -906,12 +906,18 @@ app.post("/api/claude", async (req, res) => {
     const fmt = v => v != null ? Number(v).toFixed(2) : "—";
 
     const recentNews = newsCache.items.slice(0, 10);
+    const fmtPubDate = s => {
+      if (!s) return "";
+      const d = new Date(s);
+      if (isNaN(d)) return s.slice(0, 16);
+      return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    };
     const newsBlock = recentNews.length
-      ? recentNews.map(n => `- ${n.title ?? ""}`.replace(/^- FinancialJuice:\s*/i, "- ")).join("\n")
+      ? recentNews.map(n => `${fmtPubDate(n.pubDate)} - ${(n.title ?? "").replace(/^FinancialJuice:\s*/i, "")}`).join("\n")
       : "Aucune news disponible";
 
     const contextBlock = [
-      `## Dernières news macro :`,
+      `## Dernières news macro (FinancialJuice) :`,
       newsBlock,
       ``,
       `## Account`,

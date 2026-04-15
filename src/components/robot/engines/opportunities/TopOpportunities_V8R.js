@@ -693,7 +693,7 @@ const TopOpportunities_V8R = (() => {
           num(row?.slope_h1_s0), num(row?.drsi_h1_s0), num(row?.zscore_h1_s0),
           num(row?.drsi_h4), num(row?.drsi_h4_s0),
           num(row?.slope_h4), num(row?.slope_h4_s0),
-          num(row?.rsi_h1_s0),
+          num(row?.rsi_h1_s0), num(row?.dslope_h1),
         ];
         const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
         const routeMatch = activeSide === "BUY"

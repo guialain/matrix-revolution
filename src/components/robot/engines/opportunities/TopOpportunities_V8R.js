@@ -495,12 +495,11 @@ const TopOpportunities_V8R = (() => {
       const atrH1 = num(row?.atr_h1);
       if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
 
-      // Anti-spike AVANT resolve3D
+      // Anti-spike AVANT resolve3D — live uniquement (s0 figé sur la bougie, bloquerait toute l'heure)
       const _drsi_h1    = num(row?.drsi_h1);
       const _drsi_h1_s0 = num(row?.drsi_h1_s0);
       const _drsi_h4_s0 = num(row?.drsi_h4_s0);
-      if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)              continue;
-      if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
+      if (_drsi_h1 !== null && Math.abs(_drsi_h1) >= 8) continue;
 
       const intra = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);

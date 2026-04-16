@@ -339,8 +339,8 @@ const TopOpportunities_V8R = (() => {
 
     if (type === "EARLY") {
       return {
-        drsiH1Min: 0.3, drsiRev: 0.1, zRev: 99,
-        drsi: 0.3,
+        dslopeMin: 0.3, dslopeRev: 0.1, zRev: 99,
+        dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
         drsiH4Sum: null,
         slopeH1Min:  0.5,   // slope_h1_s0 dans le sens du trade
@@ -351,8 +351,8 @@ const TopOpportunities_V8R = (() => {
 
     if (mode === "spike") {
       return {
-        drsiH1Min: 0, drsiRev: 0, zRev: 99,
-        drsi: 0,
+        dslopeMin: 0, dslopeRev: 0, zRev: 99,
+        dslopeThr: 0,
         z3050: 99, z5070: 99,
         drsiH4Sum: null,
         antiSpike,
@@ -361,14 +361,14 @@ const TopOpportunities_V8R = (() => {
 
     if (mode === "relaxed") {
       return isRev ? {
-        drsiH1Min: 0, drsiRev: 0, zRev: 99,
-        drsi: 0,
+        dslopeMin: 0, dslopeRev: 0, zRev: 99,
+        dslopeThr: 0,
         z3050: 99, z5070: 99,
         drsiH4Sum: null,
         antiSpike,
       } : {
-        drsiH1Min: 0, drsiRev: 0, zRev: 99,
-        drsi: 0,
+        dslopeMin: 0, dslopeRev: 0, zRev: 99,
+        dslopeThr: 0,
         z3050: 2.3, z5070: 2.3,
         drsiH4Sum: null,
         antiSpike,
@@ -377,14 +377,14 @@ const TopOpportunities_V8R = (() => {
 
     if (mode === "soft") {
       return isRev ? {
-        drsiH1Min: 0.2, drsiRev: 0.1, zRev: 99,
-        drsi: 0.2,
+        dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
+        dslopeThr: 0.2,
         z3050: 99, z5070: 99,
         drsiH4Sum: null,
         antiSpike,
       } : {
-        drsiH1Min: 0.2, drsiRev: 0.1, zRev: 99,
-        drsi: 0.2,
+        dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
+        dslopeThr: 0.2,
         z3050: 1.8, z5070: 1.8,
         drsiH4Sum: 0,
         antiSpike,
@@ -393,14 +393,14 @@ const TopOpportunities_V8R = (() => {
 
     if (mode === "normal") {
       return isRev ? {
-        drsiH1Min: 0.3, drsiRev: 0.2, zRev: 99,
-        drsi: 0.3,
+        dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
+        dslopeThr: 0.3,
         z3050: 99, z5070: 99,
         drsiH4Sum: null,
         antiSpike,
       } : {
-        drsiH1Min: 0.3, drsiRev: 0.2, zRev: 99,
-        drsi: 0.3,
+        dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
+        dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
         drsiH4Sum: 0,
         antiSpike,
@@ -409,14 +409,14 @@ const TopOpportunities_V8R = (() => {
 
     // STRICT
     return isRev ? {
-      drsiH1Min: 0.5, drsiRev: 0.3, zRev: 99,
-      drsi: 0.5,
+      dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
+      dslopeThr: 0.5,
       z3050: 99, z5070: 99,
       drsiH4Sum: null,
       antiSpike,
     } : {
-      drsiH1Min: 0.5, drsiRev: 0.3, zRev: 99,
-      drsi: 0.5,
+      dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
+      dslopeThr: 0.5,
       z3050: 1.6, z5070: 1.6,
       drsiH4Sum: 0,
       antiSpike,
@@ -531,8 +531,8 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [0-28] — extreme oversold
     if (rsi < 28
-     && dslope_h1 > g.drsiH1Min
-     && dslope_h1 > g.drsiRev
+     && dslope_h1 > g.dslopeMin
+     && dslope_h1 > g.dslopeRev
      && zscore < g.zRev
      && slopeOk && dslopeOk)
       return { route: "BUY-[0-28]", side: "BUY" };
@@ -540,7 +540,7 @@ const TopOpportunities_V8R = (() => {
     // BUY [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
      && zscore < g.z3050
-     && dslope_h1 > g.drsi
+     && dslope_h1 > g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "BUY-[28-50]", side: "BUY" };
@@ -548,7 +548,7 @@ const TopOpportunities_V8R = (() => {
     // BUY [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
      && zscore < g.z5070
-     && dslope_h1 > g.drsi
+     && dslope_h1 > g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "BUY-[50-72]", side: "BUY" };
@@ -571,8 +571,8 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [72-100] — extreme overbought
     if (rsi >= 72
-     && dslope_h1 < -g.drsiH1Min
-     && dslope_h1 < -g.drsiRev
+     && dslope_h1 < -g.dslopeMin
+     && dslope_h1 < -g.dslopeRev
      && zscore > -g.zRev
      && slopeOk && dslopeOk)
       return { route: "SELL-[72-100]", side: "SELL" };
@@ -580,7 +580,7 @@ const TopOpportunities_V8R = (() => {
     // SELL [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
      && zscore > -g.z3050
-     && dslope_h1 < -g.drsi
+     && dslope_h1 < -g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "SELL-[50-72]", side: "SELL" };
@@ -588,7 +588,7 @@ const TopOpportunities_V8R = (() => {
     // SELL [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
      && zscore > -g.z5070
-     && dslope_h1 < -g.drsi
+     && dslope_h1 < -g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "SELL-[28-50]", side: "SELL" };

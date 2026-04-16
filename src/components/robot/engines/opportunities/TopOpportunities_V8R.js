@@ -67,15 +67,48 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // D1 STATE — classifie la tendance journalière au snapshot (s0)
-  // slope_d1_s0  : slope D1 à l'ouverture de la bougie D1
-  // dslope_d1_s0 : dérivée du slope D1 à ce même snapshot
+  // D1 STATE — matrice slope_d1_s0 × dslope_d1_s0
+  // Seuils calibrés sur 8 assets (~159k bougies H1) :
+  //   SLOPE_STRONG = 2.2 (≈ p80)  SLOPE_SOFT = 0.5 (≈ p40)
+  //   DSLOPE_THR   = 0.5 (≈ p58)
+  //
+  //   slope \ dslope  ACCEL(≥0.5)    NEUTRE(-0.5,0.5)  DECEL(≤-0.5)
+  //   STRONG_UP       STRONG_UP       STRONG_UP          FADING_UP
+  //   SOFT_UP         FADING_UP       FADING_UP          FLAT
+  //   FLAT            EMERGING_UP     FLAT               EMERGING_DOWN
+  //   SOFT_DOWN       FLAT            FADING_DOWN        FADING_DOWN
+  //   STRONG_DOWN     FADING_DOWN     STRONG_DOWN        STRONG_DOWN
   // ============================================================================
-  function getD1State(slope_d1_s0, dslope_d1_s0, slopeThr = 0.5, dslopeThr = 0.5) {
+  const D1_SLOPE_STRONG = 2.2;
+  const D1_SLOPE_SOFT   = 0.5;
+  const D1_DSLOPE_THR   = 0.5;
+
+  function getD1State(slope_d1_s0, dslope_d1_s0) {
     if (slope_d1_s0 === null || dslope_d1_s0 === null) return "D1_FLAT";
-    if (slope_d1_s0 >=  slopeThr) return dslope_d1_s0 >=  dslopeThr ? "D1_STRONG_UP"   : "D1_FADING_UP";
-    if (slope_d1_s0 <= -slopeThr) return dslope_d1_s0 <= -dslopeThr ? "D1_STRONG_DOWN" : "D1_FADING_DOWN";
-    return "D1_FLAT";
+
+    const accel  = dslope_d1_s0 >=  D1_DSLOPE_THR;
+    const decel  = dslope_d1_s0 <= -D1_DSLOPE_THR;
+
+    if (slope_d1_s0 >= D1_SLOPE_STRONG) {
+      if (decel)  return "D1_FADING_UP";
+      return "D1_STRONG_UP";                          // accel ou neutre
+    }
+    if (slope_d1_s0 >= D1_SLOPE_SOFT) {
+      if (decel)  return "D1_FLAT";
+      return "D1_FADING_UP";                          // accel ou neutre
+    }
+    if (slope_d1_s0 > -D1_SLOPE_SOFT) {
+      if (accel)  return "D1_EMERGING_UP";
+      if (decel)  return "D1_EMERGING_DOWN";
+      return "D1_FLAT";
+    }
+    if (slope_d1_s0 > -D1_SLOPE_STRONG) {
+      if (accel)  return "D1_FLAT";
+      return "D1_FADING_DOWN";                        // neutre ou decel
+    }
+    // STRONG_DOWN
+    if (accel)  return "D1_FADING_DOWN";
+    return "D1_STRONG_DOWN";                          // neutre ou decel
   }
 
   // ============================================================================
@@ -99,10 +132,12 @@ const TopOpportunities_V8R = (() => {
     if (side === "BUY") {
       const d1BlockCont    = d1State === "D1_FADING_DOWN" || d1State === "D1_STRONG_DOWN";
       const d1ModeOverride =
-        d1State === "D1_STRONG_UP"   ? "relaxed" :
-        d1State === "D1_FADING_UP"   ? "soft"    :
-        d1State === "D1_FADING_DOWN" ? "normal"  :
-        d1State === "D1_STRONG_DOWN" ? "strict"  : null;
+        d1State === "D1_STRONG_UP"      ? "relaxed" :
+        d1State === "D1_FADING_UP"      ? "soft"    :
+        d1State === "D1_EMERGING_UP"    ? "soft"    :
+        d1State === "D1_EMERGING_DOWN"  ? "normal"  :
+        d1State === "D1_FADING_DOWN"    ? "normal"  :
+        d1State === "D1_STRONG_DOWN"    ? "strict"  : null;
 
       if (intradayLevel === "NEUTRE")     return (dslopeH4 !== null && dslopeH4 >= 1.5) ? { type: "EARLY" } : null;
       if (intradayLevel === "SPIKE_DOWN") return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: "spike" } : null;

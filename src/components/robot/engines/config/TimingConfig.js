@@ -8,7 +8,7 @@ export const TIMING_CONFIG = {
   weekendFridayHour: 17.5,
 
   // Filtre trading hours — entrées autorisées uniquement dans cette fenêtre (UTC)
-  tradingHoursUTC: { open: 0, close: 19 },
+  tradingHoursUTC: null,  // null = désactivé (24h/24)
 
   M5: {
 

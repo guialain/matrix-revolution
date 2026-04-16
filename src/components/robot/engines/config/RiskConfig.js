@@ -83,7 +83,7 @@ export const RISK_CONFIG = {
   UK_100: {
     tpAtr: 0.55, slAtr: 1.70, atrH1Cap: 43.6, maxHoldH: 96, reversalEnabled: true,
     spread: 2.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 10, refPrice: 10600, baseToEUR: 1.076,
     tickSize: 0.5, tickValue: 5, profitCurrency: "GBP",
     assetClass: "INDEX",
@@ -93,7 +93,7 @@ export const RISK_CONFIG = {
   GERMANY_40: {
     tpAtr: 0.57, slAtr: 1.75, atrH1Cap: 145.8, maxHoldH: 96, reversalEnabled: true,
     spread: 5.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 10, refPrice: 23920, baseToEUR: 1.000,
     tickSize: 1.0,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
@@ -101,7 +101,7 @@ export const RISK_CONFIG = {
   FRANCE_40: {
     tpAtr: 0.50, slAtr: 1.65, atrH1Cap: 53.3, maxHoldH: 96, reversalEnabled: true,
     spread: 2.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 100, refPrice: 8206, baseToEUR: 1.000,
     tickSize: 0.5,
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
@@ -109,7 +109,7 @@ export const RISK_CONFIG = {
   US_30: {
     tpAtr: 0.55, slAtr: 1.70, atrH1Cap: 245.0, maxHoldH: 96, reversalEnabled: true,
     spread: 7.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 10, refPrice: 48029, baseToEUR: 0.847,
     tickSize: 1.0,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
@@ -117,7 +117,7 @@ export const RISK_CONFIG = {
   US_500: {
     tpAtr: 0.55, slAtr: 1.70, atrH1Cap: 36.75, maxHoldH: 96, reversalEnabled: true,
     spread: 1.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 100, refPrice: 6816, baseToEUR: 0.847,
     tickSize: 0.25,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
@@ -125,7 +125,7 @@ export const RISK_CONFIG = {
   US_TECH100: {
     tpAtr: 0.55, slAtr: 1.70, atrH1Cap: 182.85, maxHoldH: 96, reversalEnabled: true,
     spread: 2.25,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 100, refPrice: 25062, baseToEUR: 0.847,
     tickSize: 0.25,
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
@@ -133,7 +133,7 @@ export const RISK_CONFIG = {
   JAPAN_225: {
     tpAtr: 0.55, slAtr: 1.70, atrH1Cap: 350, maxHoldH: 96, reversalEnabled: true,
     spread: 15.0,
-    targetLeveragePerTrade: 1.0,
+    targetLeveragePerTrade: 1.5,
     contractSize: 100, refPrice: 56205, baseToEUR: 0.006,
     tickSize: 5.0,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,

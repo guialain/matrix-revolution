@@ -135,6 +135,7 @@ const TopOpportunities_V8R = (() => {
         d1State === "D1_STRONG_UP"      ? "relaxed" :
         d1State === "D1_FADING_UP"      ? "soft"    :
         d1State === "D1_EMERGING_UP"    ? "soft"    :
+        d1State === "D1_FLAT"           ? "strict"  :
         d1State === "D1_EMERGING_DOWN"  ? "normal"  :
         d1State === "D1_FADING_DOWN"    ? "normal"  :
         d1State === "D1_STRONG_DOWN"    ? "strict"  : null;

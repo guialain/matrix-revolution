@@ -303,16 +303,16 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // MODE — qualité du setup (IC × slopeH4 × drsiH4S0)
+  // MODE — qualité du setup (IC × slopeH4 × dslopeH4)
   //   conf=3 → relaxed | conf=2 → soft | conf=1 → normal | conf=0 → strict
   // ============================================================================
   const STRONG_UP_LEVELS   = ["STRONG_UP","EXPLOSIVE_UP","SPIKE_UP"];
   const STRONG_DOWN_LEVELS = ["STRONG_DOWN","EXPLOSIVE_DOWN","SPIKE_DOWN"];
 
-  function computeMode(type, side, intradayLevel, slopeH4Level, drsiH4S0, thr) {
+  function computeMode(type, side, intradayLevel, slopeH4Level, dslopeH4, thr) {
     const dh4Confirm = side === "BUY"
-      ? (drsiH4S0 !== null && drsiH4S0 >= thr)
-      : (drsiH4S0 !== null && drsiH4S0 <= -thr);
+      ? (dslopeH4 !== null && dslopeH4 >= thr)
+      : (dslopeH4 !== null && dslopeH4 <= -thr);
 
     const icStrong = side === "BUY"
       ? (type === "REVERSAL" ? STRONG_DOWN_LEVELS.includes(intradayLevel) : STRONG_UP_LEVELS.includes(intradayLevel))
@@ -426,7 +426,7 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // GATE UNIVERSEL DRSI
   // ============================================================================
-  function drsiContextGate(side, type, intradayLevel, drsi_h1_s0, drsi_h4_s0, symbol) {
+  function drsiContextGate(side, type, intradayLevel, drsi_h1_s0, dslopeH4, symbol) {
     const cfg = getDrsiConfig(symbol, intradayLevel);
 
     if (cfg?.h1) {
@@ -437,16 +437,16 @@ const TopOpportunities_V8R = (() => {
       if (side === "BUY") {
         const h1Thr = isRev ? h1.p50 : h1.p25;
         if (drsi_h1_s0 !== null && drsi_h1_s0 < h1Thr) return false;
-        if (h4 && drsi_h4_s0 !== null) {
+        if (h4 && dslopeH4 !== null) {
           const h4Thr = isRev ? h4.p50 : h4.p25;
-          if (drsi_h4_s0 < h4Thr) return false;
+          if (dslopeH4 < h4Thr) return false;
         }
       } else {
         const h1Thr = isRev ? h1.p50 : h1.p75;
         if (drsi_h1_s0 !== null && drsi_h1_s0 > h1Thr) return false;
-        if (h4 && drsi_h4_s0 !== null) {
+        if (h4 && dslopeH4 !== null) {
           const h4Thr = isRev ? h4.p50 : h4.p75;
-          if (drsi_h4_s0 > h4Thr) return false;
+          if (dslopeH4 > h4Thr) return false;
         }
       }
       return true;
@@ -460,7 +460,7 @@ const TopOpportunities_V8R = (() => {
       };
       const [h1Min, h4Min] = SELL_FLOOR[intradayLevel] ?? [0, 0];
       if (drsi_h1_s0 !== null && drsi_h1_s0 > h1Min) return false;
-      if (drsi_h4_s0 !== null && drsi_h4_s0 > h4Min) return false;
+      if (dslopeH4   !== null && dslopeH4   > h4Min) return false;
     } else {
       const BUY_CEIL = {
         SOFT_DOWN:[0.20,0.10], STRONG_DOWN:[0.50,0.30], EXPLOSIVE_DOWN:[1.00,0.50],
@@ -468,7 +468,7 @@ const TopOpportunities_V8R = (() => {
       };
       const [h1Max, h4Max] = BUY_CEIL[intradayLevel] ?? [0, 0];
       if (drsi_h1_s0 !== null && drsi_h1_s0 < h1Max) return false;
-      if (drsi_h4_s0 !== null && drsi_h4_s0 < h4Max) return false;
+      if (dslopeH4   !== null && dslopeH4   < h4Max) return false;
     }
     return true;
   }
@@ -648,9 +648,7 @@ const TopOpportunities_V8R = (() => {
       // Anti-spike AVANT resolve3D
       // drsi_h1    = bougie H1 précédente (fermée, >1h) → ne bloque pas
       // drsi_h1_s0 = bougie H1 courante (en cours)      → bloque si spike
-      const _drsi_h1    = num(row?.drsi_h1);
       const _drsi_h1_s0 = num(row?.drsi_h1_s0);
-      const _drsi_h4_s0 = num(row?.drsi_h4_s0);
       if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
 
       const intra = num(row?.intraday_change);
@@ -708,7 +706,7 @@ const TopOpportunities_V8R = (() => {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_s0?.toFixed(2)}`);
       }
 
-      if (signalMode !== "spike" && !drsiContextGate(match.side, signalType, intradayLevel, _drsi_h1_s0, _drsi_h4_s0, symbol)) continue;
+      if (signalMode !== "spike" && !drsiContextGate(match.side, signalType, intradayLevel, _drsi_h1_s0, dslopeH4, symbol)) continue;
 
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
@@ -768,7 +766,7 @@ const TopOpportunities_V8R = (() => {
         drsi_h4:     num(row?.drsi_h4),
         rsi_h4_s0:   num(row?.rsi_h4_s0),
         slope_h4_s0: num(row?.slope_h4_s0),
-        drsi_h4_s0:  num(row?.drsi_h4_s0),
+        dslopeH4:    dslopeH4,
 
         // H1 s1
         rsi_h1:         num(row?.rsi_h1),
@@ -861,11 +859,10 @@ const TopOpportunities_V8R = (() => {
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
-        const _drsi_h4_s0 = num(row?.drsi_h4_s0);
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
         const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
-        if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _drsi_h4_s0, sym)) continue;
+        if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _dsh4, sym)) continue;
         cDrsiGate++;
 
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;

@@ -588,6 +588,8 @@ app.get("/api/mt5data", (req, res) => {
           rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),
           zscore_h1_min3:       num(r.zscore_h1_min3),
           zscore_h1_max3:       num(r.zscore_h1_max3),
+          range_h1_s0:          num(r.range_h1_s0),
+          range_ratio_h1:       num(r.range_ratio_h1),
           // M15
           rsi_m15:         num(r.rsi_m15),
           slope_m15:       num(r.slope_m15),

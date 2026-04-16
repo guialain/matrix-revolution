@@ -519,11 +519,15 @@ const TopOpportunities_V8R = (() => {
   // slope_h1_s0 = orientation H1 courante (EXHAUSTION + EARLY)
   // g.antiSpike = seuil |dslope_h1| max pour zones [28-72]
   // ============================================================================
-  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g) {
+  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
+
+    // Late entry gate — bougie H1 courante trop étendue vs ATR
+    const LATE_ENTRY_THR = 0.8;
+    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > LATE_ENTRY_THR;
 
     // EARLY : slope_h1_s0 + dslope_h1 requis
     const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 >  g.slopeH1Min);
@@ -554,6 +558,24 @@ const TopOpportunities_V8R = (() => {
      && zscore < g.z5070)
       return { route: "BUY-[50-72]-EXHAUSTION", side: "BUY", modeOverride: "strict" };
 
+    // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
+    // Reprise continuation H1 dans le sens du trade — dslope_h1 seul suffit,
+    // pas de contrainte slope_h1_s0.
+
+    // BUY [28-50] CONT-RESUME — reprise continuation, H1 repart
+    if (rsi >= 28 && rsi < 50
+     && !isLateEntry
+     && dslope_h1 > 1.5
+     && zscore < g.z3050)
+      return { route: "BUY-[28-50]-CONT-RESUME", side: "BUY", modeOverride: "relaxed" };
+
+    // BUY [50-72] CONT-RESUME
+    if (rsi >= 50 && rsi < 72
+     && !isLateEntry
+     && dslope_h1 > 1.5
+     && zscore < g.z5070)
+      return { route: "BUY-[50-72]-CONT-RESUME", side: "BUY", modeOverride: "soft" };
+
     // ── ROUTES NORMALES ──────────────────────────────────────────────────────
 
     // BUY [0-28] — extreme oversold
@@ -566,6 +588,7 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
+     && !isLateEntry
      && zscore < g.z3050
      && dslope_h1 > g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
@@ -574,6 +597,7 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
+     && !isLateEntry
      && zscore < g.z5070
      && dslope_h1 > g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
@@ -586,11 +610,15 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // SELL ROUTES (miroir)
   // ============================================================================
-  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g) {
+  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
+
+    // Late entry gate — bougie H1 courante trop étendue vs ATR
+    const LATE_ENTRY_THR = 0.8;
+    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > LATE_ENTRY_THR;
 
     // EARLY : slope_h1_s0 + dslope_h1 requis
     const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 < -g.slopeH1Min);
@@ -621,6 +649,24 @@ const TopOpportunities_V8R = (() => {
      && zscore > -g.z5070)
       return { route: "SELL-[28-50]-EXHAUSTION", side: "SELL", modeOverride: "strict" };
 
+    // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
+    // Reprise continuation baissière H1 — dslope_h1 seul suffit,
+    // pas de contrainte slope_h1_s0.
+
+    // SELL [50-72] CONT-RESUME — reprise continuation baissière
+    if (rsi >= 50 && rsi < 72
+     && !isLateEntry
+     && dslope_h1 < -1.5
+     && zscore > -g.z3050)
+      return { route: "SELL-[50-72]-CONT-RESUME", side: "SELL", modeOverride: "relaxed" };
+
+    // SELL [28-50] CONT-RESUME
+    if (rsi >= 28 && rsi < 50
+     && !isLateEntry
+     && dslope_h1 < -1.5
+     && zscore > -g.z5070)
+      return { route: "SELL-[28-50]-CONT-RESUME", side: "SELL", modeOverride: "soft" };
+
     // ── ROUTES NORMALES ──────────────────────────────────────────────────────
 
     // SELL [72-100] — extreme overbought
@@ -633,6 +679,7 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
+     && !isLateEntry
      && zscore > -g.z3050
      && dslope_h1 < -g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
@@ -641,6 +688,7 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
+     && !isLateEntry
      && zscore > -g.z5070
      && dslope_h1 < -g.dslopeThr
      && Math.abs(dslope_h1) < g.antiSpike
@@ -667,6 +715,11 @@ const TopOpportunities_V8R = (() => {
     "SELL-[72-100]-EXHAUSTION": "EXTREME_HIGH",
     "SELL-[50-72]-EXHAUSTION":  "MID_HIGH",
     "SELL-[28-50]-EXHAUSTION":  "LOW_MID",
+    // CONT-RESUME
+    "BUY-[28-50]-CONT-RESUME":  "LOW_MID",
+    "BUY-[50-72]-CONT-RESUME":  "MID_HIGH",
+    "SELL-[50-72]-CONT-RESUME": "MID_HIGH",
+    "SELL-[28-50]-CONT-RESUME": "LOW_MID",
   };
 
   // ============================================================================
@@ -730,11 +783,14 @@ const TopOpportunities_V8R = (() => {
         ? getD1State(_sd1s0, _dslope_d1_s0)
         : "D1_FLAT";
 
+      const range_ratio_h1 = num(row?.range_ratio_h1);
+
       const args = [
         num(row?.rsi_h1_s0),
         num(row?.dslope_h1),
         num(row?.zscore_h1_s0),
         num(row?.slope_h1_s0),
+        range_ratio_h1,
       ];
 
       let match = null;
@@ -767,6 +823,12 @@ const TopOpportunities_V8R = (() => {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_s0?.toFixed(2)}`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${num(row?.slope_h1_s0)?.toFixed(2)} dslope_h1=${num(row?.dslope_h1)?.toFixed(2)}`);
+        }
+        if (match.route?.includes("CONT-RESUME")) {
+          console.log(`[CONT-RESUME] ${symbol} route=${match.route} mode=${signalMode} dslope_h1=${num(row?.dslope_h1)?.toFixed(2)} zscore_h1_s0=${num(row?.zscore_h1_s0)?.toFixed(2)}`);
+        }
+        if (range_ratio_h1 !== null && range_ratio_h1 > 0.8) {
+          console.log(`[LATE_ENTRY] ${symbol} range_ratio_h1=${range_ratio_h1?.toFixed(2)} isLateEntry=true`);
         }
       }
 
@@ -870,7 +932,9 @@ const TopOpportunities_V8R = (() => {
 
         close:           num(row?.close),
         intraday_change: intra,
-        exhaustion:      match.route?.includes("EXHAUSTION") ?? false,
+        exhaustion:      match.route?.includes("EXHAUSTION")   ?? false,
+        contResume:      match.route?.includes("CONT-RESUME")  ?? false,
+        range_ratio_h1,
       });
     }
 
@@ -947,6 +1011,7 @@ const TopOpportunities_V8R = (() => {
           num(row?.dslope_h1),
           num(row?.zscore_h1_s0),
           num(row?.slope_h1_s0),
+          num(row?.range_ratio_h1),
         ];
         const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
         const routeMatch = activeSide === "BUY"

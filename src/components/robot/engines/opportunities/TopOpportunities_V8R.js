@@ -114,7 +114,7 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // 3D RESOLUTION : intradayLevel x slopeH4Level x dslopeH4 => { type, mode }
   // dslopeH4 = slope_h4_s0 - slope_h4 (accélération H4 live)
-  // d1State  = getD1State(slope_d1_s0, dslope_d1_s0) — module BUY uniquement
+  // d1State  = getD1State(slope_d1_s0, dslope_d1_s0) — module BUY + SELL (miroir)
   // H1 → timing seulement (route RSI Gate 2)
   // ============================================================================
   function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0, d1State = "D1_FLAT") {
@@ -155,12 +155,27 @@ const TopOpportunities_V8R = (() => {
     }
 
     if (side === "SELL") {
+      const d1BlockContSell = d1State === "D1_FADING_UP" || d1State === "D1_STRONG_UP";
+      const d1ModeOverrideSell =
+        d1State === "D1_STRONG_DOWN"    ? "relaxed" :
+        d1State === "D1_FADING_DOWN"    ? "soft"    :
+        d1State === "D1_EMERGING_DOWN"  ? "soft"    :
+        d1State === "D1_FLAT"           ? "strict"  :
+        d1State === "D1_EMERGING_UP"    ? "normal"  :
+        d1State === "D1_FADING_UP"      ? "normal"  :
+        d1State === "D1_STRONG_UP"      ? "strict"  : null;
+
       if (intradayLevel === "NEUTRE")     return (dslopeH4 !== null && dslopeH4 <= -1.5) ? { type: "EARLY" } : null;
       if (intradayLevel === "SPIKE_UP")   return h4Down && dh4OkSell ? { type: "REVERSAL", mode: "spike" } : null;
       if (intradayLevel === "SPIKE_DOWN") return null;
       if (!h4Down) return null;
-      if (isDownIC) return dh4OkSell ? { type: "CONTINUATION" } : null;
-      if (isUpIC)   return dh4OkSell ? { type: "REVERSAL" } : null;
+      if (isDownIC) {
+        if (d1BlockContSell) return null;
+        return dh4OkSell ? { type: "CONTINUATION", ...(d1ModeOverrideSell ? { mode: d1ModeOverrideSell } : {}) } : null;
+      }
+      if (isUpIC) {
+        return dh4OkSell ? { type: "REVERSAL", ...(d1ModeOverrideSell ? { mode: d1ModeOverrideSell } : {}) } : null;
+      }
       return null;
     }
 
@@ -550,7 +565,7 @@ const TopOpportunities_V8R = (() => {
       const _sh4s1  = num(row?.slope_h4);
       const dslopeH4 = (_sh4s0 !== null && _sh4s1 !== null) ? _sh4s0 - _sh4s1 : null;
 
-      // D1 state — module la résolution BUY (SELL ignoré pour l'instant)
+      // D1 state — module la résolution BUY + SELL (miroir)
       const _sd1s0        = num(row?.slope_d1_s0);
       const _dslope_d1_s0 = num(row?.dslope_d1_s0);
       const d1State = (_sd1s0 !== null && _dslope_d1_s0 !== null)

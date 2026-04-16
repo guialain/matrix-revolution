@@ -30,23 +30,23 @@ const GlobalMarketHours = {
     CRYPTO: { label: "Crypto Market", open: 0.0,  close: 24.0 },
 
     // ---------- INDICES ----------
-    INDEX:  { label: "Index Market",  open: 0.0,  close: 21.0 },
+    INDEX:  { label: "Index Market",  open: 0.0,  close: 24.0 },
 
     // ---------- METALS ----------
-    METAL:  { label: "Metals (COMEX)", open: 0.5, close: 21.0 },
+    METAL:  { label: "Metals (COMEX)", open: 0.0, close: 24.0 },
 
     // ---------- ENERGY ----------
-    ENERGY: { label: "Energy (NYMEX)", open: 0.5, close: 21.0 },
+    ENERGY: { label: "Energy (NYMEX)", open: 0.0, close: 24.0 },
 
     // ---------- AGRI ----------
-    AGRI:   { label: "Agri (ICE/CBOT)", open: 0.5, close: 18.5 },
+    AGRI:   { label: "Agri (ICE/CBOT)", open: 0.0, close: 24.0 },
   },
 
   // =========================
   // SYMBOL OVERRIDES (heures spécifiques par actif)
   // =========================
   symbolOverrides: {
-    WHEAT: { label: "CBOT Wheat", open: 13.5, close: 18.34 },
+    WHEAT: { label: "CBOT Wheat", open: 0.0, close: 24.0 },
   },
 
   // =========================
@@ -72,14 +72,13 @@ const GlobalMarketHours = {
     // --- Symbol override > market key ---
     const market = (symbol && this.symbolOverrides?.[symbol]) || this.markets[marketKey];
     if (!market) {
-      // TEST MODE: allow unknown markets — revert allowed:false for production
       return {
-        allowed: true,
+        allowed: false,
         neoOpen,
-        marketOpen: true,
+        marketOpen: false,
         market: null,
         hour,
-        reason: "Unknown market (test mode)"
+        reason: "Unknown market"
       };
     }
 
@@ -87,8 +86,7 @@ const GlobalMarketHours = {
     const marketOpen = this.inRange(hour, market.open, market.close);
 
     // --- Combined gate ---
-    // TEST MODE: always open — revert to (neoOpen && marketOpen) for production
-    const allowed = true;
+    const allowed = neoOpen && marketOpen;
 
     let reason = "Allowed";
     if (!neoOpen && !marketOpen) reason = "Outside NEO hours & market closed";

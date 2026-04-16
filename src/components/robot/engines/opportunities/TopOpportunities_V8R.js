@@ -424,9 +424,9 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // GATE UNIVERSEL DRSI
+  // GATE ACCÉLÉRATION — drsi_h1_s0 (H1) + dslopeH4 (H4) vs percentiles calibrés
   // ============================================================================
-  function drsiContextGate(side, type, intradayLevel, drsi_h1_s0, dslopeH4, symbol) {
+  function accelContextGate(side, type, intradayLevel, drsi_h1_s0, dslopeH4, symbol) {
     const cfg = getDrsiConfig(symbol, intradayLevel);
 
     if (cfg?.h1) {
@@ -706,7 +706,7 @@ const TopOpportunities_V8R = (() => {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_s0?.toFixed(2)}`);
       }
 
-      if (signalMode !== "spike" && !drsiContextGate(match.side, signalType, intradayLevel, _drsi_h1_s0, dslopeH4, symbol)) continue;
+      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _drsi_h1_s0, dslopeH4, symbol)) continue;
 
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
@@ -862,7 +862,7 @@ const TopOpportunities_V8R = (() => {
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
         const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
-        if (activeMode !== "spike" && !drsiContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _dsh4, sym)) continue;
+        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _dsh4, sym)) continue;
         cDrsiGate++;
 
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;

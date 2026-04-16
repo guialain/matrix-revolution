@@ -216,27 +216,86 @@ const TopOpportunities_V8R = (() => {
     }
 
     if (side === "SELL") {
-      const d1BlockContSell = d1State === "D1_FADING_UP" || d1State === "D1_STRONG_UP";
-      const d1ModeOverrideSell =
-        d1State === "D1_STRONG_DOWN"    ? "relaxed" :
-        d1State === "D1_FADING_DOWN"    ? "soft"    :
-        d1State === "D1_EMERGING_DOWN"  ? "soft"    :
-        d1State === "D1_FLAT"           ? "strict"  :
-        d1State === "D1_EMERGING_UP"    ? "normal"  :
-        d1State === "D1_FADING_UP"      ? "normal"  :
-        d1State === "D1_STRONG_UP"      ? "strict"  : null;
+      // IC group pour la matrice D1 (miroir BUY)
+      const icGroup =
+        intradayLevel === "SPIKE_DOWN"                                                                          ? "IC_SPIKE_DOWN" :
+        (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN") ? "IC_DOWN"       :
+        intradayLevel === "NEUTRE"                                                                              ? "IC_NEUTRE"     :
+        (intradayLevel === "STRONG_UP" || intradayLevel === "SOFT_UP")                                         ? "IC_UP"         :
+        "IC_SPIKE_UP"; // SPIKE_UP + EXPLOSIVE_UP
 
-      if (intradayLevel === "NEUTRE")     return (dslopeH4 !== null && dslopeH4 <= -1.5) ? { type: "EARLY" } : null;
-      if (intradayLevel === "SPIKE_UP")   return h4Down && dh4OkSell ? { type: "REVERSAL", mode: "spike" } : null;
-      if (intradayLevel === "SPIKE_DOWN") return null;
+      const D1_SELL_MATRIX = {
+        D1_STRONG_DOWN: {
+          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "relaxed" },
+          IC_UP:         { action: "REVERSAL",     mode: "soft"    },
+          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+          IC_DOWN:       { action: "CONTINUATION", mode: "relaxed" },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_FADING_DOWN: {
+          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "soft"    },
+          IC_UP:         { action: "REVERSAL",     mode: "normal"  },
+          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+          IC_DOWN:       { action: "CONTINUATION", mode: "soft"    },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_EMERGING_DOWN: {
+          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "normal"  },
+          IC_UP:         { action: "REVERSAL",     mode: "strict"  },
+          IC_NEUTRE:     { action: "EARLY",        mode: "relaxed" },
+          IC_DOWN:       { action: "CONTINUATION", mode: "soft"    },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_FLAT: {
+          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "normal"  },
+          IC_UP:         { action: "unchanged",    mode: "normal"  },
+          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+          IC_DOWN:       { action: "unchanged",    mode: "normal"  },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_EMERGING_UP: {
+          IC_SPIKE_UP:   { action: "block" },
+          IC_UP:         { action: "block" },
+          IC_NEUTRE:     { action: "EARLY",        mode: "strict"  },
+          IC_DOWN:       { action: "REVERSAL",     mode: "normal"  },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_FADING_UP: {
+          IC_SPIKE_UP:   { action: "block" },
+          IC_UP:         { action: "block" },
+          IC_NEUTRE:     { action: "block" },
+          IC_DOWN:       { action: "REVERSAL",     mode: "strict"  },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+        D1_STRONG_UP: {
+          IC_SPIKE_UP:   { action: "block" },
+          IC_UP:         { action: "block" },
+          IC_NEUTRE:     { action: "block" },
+          IC_DOWN:       { action: "REVERSAL",     mode: "strict"  },
+          IC_SPIKE_DOWN: { action: "block" },
+        },
+      };
+
+      const d1Entry = D1_SELL_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
+      if (d1Entry.action === "block") return null;
+
+      // Spike mode préservé si SPIKE_UP + H4 aligné (jamais écrasé par la matrice)
+      const baseIsSpike = intradayLevel === "SPIKE_UP" && h4Down && dh4OkSell;
+
+      if (d1Entry.action !== "unchanged") {
+        // Type forcé par la matrice D1 × IC
+        const finalMode = baseIsSpike ? "spike" : d1Entry.mode;
+        return { type: d1Entry.action, ...(finalMode ? { mode: finalMode } : {}) };
+      }
+
+      // "unchanged" — logique H4 existante, mode de la matrice appliqué
+      if (intradayLevel === "NEUTRE")
+        return (dslopeH4 !== null && dslopeH4 <= -1.5) ? { type: "EARLY", mode: d1Entry.mode } : null;
+      if (intradayLevel === "SPIKE_UP")
+        return h4Down && dh4OkSell ? { type: "REVERSAL", mode: "spike" } : null;
       if (!h4Down) return null;
-      if (isDownIC) {
-        if (d1BlockContSell) return null;
-        return dh4OkSell ? { type: "CONTINUATION", ...(d1ModeOverrideSell ? { mode: d1ModeOverrideSell } : {}) } : null;
-      }
-      if (isUpIC) {
-        return dh4OkSell ? { type: "REVERSAL", ...(d1ModeOverrideSell ? { mode: d1ModeOverrideSell } : {}) } : null;
-      }
+      if (isDownIC) return dh4OkSell ? { type: "CONTINUATION", mode: d1Entry.mode } : null;
+      if (isUpIC)   return dh4OkSell ? { type: "REVERSAL",     mode: d1Entry.mode } : null;
       return null;
     }
 

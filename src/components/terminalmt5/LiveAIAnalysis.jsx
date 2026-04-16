@@ -71,7 +71,7 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
         side:            o.side,
         type:            o.type,
         score:           o.score,
-        waitState:       o.waitState ?? null,
+        waitState:       o.state ?? null,
         volatilityLevel: o.volatilityLevel ?? null,
       })),
       marketData: mw.map(r => ({

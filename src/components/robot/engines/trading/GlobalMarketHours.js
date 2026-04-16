@@ -40,6 +40,9 @@ const GlobalMarketHours = {
 
     // ---------- AGRI ----------
     AGRI:   { label: "Agri (ICE/CBOT)", open: 0.0, close: 24.0 },
+
+    // ---------- DEFAULT (actifs non mappés) ----------
+    default: { label: "Unknown Market", open: 0.0, close: 24.0 },
   },
 
   // =========================
@@ -69,18 +72,10 @@ const GlobalMarketHours = {
     // --- Neo open ? ---
     const neoOpen = this.inRange(hour, this.neo.open, this.neo.close);
 
-    // --- Symbol override > market key ---
-    const market = (symbol && this.symbolOverrides?.[symbol]) || this.markets[marketKey];
-    if (!market) {
-      return {
-        allowed: false,
-        neoOpen,
-        marketOpen: false,
-        market: null,
-        hour,
-        reason: "Unknown market"
-      };
-    }
+    // --- Symbol override > market key > default fallback ---
+    const market = (symbol && this.symbolOverrides?.[symbol])
+      || this.markets[marketKey]
+      || this.markets.default;
 
     // --- Market open ? ---
     const marketOpen = this.inRange(hour, market.open, market.close);

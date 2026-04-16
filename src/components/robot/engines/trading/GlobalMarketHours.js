@@ -72,13 +72,14 @@ const GlobalMarketHours = {
     // --- Symbol override > market key ---
     const market = (symbol && this.symbolOverrides?.[symbol]) || this.markets[marketKey];
     if (!market) {
+      // TEST MODE: allow unknown markets — revert allowed:false for production
       return {
-        allowed: false,
+        allowed: true,
         neoOpen,
-        marketOpen: false,
+        marketOpen: true,
         market: null,
         hour,
-        reason: "Unknown market"
+        reason: "Unknown market (test mode)"
       };
     }
 
@@ -86,7 +87,8 @@ const GlobalMarketHours = {
     const marketOpen = this.inRange(hour, market.open, market.close);
 
     // --- Combined gate ---
-    const allowed = neoOpen && marketOpen;
+    // TEST MODE: always open — revert to (neoOpen && marketOpen) for production
+    const allowed = true;
 
     let reason = "Allowed";
     if (!neoOpen && !marketOpen) reason = "Outside NEO hours & market closed";

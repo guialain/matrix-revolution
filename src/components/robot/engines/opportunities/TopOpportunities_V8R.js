@@ -67,11 +67,24 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
+  // D1 STATE — classifie la tendance journalière au snapshot (s0)
+  // slope_d1_s0  : slope D1 à l'ouverture de la bougie D1
+  // dslope_d1_s0 : dérivée du slope D1 à ce même snapshot
+  // ============================================================================
+  function getD1State(slope_d1_s0, dslope_d1_s0, slopeThr = 0.3, dslopeThr = 0.1) {
+    if (slope_d1_s0 === null || dslope_d1_s0 === null) return "D1_FLAT";
+    if (slope_d1_s0 >=  slopeThr) return dslope_d1_s0 >=  dslopeThr ? "D1_STRONG_UP"   : "D1_FADING_UP";
+    if (slope_d1_s0 <= -slopeThr) return dslope_d1_s0 <= -dslopeThr ? "D1_STRONG_DOWN" : "D1_FADING_DOWN";
+    return "D1_FLAT";
+  }
+
+  // ============================================================================
   // 3D RESOLUTION : intradayLevel x slopeH4Level x dslopeH4 => { type, mode }
   // dslopeH4 = slope_h4_s0 - slope_h4 (accélération H4 live)
+  // d1State  = getD1State(slope_d1_s0, dslope_d1_s0) — module BUY uniquement
   // H1 → timing seulement (route RSI Gate 2)
   // ============================================================================
-  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0) {
+  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0, d1State = "D1_FLAT") {
     const h4Up   = slopeH4Level === "SOFT_UP"   || slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP";
     const h4Down = slopeH4Level === "SOFT_DOWN" || slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN";
 
@@ -84,12 +97,24 @@ const TopOpportunities_V8R = (() => {
     const isDownIC = intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN";
 
     if (side === "BUY") {
+      const d1BlockCont    = d1State === "D1_FADING_DOWN" || d1State === "D1_STRONG_DOWN";
+      const d1ModeOverride =
+        d1State === "D1_STRONG_UP"   ? "relaxed" :
+        d1State === "D1_FADING_UP"   ? "soft"    :
+        d1State === "D1_FADING_DOWN" ? "normal"  :
+        d1State === "D1_STRONG_DOWN" ? "strict"  : null;
+
       if (intradayLevel === "NEUTRE")     return (dslopeH4 !== null && dslopeH4 >= 1.5) ? { type: "EARLY" } : null;
       if (intradayLevel === "SPIKE_DOWN") return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: "spike" } : null;
       if (intradayLevel === "SPIKE_UP")   return null;
       if (!h4Up) return null;
-      if (isUpIC)   return dh4OkBuy ? { type: "CONTINUATION" } : null;
-      if (isDownIC) return dh4OkBuy ? { type: "REVERSAL" } : null;
+      if (isUpIC) {
+        if (d1BlockCont) return null;
+        return dh4OkBuy ? { type: "CONTINUATION", ...(d1ModeOverride ? { mode: d1ModeOverride } : {}) } : null;
+      }
+      if (isDownIC) {
+        return dh4OkBuy ? { type: "REVERSAL", ...(d1ModeOverride ? { mode: d1ModeOverride } : {}) } : null;
+      }
       return null;
     }
 
@@ -488,6 +513,13 @@ const TopOpportunities_V8R = (() => {
       const _sh4s1  = num(row?.slope_h4);
       const dslopeH4 = (_sh4s0 !== null && _sh4s1 !== null) ? _sh4s0 - _sh4s1 : null;
 
+      // D1 state — module la résolution BUY (SELL ignoré pour l'instant)
+      const _sd1s0        = num(row?.slope_d1_s0);
+      const _dslope_d1_s0 = num(row?.dslope_d1_s0);
+      const d1State = (_sd1s0 !== null && _dslope_d1_s0 !== null)
+        ? getD1State(_sd1s0, _dslope_d1_s0)
+        : "D1_FLAT";
+
       const args = [
         num(row?.rsi_h1), num(row?.slope_h1),
         num(row?.drsi_h1), num(row?.zscore_h1),
@@ -502,7 +534,7 @@ const TopOpportunities_V8R = (() => {
       let signalType = null;
       let signalMode = null;
 
-      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY");
+      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, d1State);
       if (buyRes) {
         const buyMode = buyRes.mode ?? computeMode(
           buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
@@ -512,7 +544,7 @@ const TopOpportunities_V8R = (() => {
       }
 
       if (!match) {
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL");
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, d1State);
         if (sellRes) {
           const sellMode = sellRes.mode ?? computeMode(
             sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
@@ -572,6 +604,11 @@ const TopOpportunities_V8R = (() => {
         breakdown,
         intradayLevel,
         slopeH4Level,
+        d1State,
+
+        // D1
+        slope_d1_s0:  _sd1s0,
+        dslope_d1_s0: _dslope_d1_s0,
 
         // H4
         slope_h4:    num(row?.slope_h4),

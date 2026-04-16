@@ -515,34 +515,24 @@ const TopOpportunities_V8R = (() => {
 
   // ============================================================================
   // NIVEAU 2 — BUY ROUTES
-  // drsi_h1_s0 = indicateur live de momentum H1
-  // g.antiSpike = seuil drsiSafe configurable par asset
+  // dslope_h1   = momentum live H1 (remplace drsi_h1_s0)
+  // g.antiSpike = seuil |dslope_h1| max pour zones [28-72]
+  // slope_h1_s0 = utilisé uniquement pour EARLY (g.slopeH1Min)
   // ============================================================================
-  function matchBuyRoute(
-    rsi_s1, slope_h1, drsi_h1, zscore_h1,
-    zscore_h1_min3, zscore_h1_max3,
-    slope_h1_s0, drsi_h1_s0, zscore_h1_s0,
-    drsi_h4, drsi_h4_s0, slope_h4, slope_h4_s0,
-    rsi_h1_s0, dslope_h1,
-    g
-  ) {
-    const rsi = rsi_h1_s0 !== null ? rsi_h1_s0 : rsi_s1;
-    if (rsi === null || drsi_h1_s0 === null || zscore_h1 === null) return null;
+  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g) {
+    if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
-    const zscore    = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
-    const drsi_live = drsi_h1_s0;
+    const rsi    = rsi_h1_s0;
+    const zscore = zscore_h1_s0;
 
-    const drsiSafe  = Math.abs(drsi_live) < g.antiSpike;
-    const h4BuyOk   = drsi_h4_s0 === null || drsi_h4_s0 > -0.3;
-    const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 > 0;
-    const slopeOk   = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0  >  g.slopeH1Min);
-    const dslopeOk  = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1    >  g.dslopeH1Min);
+    // EARLY : slope_h1_s0 + dslope_h1 requis
+    const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 >  g.slopeH1Min);
+    const dslopeOk = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1   >  g.dslopeH1Min);
 
     // BUY [0-28] — extreme oversold
     if (rsi < 28
-     && drsi_live > g.drsiH1Min
-     && drsiH4Ok
-     && drsi_live > g.drsiRev
+     && dslope_h1 > g.drsiH1Min
+     && dslope_h1 > g.drsiRev
      && zscore < g.zRev
      && slopeOk && dslopeOk)
       return { route: "BUY-[0-28]", side: "BUY" };
@@ -550,16 +540,16 @@ const TopOpportunities_V8R = (() => {
     // BUY [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
      && zscore < g.z3050
-     && drsi_live > g.drsi
-     && drsiSafe && h4BuyOk
+     && dslope_h1 > g.drsi
+     && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "BUY-[28-50]", side: "BUY" };
 
     // BUY [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
      && zscore < g.z5070
-     && drsi_live > g.drsi
-     && drsiSafe && h4BuyOk
+     && dslope_h1 > g.drsi
+     && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "BUY-[50-72]", side: "BUY" };
 
@@ -569,31 +559,20 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // SELL ROUTES (miroir)
   // ============================================================================
-  function matchSellRoute(
-    rsi_s1, slope_h1, drsi_h1, zscore_h1,
-    zscore_h1_min3, zscore_h1_max3,
-    slope_h1_s0, drsi_h1_s0, zscore_h1_s0,
-    drsi_h4, drsi_h4_s0, slope_h4, slope_h4_s0,
-    rsi_h1_s0, dslope_h1,
-    g
-  ) {
-    const rsi = rsi_h1_s0 !== null ? rsi_h1_s0 : rsi_s1;
-    if (rsi === null || drsi_h1_s0 === null || zscore_h1 === null) return null;
+  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g) {
+    if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
-    const zscore    = zscore_h1_s0 !== null ? zscore_h1_s0 : zscore_h1;
-    const drsi_live = drsi_h1_s0;
+    const rsi    = rsi_h1_s0;
+    const zscore = zscore_h1_s0;
 
-    const drsiSafe  = Math.abs(drsi_live) < g.antiSpike;
-    const h4SellOk  = drsi_h4_s0 === null || drsi_h4_s0 < 0.3;
-    const drsiH4Ok  = drsi_h4_s0 !== null && drsi_h4_s0 < 0;
-    const slopeOk   = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0  < -g.slopeH1Min);
-    const dslopeOk  = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1    < -g.dslopeH1Min);
+    // EARLY : slope_h1_s0 + dslope_h1 requis
+    const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 < -g.slopeH1Min);
+    const dslopeOk = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1   < -g.dslopeH1Min);
 
     // SELL [72-100] — extreme overbought
     if (rsi >= 72
-     && drsi_live < -g.drsiH1Min
-     && drsiH4Ok
-     && drsi_live < -g.drsiRev
+     && dslope_h1 < -g.drsiH1Min
+     && dslope_h1 < -g.drsiRev
      && zscore > -g.zRev
      && slopeOk && dslopeOk)
       return { route: "SELL-[72-100]", side: "SELL" };
@@ -601,16 +580,16 @@ const TopOpportunities_V8R = (() => {
     // SELL [50-72] — mid-high zone
     if (rsi >= 50 && rsi < 72
      && zscore > -g.z3050
-     && drsi_live < -g.drsi
-     && drsiSafe && h4SellOk
+     && dslope_h1 < -g.drsi
+     && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "SELL-[50-72]", side: "SELL" };
 
     // SELL [28-50] — low-mid zone
     if (rsi >= 28 && rsi < 50
      && zscore > -g.z5070
-     && drsi_live < -g.drsi
-     && drsiSafe && h4SellOk
+     && dslope_h1 < -g.drsi
+     && Math.abs(dslope_h1) < g.antiSpike
      && slopeOk && dslopeOk)
       return { route: "SELL-[28-50]", side: "SELL" };
 
@@ -693,13 +672,10 @@ const TopOpportunities_V8R = (() => {
         : "D1_FLAT";
 
       const args = [
-        num(row?.rsi_h1), num(row?.slope_h1),
-        num(row?.drsi_h1), num(row?.zscore_h1),
-        num(row?.zscore_h1_min3), num(row?.zscore_h1_max3),
-        num(row?.slope_h1_s0), num(row?.drsi_h1_s0), num(row?.zscore_h1_s0),
-        num(row?.drsi_h4), num(row?.drsi_h4_s0),
-        num(row?.slope_h4), num(row?.slope_h4_s0),
-        num(row?.rsi_h1_s0), num(row?.dslope_h1),
+        num(row?.rsi_h1_s0),
+        num(row?.dslope_h1),
+        num(row?.zscore_h1_s0),
+        num(row?.slope_h1_s0),
       ];
 
       let match = null;
@@ -904,26 +880,23 @@ const TopOpportunities_V8R = (() => {
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;
 
-        const args = [
-          num(row?.rsi_h1), num(row?.slope_h1),
-          num(row?.drsi_h1), num(row?.zscore_h1),
-          num(row?.zscore_h1_min3), num(row?.zscore_h1_max3),
-          num(row?.slope_h1_s0), num(row?.drsi_h1_s0), num(row?.zscore_h1_s0),
-          num(row?.drsi_h4), num(row?.drsi_h4_s0),
-          num(row?.slope_h4), num(row?.slope_h4_s0),
-          num(row?.rsi_h1_s0), num(row?.dslope_h1),
+        const _dbg_args = [
+          num(row?.rsi_h1_s0),
+          num(row?.dslope_h1),
+          num(row?.zscore_h1_s0),
+          num(row?.slope_h1_s0),
         ];
         const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
         const routeMatch = activeSide === "BUY"
-          ? matchBuyRoute(...args, g)
-          : matchSellRoute(...args, g);
+          ? matchBuyRoute(..._dbg_args, g)
+          : matchSellRoute(..._dbg_args, g);
 
         if (!routeMatch) {
-          const rsi    = num(row?.rsi_h1_s0) ?? num(row?.rsi_h1);
-          const zscore = num(row?.zscore_h1_s0) ?? num(row?.zscore_h1);
-          const drsi   = num(row?.drsi_h1_s0);
-          const zone   = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
-          console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} drsi_h1_s0=${drsi?.toFixed(2)}`);
+          const rsi      = num(row?.rsi_h1_s0);
+          const zscore   = num(row?.zscore_h1_s0);
+          const dslope   = num(row?.dslope_h1);
+          const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
+          console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1=${dslope?.toFixed(2)}`);
           continue;
         }
 

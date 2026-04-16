@@ -71,7 +71,7 @@ const TopOpportunities_V8R = (() => {
   // slope_d1_s0  : slope D1 à l'ouverture de la bougie D1
   // dslope_d1_s0 : dérivée du slope D1 à ce même snapshot
   // ============================================================================
-  function getD1State(slope_d1_s0, dslope_d1_s0, slopeThr = 0.3, dslopeThr = 0.1) {
+  function getD1State(slope_d1_s0, dslope_d1_s0, slopeThr = 0.5, dslopeThr = 0.5) {
     if (slope_d1_s0 === null || dslope_d1_s0 === null) return "D1_FLAT";
     if (slope_d1_s0 >=  slopeThr) return dslope_d1_s0 >=  dslopeThr ? "D1_STRONG_UP"   : "D1_FADING_UP";
     if (slope_d1_s0 <= -slopeThr) return dslope_d1_s0 <= -dslopeThr ? "D1_STRONG_DOWN" : "D1_FADING_DOWN";

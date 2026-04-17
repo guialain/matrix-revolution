@@ -144,7 +144,7 @@ export const RISK_CONFIG = {
   BTCEUR: {
     tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 970.69, maxHoldH: 96, reversalEnabled: true,
     spread: 70.71,
-    targetLeveragePerTrade: 0.3,
+    targetLeveragePerTrade: 0.5,
     contractSize: 10, refPrice: 60672, baseToEUR: 1.000,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
@@ -158,14 +158,14 @@ export const RISK_CONFIG = {
   BTCJPY: {
     tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 1100, maxHoldH: 96, reversalEnabled: true,
     spread: 5000,
-    targetLeveragePerTrade: 0.3,
+    targetLeveragePerTrade: 0.5,
     contractSize: 10, refPrice: 11282266, baseToEUR: 0.006,
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   ETHUSD: {
     tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 62.43, maxHoldH: 96, reversalEnabled: true,
     spread: 1.9,
-    targetLeveragePerTrade: 0.3,
+    targetLeveragePerTrade: 0.5,
     contractSize: 100, refPrice: 2169, baseToEUR: 0.847,
     volume_min: 0.001, volume_max: 100, volume_step: 0.001,
   },

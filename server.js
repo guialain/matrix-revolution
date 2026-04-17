@@ -11,6 +11,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import nodeFetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { getRiskConfig } from "./src/components/robot/engines/config/RiskConfig.js";
+import { INTRADAY_CONFIG } from "./src/components/robot/engines/config/IntradayConfig.js";
 
 // Use native fetch if available (Node 18+), otherwise node-fetch
 const _fetch = globalThis.fetch ?? nodeFetch;
@@ -983,6 +984,35 @@ app.post("/api/trading-mode", (req, res) => {
 // Body: { messages, context: { marketData, signals, account, openPositions } }
 // ============================================================================
 
+function formatIntradayConfig(symbol) {
+  const cfg = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
+  return (
+    `SPIKE_DOWN<${cfg.spikeDown}% | ` +
+    `EXP_DOWN[${cfg.explosiveDown},${cfg.spikeDown}] | ` +
+    `STR_DOWN[${cfg.strongDown},${cfg.explosiveDown}] | ` +
+    `SOFT_DOWN[${cfg.softDown},${cfg.strongDown}] | ` +
+    `NEUTRE[${cfg.softDown},${cfg.softUp}] | ` +
+    `SOFT_UP[${cfg.softUp},${cfg.strongUp}] | ` +
+    `STR_UP[${cfg.strongUp},${cfg.explosiveUp}] | ` +
+    `EXP_UP[${cfg.explosiveUp},${cfg.spikeUp}] | ` +
+    `SPIKE_UP>${cfg.spikeUp}%`
+  );
+}
+
+function getIntradayRegime(intra, symbol) {
+  if (intra === null || intra === undefined) return "NEUTRE";
+  const cfg = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
+  if (intra >  cfg.spikeUp)       return "SPIKE_UP";
+  if (intra >= cfg.explosiveUp)   return "EXPLOSIVE_UP";
+  if (intra >= cfg.strongUp)      return "STRONG_UP";
+  if (intra >= cfg.softUp)        return "SOFT_UP";
+  if (intra >  cfg.softDown)      return "NEUTRE";
+  if (intra >  cfg.strongDown)    return "SOFT_DOWN";
+  if (intra >  cfg.explosiveDown) return "STRONG_DOWN";
+  if (intra >  cfg.spikeDown)     return "EXPLOSIVE_DOWN";
+  return "SPIKE_DOWN";
+}
+
 const CLAUDE_SYSTEM = `You are NEO, an expert trading assistant embedded in a live MT5 trading terminal.
 You have access to real-time market data, active trading signals, account state, and open positions.
 Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.
@@ -998,6 +1028,17 @@ Be concise, precise, and actionable. Use trading terminology. Answer in the same
 - D1_BUY  : slope_d1_s0 > 0.5  AND rsi_d1 > 52
 - D1_SELL : slope_d1_s0 < -0.5 AND rsi_d1 < 48
 - D1_FLAT : otherwise (trend uncertain)
+
+## INTRADAY RÉGIMES (9 niveaux, calibrés par asset)
+Les seuils IC sont fournis dans chaque signal sous IC_seuils.
+Le régime IC actuel est fourni sous IC_regime dans marketData.
+Utilise ces valeurs pour évaluer la force du mouvement intraday
+par rapport aux percentiles historiques de l'asset.
+
+Exemples d'interprétation :
+- IC=+0.15% sur EURUSD (softUp=0.11, strongUp=0.19) → SOFT_UP ✅
+- IC=-2.36% sur CrudeOIL (strongDown=-0.85) → EXPLOSIVE_DOWN ⚠️
+- IC=+0.05% sur EURUSD → NEUTRE (entre softDown et softUp)
 
 ## ROUTE GUIDE (H1 bar patterns)
 - BUY-[28-50]       : reversal zone — rsi_h1_s0 28-50, zscore_h1_s0 ≤ -0.5
@@ -1059,7 +1100,9 @@ app.post("/api/claude", async (req, res) => {
             ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
             ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
             ` tpAtr=${rc.tpAtr} slAtr=${rc.slAtr} TP=${tp} SL=${sl}` +
-            ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)} m5Conf=${s.m5Confidence ?? "—"}`
+            ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)} m5Conf=${s.m5Confidence ?? "—"}` +
+            ` | IC_regime=${getIntradayRegime(s.intraday_change, s.symbol)} IC_val=${s.intraday_change ?? "—"}%` +
+            ` IC_seuils: ${formatIntradayConfig(s.symbol)}`
           );
         }).join("\n")
       : "  None";
@@ -1076,7 +1119,7 @@ app.post("/api/claude", async (req, res) => {
       : "  None";
 
     const mdLines = marketData.slice(0, 25).map(r =>
-      `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}%` +
+      `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}% IC_regime=${getIntradayRegime(r.intraday_change, r.symbol)}` +
       ` atr=${f2(r.atr_h1)}` +
       ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1)}` +
       ` | H4: rsi=${f1(r.rsi_h4)} sl=${f2(r.slope_h4)} sl_s0=${f2(r.slope_h4_s0)} dsl=${f2(r.dslope_h4)} z=${f2(r.zscore_h4)}` +

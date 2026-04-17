@@ -987,10 +987,11 @@ const CLAUDE_SYSTEM = `You are NEO, an expert trading assistant embedded in a li
 You have access to real-time market data, active trading signals, account state, and open positions.
 Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.
 
-## SYSTEM RULES
-- TP = tpAtr × ATR_H1 | SL = slAtr × ATR_H1 (per RiskConfig per asset)
-- tpAtr defaults: FX/CRYPTO 0.55, INDEX 0.50-0.57, GOLD 0.50, OIL 0.65
-- slAtr defaults: FX/CRYPTO 1.75, INDEX 1.70, GOLD 1.55, OIL 1.75-1.85
+## RÈGLES TP/SL
+- TP = tpAtr × atr_h1  (tpAtr par asset, visible dans chaque signal)
+- SL = slAtr × atr_h1  (slAtr par asset, visible dans chaque signal)
+- Défauts si asset inconnu : tpAtr=0.50 slAtr=1.65
+- Valeurs TP/SL pré-calculées et affichées dans chaque ligne de signal
 - range_ratio_h1 > 0.8 → late entry (H1 bar >80% consumed) — wait next bar
 
 ## D1STATE GUIDE
@@ -1047,14 +1048,20 @@ app.post("/api/claude", async (req, res) => {
     const boo = v => v == null ? "—" : v ? "Y" : "n";
 
     const sigLines = signals.length
-      ? signals.map(s =>
-          `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
-          ` score=${s.score ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"} mode=${s.mode ?? "—"}` +
-          ` vol=${s.volatilityLevel ?? "—"} phase=${s.phase ?? "—"}` +
-          ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
-          ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
-          ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)}`
-        ).join("\n")
+      ? signals.map(s => {
+          const rc = getRiskConfig(s.symbol);
+          const tp = s.atr_h1 != null ? (rc.tpAtr * s.atr_h1).toFixed(5) : "?";
+          const sl = s.atr_h1 != null ? (rc.slAtr * s.atr_h1).toFixed(5) : "?";
+          return (
+            `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
+            ` score=${s.score ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"} mode=${s.mode ?? "—"}` +
+            ` vol=${s.volatilityLevel ?? "—"} phase=${s.phase ?? "—"}` +
+            ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
+            ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
+            ` tpAtr=${rc.tpAtr} slAtr=${rc.slAtr} TP=${tp} SL=${sl}` +
+            ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)} m5Conf=${s.m5Confidence ?? "—"}`
+          );
+        }).join("\n")
       : "  None";
 
     const waitLines = waitOpportunities.length

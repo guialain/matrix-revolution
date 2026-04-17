@@ -7,7 +7,7 @@ import SignalFrequency from "../robot/engines/trading/SignalFrequency";
 import AccountHealth from "./AccountHealth";
 import "../../styles/stylesterminalMT5/dealpipeline.css";
 
-export default function DealPipeline({ robot, draftDeal, onSelectDeal, account, totalExposure }) {
+export default function DealPipeline({ robot, draftDeal, onSelectDeal, account, totalExposure, muted = false, onMutedChange }) {
 
   // ================= TRADING MODE =================
   const { mode, setMode } = useTradingMode();
@@ -39,7 +39,6 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal, account, 
   const hasExpired = displayExpired.length > 0;
   const hasWait  = waitOpportunities.length > 0;
 
-  const [muted, setMuted] = useState(false);
 
   // ================= COOLDOWN CONFIG + TICK =================
   const [cooldownMin, setCooldownMin] = useState(() => SignalFrequency.getCooldownMinutes());
@@ -144,7 +143,7 @@ export default function DealPipeline({ robot, draftDeal, onSelectDeal, account, 
         </select>
         <button
           className={`voice-btn ${muted ? "off" : "on"}`}
-          onClick={() => setMuted(m => !m)}
+          onClick={() => onMutedChange?.(!muted)}
           title={muted ? "Activer la voix" : "Désactiver la voix"}
         >
           {muted ? "🔇" : "🔊"}

@@ -28,6 +28,7 @@ export default function TerminalMT5({ snapshot }) {
   // ==========================================================================
   // HOOKS (must be called unconditionally, before any return)
   // ==========================================================================
+  const [muted, setMuted] = useState(false);
 
   const robot = useRobotCore(snapshot);
   const { mode } = useTradingMode();
@@ -91,6 +92,8 @@ export default function TerminalMT5({ snapshot }) {
               onSelectDeal={handleSelectDeal}
               account={account}
               totalExposure={totalExposure}
+              muted={muted}
+              onMutedChange={setMuted}
             />
           </div>
 
@@ -121,7 +124,7 @@ export default function TerminalMT5({ snapshot }) {
       <div className="right-column">
 
         <div className="terminal-block live-ai-analysis">
-          <LiveAIAnalysis snapshot={snapshot} robot={robot} />
+          <LiveAIAnalysis snapshot={snapshot} robot={robot} muted={muted} />
         </div>
 
       </div>

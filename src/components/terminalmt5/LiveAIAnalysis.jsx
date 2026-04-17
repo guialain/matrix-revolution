@@ -10,7 +10,18 @@ const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
   : window.location.origin;
 
-export default function LiveAIAnalysis({ snapshot, robot }) {
+function speak(text) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.lang   = "fr-FR";
+  msg.rate   = 1.3;
+  msg.pitch  = 0.78;
+  msg.volume = 1.0;
+  window.speechSynthesis.speak(msg);
+}
+
+export default function LiveAIAnalysis({ snapshot, robot, muted = false }) {
   const STORAGE_KEY = "neo_ai_messages";
 
   const [messages, setMessages] = useState(() => {
@@ -153,6 +164,7 @@ export default function LiveAIAnalysis({ snapshot, robot }) {
       const reply = data?.content ?? data?.message ?? "No response";
 
       setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+      if (!muted) speak(reply);
     } catch (err) {
       setMessages(prev => [
         ...prev,

@@ -57,7 +57,7 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 201, volume_step: 0.01,
   },
   EURJPY: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.50, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.65, slAtr: 1.75, atrH1Cap: 0.50, maxHoldH: 96, reversalEnabled: true,
     spread: 0.020,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 185.86, baseToEUR: 1.000,

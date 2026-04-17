@@ -12,7 +12,14 @@ import nodeFetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { getRiskConfig } from "./src/components/robot/engines/config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "./src/components/robot/engines/config/IntradayConfig.js";
-import { ALLOWED_SYMBOLS } from "./src/components/robot/engines/trading/AssetEligibility.js";
+const ALLOWED_SYMBOLS = [
+  "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "USDCHF", "EURJPY", "GBPJPY", "AUDJPY",
+  "GERMANY_40", "UK_100", "US_30", "US_500", "US_TECH100", "JAPAN_225",
+  "BTCUSD", "BTCEUR", "BTCJPY", "ETHUSD",
+  "GOLD", "SILVER",
+  "CrudeOIL", "BRENT_OIL", "GASOLINE",
+  "WHEAT",
+];
 
 // Use native fetch if available (Node 18+), otherwise node-fetch
 const _fetch = globalThis.fetch ?? nodeFetch;

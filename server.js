@@ -1120,7 +1120,8 @@ app.post("/api/claude", async (req, res) => {
         ).join("\n")
       : "  None";
 
-    const mdLines = (marketData ?? []).filter(r => ALLOWED_SYMBOLS.includes(r.symbol)).map(r =>
+    const mdFiltered = (marketData ?? []).filter(r => ALLOWED_SYMBOLS.includes(r.symbol));
+    const mdLines = mdFiltered.map(r =>
       `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}% IC_regime=${getIntradayRegime(r.intraday_change, r.symbol)}` +
       ` atr=${f2(r.atr_h1)}` +
       ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1)}` +
@@ -1147,7 +1148,7 @@ app.post("/api/claude", async (req, res) => {
       `## Wait Signals (${waitOpportunities.length})`,
       waitLines,
       ``,
-      `## Market Data (${marketData.length} assets) — fields: D1(rsi,sl_s0,dsl) H4(rsi,sl,sl_s0,dsl,z) H1(rsi,rsi_s0,sl_s0,dsl,z,z_s0,rr) M5s0(rsi,sl,dsl,z)`,
+      `## Market Data (${mdFiltered.length} assets) — fields: D1(rsi,sl_s0,dsl) H4(rsi,sl,sl_s0,dsl,z) H1(rsi,rsi_s0,sl_s0,dsl,z,z_s0,rr) M5s0(rsi,sl,dsl,z)`,
       mdLines,
     ].join("\n");
 

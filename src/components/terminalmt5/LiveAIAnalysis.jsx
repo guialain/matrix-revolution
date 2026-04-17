@@ -33,7 +33,7 @@ function speak(text) {
   window.speechSynthesis.cancel();
   const msg = new SpeechSynthesisUtterance(stripMarkdown(text));
   msg.lang   = "fr-FR";
-  msg.rate   = 1.3;
+  msg.rate   = 1.0;
   msg.pitch  = 0.78;
   msg.volume = 1.0;
   window.speechSynthesis.speak(msg);

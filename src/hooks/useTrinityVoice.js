@@ -26,7 +26,7 @@ export default function useTrinityVoice({ valid = 0, wait = 0, topValid, muted =
 
       const msg = new SpeechSynthesisUtterance(text);
       msg.lang = "fr-FR";
-      msg.rate = 1.3;
+      msg.rate = 1.0;
       msg.pitch = 0.78;
       msg.volume = 1.0;
 

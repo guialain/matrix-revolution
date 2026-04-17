@@ -985,7 +985,36 @@ app.post("/api/trading-mode", (req, res) => {
 
 const CLAUDE_SYSTEM = `You are NEO, an expert trading assistant embedded in a live MT5 trading terminal.
 You have access to real-time market data, active trading signals, account state, and open positions.
-Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.`;
+Be concise, precise, and actionable. Use trading terminology. Answer in the same language as the user.
+
+## SYSTEM RULES
+- TP = tpAtr × ATR_H1 | SL = slAtr × ATR_H1 (per RiskConfig per asset)
+- tpAtr defaults: FX/CRYPTO 0.55, INDEX 0.50-0.57, GOLD 0.50, OIL 0.65
+- slAtr defaults: FX/CRYPTO 1.75, INDEX 1.70, GOLD 1.55, OIL 1.75-1.85
+- range_ratio_h1 > 0.8 → late entry (H1 bar >80% consumed) — wait next bar
+
+## D1STATE GUIDE
+- D1_BUY  : slope_d1_s0 > 0.5  AND rsi_d1 > 52
+- D1_SELL : slope_d1_s0 < -0.5 AND rsi_d1 < 48
+- D1_FLAT : otherwise (trend uncertain)
+
+## ROUTE GUIDE (H1 bar patterns)
+- BUY-[28-50]       : reversal zone — rsi_h1_s0 28-50, zscore_h1_s0 ≤ -0.5
+- BUY-[50-72]       : continuation zone — rsi_h1_s0 50-72, dslope_h1 > 0.5
+- SELL-[50-72]      : continuation zone — rsi_h1_s0 50-72, dslope_h1 < -0.5
+- SELL-[28-50]      : reversal zone — rsi_h1_s0 28-50, zscore_h1_s0 ≥ 0.5
+- CONT-RESUME       : trend resuming after pause — dslope_h1 acceleration > 1.5
+- EXHAUSTION=true   : counter-trend spike detected — higher reversal conviction
+
+## SIGNAL QUALITY
+- score 0-100: composite of slope + dslope + zscore + RSI depth + intraday + volatility bonus
+- mode: UPTREND / DOWNTREND / REVERSAL / NEUTRAL
+- volatilityLevel: LOW / MED / HIGH
+- contResume=true → trend consolidation resolved, momentum restarting
+
+## RESPONSE FORMAT
+When commenting on a signal or asset, structure: [SYMBOL SIDE TYPE] route=X d1=Y score=Z — analysis in 1-2 sentences.`;
+
 
 app.post("/api/claude", async (req, res) => {
   try {
@@ -994,8 +1023,6 @@ app.post("/api/claude", async (req, res) => {
     const { messages = [], context = {} } = req.body ?? {};
 
     const { marketData = [], signals = [], waitOpportunities = [], account = {}, openPositions = [] } = context;
-
-    const fmt = v => v != null ? Number(v).toFixed(2) : "—";
 
     let recentNews = [];
     try {
@@ -1015,6 +1042,41 @@ app.post("/api/claude", async (req, res) => {
       ? recentNews.map(n => `${fmtPubDate(n.pubDate)} - ${(n.title ?? "").replace(/^FinancialJuice:\s*/i, "")}`).join("\n")
       : "Aucune news disponible";
 
+    const f2  = v => v != null ? Number(v).toFixed(2) : "—";
+    const f1  = v => v != null ? Number(v).toFixed(1) : "—";
+    const boo = v => v == null ? "—" : v ? "Y" : "n";
+
+    const sigLines = signals.length
+      ? signals.map(s =>
+          `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
+          ` score=${s.score ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"} mode=${s.mode ?? "—"}` +
+          ` vol=${s.volatilityLevel ?? "—"} phase=${s.phase ?? "—"}` +
+          ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
+          ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
+          ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)}`
+        ).join("\n")
+      : "  None";
+
+    const waitLines = waitOpportunities.length
+      ? waitOpportunities.map(s =>
+          `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
+          ` score=${s.score ?? "—"} wait=${s.waitState ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"}` +
+          ` vol=${s.volatilityLevel ?? "—"}` +
+          ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
+          ` rr=${f2(s.range_ratio_h1)}` +
+          ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)}`
+        ).join("\n")
+      : "  None";
+
+    const mdLines = marketData.slice(0, 25).map(r =>
+      `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}%` +
+      ` atr=${f2(r.atr_h1)}` +
+      ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1)}` +
+      ` | H4: rsi=${f1(r.rsi_h4)} sl=${f2(r.slope_h4)} sl_s0=${f2(r.slope_h4_s0)} dsl=${f2(r.dslope_h4)} z=${f2(r.zscore_h4)}` +
+      ` | H1: rsi=${f1(r.rsi_h1)} rsi_s0=${f1(r.rsi_h1_s0)} sl_s0=${f2(r.slope_h1_s0)} dsl=${f2(r.dslope_h1)} z=${f2(r.zscore_h1)} z_s0=${f2(r.zscore_h1_s0)} rr=${f2(r.range_ratio_h1)}` +
+      ` | M5s0: rsi=${f1(r.rsi_m5_s0)} sl=${f2(r.slope_m5_s0)} dsl=${f2(r.dslope_m5_s0)} z=${f2(r.zscore_m5_s0)}`
+    ).join("\n");
+
     const contextBlock = [
       `## Dernières news macro (FinancialJuice) :`,
       newsBlock,
@@ -1024,26 +1086,17 @@ app.post("/api/claude", async (req, res) => {
       ``,
       `## Open Positions (${openPositions.length})`,
       openPositions.length
-        ? openPositions.map(p => `- ${p.symbol} ${p.side} ${p.lots} lots | PnL: ${p.pnl_eur ?? "—"}€`).join("\n")
-        : "None",
+        ? openPositions.map(p => `  ${p.symbol} ${p.side} ${p.lots} lots | PnL: ${p.pnl_eur ?? "—"}€`).join("\n")
+        : "  None",
       ``,
       `## Active Signals (${signals.length})`,
-      signals.length
-        ? signals.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} phase=${s.phase ?? "—"} vol=${s.volatilityLevel ?? "—"}`).join("\n")
-        : "None",
+      sigLines,
       ``,
       `## Wait Signals (${waitOpportunities.length})`,
-      waitOpportunities.length
-        ? waitOpportunities.map(s => `- ${s.symbol} ${s.side} [${s.type}] score=${s.score} wait=${s.waitState ?? "—"} vol=${s.volatilityLevel ?? "—"}`).join("\n")
-        : "None",
+      waitLines,
       ``,
-      `## Market Data (${marketData.length} assets)`,
-      marketData.slice(0, 20).map(r =>
-        `- ${r.symbol.padEnd(12)} | intra=${fmt(r.intraday_change)}%` +
-        ` | H4: rsi=${fmt(r.rsi_h4)} slope=${fmt(r.slope_h4)} dslope=${fmt(r.dslope_h4)} z=${fmt(r.zscore_h4)}` +
-        ` | H1: rsi=${fmt(r.rsi_h1)} slope=${fmt(r.slope_h1)} dslope=${fmt(r.dslope_h1)} z=${fmt(r.zscore_h1)}` +
-        ` | M5: rsi=${fmt(r.rsi_m5)} slope=${fmt(r.slope_m5)} dslope=${fmt(r.dslope_m5)}`
-      ).join("\n"),
+      `## Market Data (${marketData.length} assets) — fields: D1(rsi,sl_s0,dsl) H4(rsi,sl,sl_s0,dsl,z) H1(rsi,rsi_s0,sl_s0,dsl,z,z_s0,rr) M5s0(rsi,sl,dsl,z)`,
+      mdLines,
     ].join("\n");
 
     const systemPrompt = `${CLAUDE_SYSTEM}\n\n--- LIVE CONTEXT ---\n${contextBlock}`;

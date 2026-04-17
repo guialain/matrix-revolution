@@ -12,6 +12,7 @@ import nodeFetch from "node-fetch";
 import { XMLParser } from "fast-xml-parser";
 import { getRiskConfig } from "./src/components/robot/engines/config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "./src/components/robot/engines/config/IntradayConfig.js";
+import { ALLOWED_SYMBOLS } from "./src/components/robot/engines/trading/AssetEligibility.js";
 
 // Use native fetch if available (Node 18+), otherwise node-fetch
 const _fetch = globalThis.fetch ?? nodeFetch;
@@ -1119,7 +1120,7 @@ app.post("/api/claude", async (req, res) => {
         ).join("\n")
       : "  None";
 
-    const mdLines = marketData.slice(0, 25).map(r =>
+    const mdLines = (marketData ?? []).filter(r => ALLOWED_SYMBOLS.includes(r.symbol)).map(r =>
       `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}% IC_regime=${getIntradayRegime(r.intraday_change, r.symbol)}` +
       ` atr=${f2(r.atr_h1)}` +
       ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1)}` +

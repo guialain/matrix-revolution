@@ -10,10 +10,28 @@ const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
   : window.location.origin;
 
+function stripMarkdown(text) {
+  return text
+    .replace(/```[\s\S]*?```/g, "")       // blocs de code
+    .replace(/`[^`]*`/g, "")             // code inline
+    .replace(/#{1,6}\s*/g, "")           // titres
+    .replace(/\*\*([^*]+)\*\*/g, "$1")   // gras
+    .replace(/\*([^*]+)\*/g, "$1")       // italique
+    .replace(/_{1,2}([^_]+)_{1,2}/g, "$1") // underscore
+    .replace(/~~([^~]+)~~/g, "$1")       // barré
+    .replace(/^\s*[-*+]\s+/gm, "")       // listes à puces
+    .replace(/^\s*\d+\.\s+/gm, "")       // listes numérotées
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // liens
+    .replace(/[|#>]/g, "")              // tableaux / blockquotes
+    .replace(/\n{2,}/g, ". ")           // doubles sauts → pause
+    .replace(/\n/g, " ")               // sauts simples
+    .trim();
+}
+
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
-  const msg = new SpeechSynthesisUtterance(text);
+  const msg = new SpeechSynthesisUtterance(stripMarkdown(text));
   msg.lang   = "fr-FR";
   msg.rate   = 1.3;
   msg.pitch  = 0.78;

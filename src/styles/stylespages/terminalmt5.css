@@ -6,7 +6,7 @@
 
 .terminal-mt5-grid {
   display: grid;
-  grid-template-columns: 75fr 25fr;
+  grid-template-columns: 70fr 30fr;
   gap: 12px;
   height: calc(100vh - 72px);
   padding: 12px;

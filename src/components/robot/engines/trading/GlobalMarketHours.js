@@ -15,7 +15,8 @@ const GlobalMarketHours = {
   neo: {
     label: "NEO MATRIX HOURS",
     open: 0.0,    // 00h00 UTC
-    close: 24.0   // 24h/24
+    close: 24.0,  // 24h/24
+    breaks: [{ start: 20.0, end: 22.0 }], // 20h-22h GMT exclue
   },
 
   // =========================
@@ -71,7 +72,8 @@ const GlobalMarketHours = {
     const hour = this.getHour(now);
 
     // --- Neo open ? ---
-    const neoOpen = this.inRange(hour, this.neo.open, this.neo.close);
+    const neoBreak = this.neo.breaks?.some(b => this.inRange(hour, b.start, b.end)) ?? false;
+    const neoOpen  = this.inRange(hour, this.neo.open, this.neo.close) && !neoBreak;
 
     // --- Symbol override > market key > default fallback ---
     const market = (symbol && this.symbolOverrides?.[symbol])

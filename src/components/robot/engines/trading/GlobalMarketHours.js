@@ -30,7 +30,7 @@ const GlobalMarketHours = {
     CRYPTO: { label: "Crypto Market", open: 0.0,  close: 24.0 },
 
     // ---------- INDICES ----------
-    INDEX:  { label: "Index Market",  open: 0.0,  close: 24.0 },
+    INDEX:  { label: "Index Market",  open: 9.0,  close: 19.0 },
 
     // ---------- METALS ----------
     METAL:  { label: "Metals (COMEX)", open: 0.0, close: 24.0 },
@@ -49,7 +49,8 @@ const GlobalMarketHours = {
   // SYMBOL OVERRIDES (heures spécifiques par actif)
   // =========================
   symbolOverrides: {
-    WHEAT: { label: "CBOT Wheat", open: 0.0, close: 24.0 },
+    WHEAT:      { label: "CBOT Wheat",   open: 0.0,  close: 24.0 },
+    JAPAN_225:  { label: "Nikkei 225",   open: 0.0,  close: 24.0 },
   },
 
   // =========================

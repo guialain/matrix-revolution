@@ -793,11 +793,20 @@ const TopOpportunities_V8R = (() => {
 
       const range_ratio_h1 = num(row?.range_ratio_h1);
 
+      // dslope_h1 live = slope_h1_s0 - slope_h1 (s0 vs s1 fermée)
+      // Plus réactif que la colonne CSV (s1-s2 = deux bougies fermées)
+      // Avance le timing d'entrée d'une bougie H1
+      const _slope_h1_s0      = num(row?.slope_h1_s0);
+      const _slope_h1         = num(row?.slope_h1);
+      const _dslope_h1_live   = (_slope_h1_s0 !== null && _slope_h1 !== null)
+        ? _slope_h1_s0 - _slope_h1
+        : null;
+
       const args = [
         num(row?.rsi_h1_s0),
-        num(row?.dslope_h1),
+        _dslope_h1_live,        // ← live au lieu du CSV
         num(row?.zscore_h1_s0),
-        num(row?.slope_h1_s0),
+        _slope_h1_s0,
         range_ratio_h1,
       ];
 
@@ -830,10 +839,10 @@ const TopOpportunities_V8R = (() => {
       if (TOP_CFG.debug) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_s0?.toFixed(2)}`);
         if (match.route?.includes("EXHAUSTION")) {
-          console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${num(row?.slope_h1_s0)?.toFixed(2)} dslope_h1=${num(row?.dslope_h1)?.toFixed(2)}`);
+          console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }
         if (match.route?.includes("CONT-RESUME")) {
-          console.log(`[CONT-RESUME] ${symbol} route=${match.route} mode=${signalMode} dslope_h1=${num(row?.dslope_h1)?.toFixed(2)} zscore_h1_s0=${num(row?.zscore_h1_s0)?.toFixed(2)}`);
+          console.log(`[CONT-RESUME] ${symbol} route=${match.route} mode=${signalMode} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)} zscore_h1_s0=${num(row?.zscore_h1_s0)?.toFixed(2)}`);
         }
         if (range_ratio_h1 !== null && range_ratio_h1 > 0.8) {
           console.log(`[LATE_ENTRY] ${symbol} range_ratio_h1=${range_ratio_h1?.toFixed(2)} isLateEntry=true`);
@@ -848,7 +857,7 @@ const TopOpportunities_V8R = (() => {
         symbol,
         type: signalType, side: match.side,
         slope_h1:             num(row?.slope_h1),
-        dslope_h1:            num(row?.dslope_h1),
+        dslope_h1:            _dslope_h1_live,
         zscore_h1:            num(row?.zscore_h1),
         rsi_h1:               num(row?.rsi_h1),
         rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
@@ -905,7 +914,8 @@ const TopOpportunities_V8R = (() => {
         // H1 s1
         rsi_h1:         num(row?.rsi_h1),
         slope_h1:       num(row?.slope_h1),
-        dslope_h1:      num(row?.dslope_h1),
+        dslope_h1:      _dslope_h1_live,      // live = slope_h1_s0 - slope_h1
+        dslope_h1_csv:  num(row?.dslope_h1),  // original CSV pour debug
         drsi_h1:        num(row?.drsi_h1),
         zscore_h1:      num(row?.zscore_h1),
         dz_h1:          num(row?.dz_h1),
@@ -1014,11 +1024,17 @@ const TopOpportunities_V8R = (() => {
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;
 
+        const _slope_h1_s0_dbg  = num(row?.slope_h1_s0);
+        const _slope_h1_dbg     = num(row?.slope_h1);
+        const _dslope_h1_dbg    = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
+          ? _slope_h1_s0_dbg - _slope_h1_dbg
+          : null;
+
         const _dbg_args = [
           num(row?.rsi_h1_s0),
-          num(row?.dslope_h1),
+          _dslope_h1_dbg,
           num(row?.zscore_h1_s0),
-          num(row?.slope_h1_s0),
+          _slope_h1_s0_dbg,
           num(row?.range_ratio_h1),
         ];
         const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
@@ -1029,9 +1045,8 @@ const TopOpportunities_V8R = (() => {
         if (!routeMatch) {
           const rsi      = num(row?.rsi_h1_s0);
           const zscore   = num(row?.zscore_h1_s0);
-          const dslope   = num(row?.dslope_h1);
           const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
-          console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1=${dslope?.toFixed(2)}`);
+          console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
           continue;
         }
 

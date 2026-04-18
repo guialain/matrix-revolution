@@ -801,6 +801,7 @@ const TopOpportunities_V8R = (() => {
       const _dslope_h1_live   = (_slope_h1_s0 !== null && _slope_h1 !== null)
         ? _slope_h1_s0 - _slope_h1
         : null;
+      if (_dslope_h1_live !== null && Math.abs(_dslope_h1_live) >= antiSpikeH1S0) continue;
 
       const args = [
         num(row?.rsi_h1_s0),
@@ -849,7 +850,7 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _drsi_h1_s0, dslopeH4, symbol)) continue;
+      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _dslope_h1_live, dslopeH4, symbol)) continue;
 
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
@@ -1009,7 +1010,7 @@ const TopOpportunities_V8R = (() => {
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
         const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
-        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _drsi_h1_s0, _dsh4, sym)) continue;
+        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _dslope_h1_dbg, _dsh4, sym)) continue;
         cDrsiGate++;
 
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;

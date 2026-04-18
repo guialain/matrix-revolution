@@ -785,10 +785,16 @@ const TopOpportunities_V8R = (() => {
       const dslopeH4 = (_sh4s0 !== null && _sh4s1 !== null) ? _sh4s0 - _sh4s1 : null;
 
       // D1 state — module la résolution BUY + SELL (miroir)
-      const _sd1s0        = num(row?.slope_d1_s0);
-      const _dslope_d1_s0 = num(row?.dslope_d1_s0);
-      const d1State = (_sd1s0 !== null && _dslope_d1_s0 !== null)
-        ? getD1State(_sd1s0, _dslope_d1_s0)
+      // dslope_d1_live = slope_d1_s0 - slope_d1 (s0 vs s1 fermée)
+      // La colonne dslope_d1_s0 n'existe pas dans le CSV
+      // Même approche que dslope_h1_live
+      const _sd1s0          = num(row?.slope_d1_s0);
+      const _slope_d1       = num(row?.slope_d1);
+      const _dslope_d1_live = (_sd1s0 !== null && _slope_d1 !== null)
+        ? _sd1s0 - _slope_d1
+        : null;
+      const d1State = (_sd1s0 !== null && _dslope_d1_live !== null)
+        ? getD1State(_sd1s0, _dslope_d1_live)
         : "D1_FLAT";
 
       const range_ratio_h1 = num(row?.range_ratio_h1);
@@ -838,7 +844,7 @@ const TopOpportunities_V8R = (() => {
       if (!match) continue;
 
       if (TOP_CFG.debug) {
-        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_s0?.toFixed(2)}`);
+        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)})`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }
@@ -901,8 +907,9 @@ const TopOpportunities_V8R = (() => {
         d1State,
 
         // D1
-        slope_d1_s0:  _sd1s0,
-        dslope_d1_s0: _dslope_d1_s0,
+        slope_d1_s0:    _sd1s0,
+        dslope_d1_live: _dslope_d1_live,   // live = slope_d1_s0 - slope_d1
+        dslope_d1_csv:  num(row?.dslope_d1), // original CSV pour debug
 
         // H4
         slope_h4:    num(row?.slope_h4),
@@ -997,10 +1004,13 @@ const TopOpportunities_V8R = (() => {
         const _ds1 = num(row?.slope_h4);
         const _dsh4 = (_ds0 !== null && _ds1 !== null) ? _ds0 - _ds1 : null;
 
-        const _dbg_sd1s0        = num(row?.slope_d1_s0);
-        const _dbg_dslope_d1_s0 = num(row?.dslope_d1_s0);
-        const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1_s0 !== null)
-          ? getD1State(_dbg_sd1s0, _dbg_dslope_d1_s0) : "D1_FLAT";
+        const _dbg_sd1s0    = num(row?.slope_d1_s0);
+        const _dbg_slope_d1 = num(row?.slope_d1);
+        const _dbg_dslope_d1 = (_dbg_sd1s0 !== null && _dbg_slope_d1 !== null)
+          ? _dbg_sd1s0 - _dbg_slope_d1
+          : null;
+        const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1 !== null)
+          ? getD1State(_dbg_sd1s0, _dbg_dslope_d1) : "D1_FLAT";
 
         const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY",  1.0, _dbg_d1State);
         const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL", 1.0, _dbg_d1State);
@@ -1081,7 +1091,9 @@ const TopOpportunities_V8R = (() => {
         const sh4  = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
         const _s0  = num(row?.slope_h4_s0), _s1 = num(row?.slope_h4);
         const dsh4 = (_s0 !== null && _s1 !== null) ? _s0 - _s1 : null;
-        const _bk_sd1   = num(row?.slope_d1_s0), _bk_dsd1 = num(row?.dslope_d1_s0);
+        const _bk_sd1   = num(row?.slope_d1_s0);
+        const _bk_sl_d1 = num(row?.slope_d1);
+        const _bk_dsd1  = (_bk_sd1 !== null && _bk_sl_d1 !== null) ? _bk_sd1 - _bk_sl_d1 : null;
         const _bk_d1    = (_bk_sd1 !== null && _bk_dsd1 !== null) ? getD1State(_bk_sd1, _bk_dsd1) : "D1_FLAT";
         const br  = resolve3D(il, sh4, dsh4, "BUY",  1.0, _bk_d1);
         const sr  = resolve3D(il, sh4, dsh4, "SELL", 1.0, _bk_d1);

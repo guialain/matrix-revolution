@@ -182,20 +182,22 @@ const TopOpportunities_V8R = (() => {
         },
         D1_STRONG_DOWN: {
           IC_SPIKE_DOWN: { action: "block" },
-          IC_DOWN:       { action: "block" },
+          IC_DOWN:       dslope_d1_live !== null && dslope_d1_live > 0.5
+                           ? { action: "unchanged", mode: "strict" }
+                           : { action: "block" },
           IC_NEUTRE:     { action: "block" },
-          IC_UP:         { action: "REVERSAL", mode: "strict" },
-          IC_SPIKE_UP:   { action: "REVERSAL", mode: "spike"  },
+          IC_UP:         { action: "REVERSAL",  mode: "strict" },
+          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
         },
       };
 
       // IC group pour la matrice D1
       const icGroup =
-        intradayLevel === "SPIKE_UP"                                                                       ? "IC_SPIKE_UP"  :
-        (intradayLevel === "SOFT_UP" || intradayLevel === "STRONG_UP" || intradayLevel === "EXPLOSIVE_UP") ? "IC_UP"        :
-        intradayLevel === "NEUTRE"                                                                         ? "IC_NEUTRE"    :
-        (intradayLevel === "STRONG_DOWN" || intradayLevel === "SOFT_DOWN")                                 ? "IC_DOWN"      :
-        "IC_SPIKE_DOWN"; // SPIKE_DOWN + EXPLOSIVE_DOWN
+        intradayLevel === "SPIKE_UP"                                                                             ? "IC_SPIKE_UP"  :
+        (intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP")   ? "IC_UP"        :
+        intradayLevel === "NEUTRE"                                                                               ? "IC_NEUTRE"    :
+        (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN") ? "IC_DOWN"      :
+        "IC_SPIKE_DOWN"; // SPIKE_DOWN seulement
 
       const d1Entry = D1_BUY_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
       if (d1Entry.action === "block") return null;
@@ -225,11 +227,11 @@ const TopOpportunities_V8R = (() => {
     if (side === "SELL") {
       // IC group pour la matrice D1 (miroir BUY)
       const icGroup =
-        intradayLevel === "SPIKE_DOWN"                                                                          ? "IC_SPIKE_DOWN" :
-        (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN") ? "IC_DOWN"       :
-        intradayLevel === "NEUTRE"                                                                              ? "IC_NEUTRE"     :
-        (intradayLevel === "STRONG_UP" || intradayLevel === "SOFT_UP")                                         ? "IC_UP"         :
-        "IC_SPIKE_UP"; // SPIKE_UP + EXPLOSIVE_UP
+        intradayLevel === "SPIKE_DOWN"                                                                             ? "IC_SPIKE_DOWN" :
+        (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN")   ? "IC_DOWN"       :
+        intradayLevel === "NEUTRE"                                                                                 ? "IC_NEUTRE"     :
+        (intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP")     ? "IC_UP"         :
+        "IC_SPIKE_UP"; // SPIKE_UP seulement
 
       const D1_SELL_MATRIX = {
         D1_STRONG_DOWN: {
@@ -280,10 +282,12 @@ const TopOpportunities_V8R = (() => {
         },
         D1_STRONG_UP: {
           IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         { action: "block" },
+          IC_UP:         dslope_d1_live !== null && dslope_d1_live < -0.5
+                           ? { action: "unchanged", mode: "strict" }
+                           : { action: "block" },
           IC_NEUTRE:     { action: "block" },
-          IC_DOWN:       { action: "REVERSAL", mode: "strict" },
-          IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike"  },
+          IC_DOWN:       { action: "REVERSAL",  mode: "strict" },
+          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
         },
       };
 
@@ -864,6 +868,8 @@ const TopOpportunities_V8R = (() => {
           console.log(`[D1_EMERGING] ${symbol} d1State=${d1State} → signalType=${signalType} signalMode=${signalMode}`);
         if (signalMode === "spike" && (d1State === "D1_STRONG_UP" || d1State === "D1_STRONG_DOWN"))
           console.log(`[D1_STRONG_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike contra D1_STRONG`);
+        if (signalMode !== "spike" && (d1State === "D1_STRONG_UP" || d1State === "D1_STRONG_DOWN"))
+          console.log(`[D1_STRONG_CONT] ${symbol} d1State=${d1State} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} → unchanged strict`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }

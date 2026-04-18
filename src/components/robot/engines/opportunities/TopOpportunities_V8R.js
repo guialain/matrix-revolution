@@ -171,13 +171,13 @@ const TopOpportunities_V8R = (() => {
         },
         D1_FADING_DOWN: {
           IC_SPIKE_DOWN: { action: "block" },
-          IC_DOWN:       dslope_d1_live !== null && dslope_d1_live > 0.5
-                           ? { action: "REVERSAL", mode: "strict" }
-                           : { action: "block" },
+          IC_DOWN:       { action: "block" },
           IC_NEUTRE:     dslope_d1_live !== null && dslope_d1_live > 0.5
-                           ? { action: "REVERSAL", mode: "strict" }
+                           ? { action: "EARLY",     mode: "strict" }
                            : { action: "block" },
-          IC_UP:         { action: "REVERSAL",     mode: "strict"  },
+          IC_UP:         dslope_d1_live !== null && dslope_d1_live > 0.5
+                           ? { action: "unchanged", mode: "strict" }
+                           : { action: "block" },
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_STRONG_DOWN: {
@@ -267,13 +267,13 @@ const TopOpportunities_V8R = (() => {
         },
         D1_FADING_UP: {
           IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         dslope_d1_live !== null && dslope_d1_live < -0.5
-                           ? { action: "REVERSAL", mode: "strict" }
-                           : { action: "block" },
+          IC_UP:         { action: "block" },
           IC_NEUTRE:     dslope_d1_live !== null && dslope_d1_live < -0.5
-                           ? { action: "REVERSAL", mode: "strict" }
+                           ? { action: "EARLY",     mode: "strict" }
                            : { action: "block" },
-          IC_DOWN:       { action: "REVERSAL",     mode: "strict"  },
+          IC_DOWN:       dslope_d1_live !== null && dslope_d1_live < -0.5
+                           ? { action: "unchanged", mode: "strict" }
+                           : { action: "block" },
           IC_SPIKE_DOWN: { action: "block" },
         },
         D1_STRONG_UP: {
@@ -853,7 +853,7 @@ const TopOpportunities_V8R = (() => {
       if (!match) continue;
 
       if (TOP_CFG.debug) {
-        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → fading_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'SELL_OK' : _dslope_d1_live > 0.5 ? 'BUY_OK' : 'BLOCK') : 'null'}`);
+        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }

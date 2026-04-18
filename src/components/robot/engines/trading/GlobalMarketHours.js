@@ -49,7 +49,7 @@ const GlobalMarketHours = {
   // SYMBOL OVERRIDES (heures spécifiques par actif)
   // =========================
   symbolOverrides: {
-    WHEAT:      { label: "CBOT Wheat",   open: 0.0,  close: 24.0 },
+    WHEAT:      { label: "CBOT Wheat",   open: 9.0,  close: 16.0 },
     JAPAN_225:  { label: "Nikkei 225",   open: 0.0,  close: 24.0 },
   },
 

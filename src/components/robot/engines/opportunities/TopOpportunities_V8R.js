@@ -149,10 +149,10 @@ const TopOpportunities_V8R = (() => {
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_EMERGING_UP: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"   },
-          IC_DOWN:       { action: "unchanged", mode: "soft"    },
-          IC_NEUTRE:     { action: "EARLY",     mode: "relaxed" },
-          IC_UP:         { action: "unchanged", mode: "soft"    },
+          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
+          IC_DOWN:       { action: "unchanged", mode: "soft"   },
+          IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
+          IC_UP:         { action: "unchanged", mode: "soft"   },
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_FLAT: {
@@ -249,10 +249,10 @@ const TopOpportunities_V8R = (() => {
           IC_SPIKE_DOWN: { action: "block" },
         },
         D1_EMERGING_DOWN: {
-          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"   },
-          IC_UP:         { action: "unchanged", mode: "soft"    },
-          IC_NEUTRE:     { action: "EARLY",     mode: "relaxed" },
-          IC_DOWN:       { action: "unchanged", mode: "soft"    },
+          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
+          IC_UP:         { action: "unchanged", mode: "soft"   },
+          IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
+          IC_DOWN:       { action: "unchanged", mode: "soft"   },
           IC_SPIKE_DOWN: { action: "block" },
         },
         D1_FLAT: {

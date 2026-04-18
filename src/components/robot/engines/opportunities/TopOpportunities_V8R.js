@@ -149,10 +149,10 @@ const TopOpportunities_V8R = (() => {
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_EMERGING_UP: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "normal"  },
-          IC_DOWN:       { action: "REVERSAL",     mode: "strict"  },
-          IC_NEUTRE:     { action: "EARLY",        mode: "relaxed" },
-          IC_UP:         { action: "CONTINUATION", mode: "soft"    },
+          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"   },
+          IC_DOWN:       { action: "unchanged", mode: "soft"    },
+          IC_NEUTRE:     { action: "EARLY",     mode: "relaxed" },
+          IC_UP:         { action: "unchanged", mode: "soft"    },
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_FLAT: {
@@ -247,10 +247,10 @@ const TopOpportunities_V8R = (() => {
           IC_SPIKE_DOWN: { action: "block" },
         },
         D1_EMERGING_DOWN: {
-          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "normal"  },
-          IC_UP:         { action: "REVERSAL",     mode: "strict"  },
-          IC_NEUTRE:     { action: "EARLY",        mode: "relaxed" },
-          IC_DOWN:       { action: "CONTINUATION", mode: "soft"    },
+          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"   },
+          IC_UP:         { action: "unchanged", mode: "soft"    },
+          IC_NEUTRE:     { action: "EARLY",     mode: "relaxed" },
+          IC_DOWN:       { action: "unchanged", mode: "soft"    },
           IC_SPIKE_DOWN: { action: "block" },
         },
         D1_FLAT: {
@@ -860,6 +860,8 @@ const TopOpportunities_V8R = (() => {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
         if (signalMode === "spike" && (d1State === "D1_FADING_UP" || d1State === "D1_FADING_DOWN"))
           console.log(`[D1_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike forcé par D1`);
+        if (d1State === "D1_EMERGING_DOWN" || d1State === "D1_EMERGING_UP")
+          console.log(`[D1_EMERGING] ${symbol} d1State=${d1State} → signalType=${signalType} signalMode=${signalMode}`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }

@@ -170,7 +170,7 @@ const TopOpportunities_V8R = (() => {
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_FADING_DOWN: {
-          IC_SPIKE_DOWN: { action: "block" },
+          IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
           IC_DOWN:       { action: "block" },
           IC_NEUTRE:     dslope_d1_live !== null && dslope_d1_live > 0.5
                            ? { action: "EARLY",     mode: "strict" }
@@ -205,7 +205,9 @@ const TopOpportunities_V8R = (() => {
 
       if (d1Entry.action !== "unchanged") {
         // Type forcé par la matrice D1 × IC
-        const finalMode = baseIsSpike ? "spike" : d1Entry.mode;
+        const finalMode = d1Entry.mode === "spike" ? "spike"
+                        : baseIsSpike ? "spike"
+                        : d1Entry.mode;
         return { type: d1Entry.action, ...(finalMode ? { mode: finalMode } : {}) };
       }
 
@@ -274,7 +276,7 @@ const TopOpportunities_V8R = (() => {
           IC_DOWN:       dslope_d1_live !== null && dslope_d1_live < -0.5
                            ? { action: "unchanged", mode: "strict" }
                            : { action: "block" },
-          IC_SPIKE_DOWN: { action: "block" },
+          IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
         },
         D1_STRONG_UP: {
           IC_SPIKE_UP:   { action: "block" },
@@ -293,7 +295,9 @@ const TopOpportunities_V8R = (() => {
 
       if (d1Entry.action !== "unchanged") {
         // Type forcé par la matrice D1 × IC
-        const finalMode = baseIsSpike ? "spike" : d1Entry.mode;
+        const finalMode = d1Entry.mode === "spike" ? "spike"
+                        : baseIsSpike ? "spike"
+                        : d1Entry.mode;
         return { type: d1Entry.action, ...(finalMode ? { mode: finalMode } : {}) };
       }
 
@@ -854,6 +858,8 @@ const TopOpportunities_V8R = (() => {
 
       if (TOP_CFG.debug) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
+        if (signalMode === "spike" && (d1State === "D1_FADING_UP" || d1State === "D1_FADING_DOWN"))
+          console.log(`[D1_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike forcé par D1`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }

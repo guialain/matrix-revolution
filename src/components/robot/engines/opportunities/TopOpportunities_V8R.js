@@ -266,12 +266,13 @@ const TopOpportunities_V8R = (() => {
       // Spike mode préservé si SPIKE_DOWN + H4 aligné (jamais écrasé par la matrice)
       const baseIsSpike = intradayLevel === "SPIKE_DOWN" && h4Up && dh4OkBuy;
 
+      // Précomputer finalMode hors du bloc if — évite TDZ dans le bundle Rolldown
+      const buyFinalMode = d1Entry.mode === "spike" ? "spike"
+                         : baseIsSpike ? "spike"
+                         : d1Entry.mode;
+
       if (d1Entry.action !== "unchanged") {
-        // Type forcé par la matrice D1 × IC
-        const finalMode = d1Entry.mode === "spike" ? "spike"
-                        : baseIsSpike ? "spike"
-                        : d1Entry.mode;
-        return { type: d1Entry.action, ...(finalMode ? { mode: finalMode } : {}) };
+        return { type: d1Entry.action, ...(buyFinalMode ? { mode: buyFinalMode } : {}) };
       }
 
       // "unchanged" — logique H4 existante, mode de la matrice appliqué
@@ -301,12 +302,13 @@ const TopOpportunities_V8R = (() => {
       // Spike mode préservé si SPIKE_UP + H4 aligné (jamais écrasé par la matrice)
       const baseIsSpike = intradayLevel === "SPIKE_UP" && h4Down && dh4OkSell;
 
+      // Précomputer finalMode hors du bloc if — évite TDZ dans le bundle Rolldown
+      const sellFinalMode = d1Entry.mode === "spike" ? "spike"
+                          : baseIsSpike ? "spike"
+                          : d1Entry.mode;
+
       if (d1Entry.action !== "unchanged") {
-        // Type forcé par la matrice D1 × IC
-        const finalMode = d1Entry.mode === "spike" ? "spike"
-                        : baseIsSpike ? "spike"
-                        : d1Entry.mode;
-        return { type: d1Entry.action, ...(finalMode ? { mode: finalMode } : {}) };
+        return { type: d1Entry.action, ...(sellFinalMode ? { mode: sellFinalMode } : {}) };
       }
 
       // "unchanged" — logique H4 existante, mode de la matrice appliqué

@@ -562,6 +562,7 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [0-28] EXHAUSTION
     if (rsi < 28
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.zRev)
@@ -569,6 +570,7 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [28-50] EXHAUSTION
     if (rsi >= 28 && rsi < 50
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.z3050)
@@ -576,6 +578,7 @@ const TopOpportunities_V8R = (() => {
 
     // BUY [50-72] EXHAUSTION
     if (rsi >= 50 && rsi < 72
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.z5070)
@@ -653,6 +656,7 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [72-100] EXHAUSTION
     if (rsi >= 72
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.zRev)
@@ -660,6 +664,7 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [50-72] EXHAUSTION
     if (rsi >= 50 && rsi < 72
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.z3050)
@@ -667,6 +672,7 @@ const TopOpportunities_V8R = (() => {
 
     // SELL [28-50] EXHAUSTION
     if (rsi >= 28 && rsi < 50
+     && !isLateEntry
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.z5070)

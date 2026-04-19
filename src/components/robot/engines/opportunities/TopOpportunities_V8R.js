@@ -132,6 +132,11 @@ const TopOpportunities_V8R = (() => {
     const isUpIC   = intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP";
     const isDownIC = intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN";
 
+    // Précomputer les gates dslope_d1_live — évite les ternaires dans les literals
+    // (prévient le TDZ dans le code minifié par Rolldown)
+    const _fadeOkBuy  = dslope_d1_live !== null && dslope_d1_live >  0.5;
+    const _fadeOkSell = dslope_d1_live !== null && dslope_d1_live < -0.5;
+
     if (side === "BUY") {
       const D1_BUY_MATRIX = {
         D1_STRONG_UP: {
@@ -172,19 +177,13 @@ const TopOpportunities_V8R = (() => {
         D1_FADING_DOWN: {
           IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
           IC_DOWN:       { action: "block" },
-          IC_NEUTRE:     dslope_d1_live !== null && dslope_d1_live > 0.5
-                           ? { action: "EARLY",     mode: "strict" }
-                           : { action: "block" },
-          IC_UP:         dslope_d1_live !== null && dslope_d1_live > 0.5
-                           ? { action: "unchanged", mode: "strict" }
-                           : { action: "block" },
+          IC_NEUTRE:     _fadeOkBuy ? { action: "EARLY",     mode: "strict" } : { action: "block" },
+          IC_UP:         _fadeOkBuy ? { action: "unchanged", mode: "strict" } : { action: "block" },
           IC_SPIKE_UP:   { action: "block" },
         },
         D1_STRONG_DOWN: {
           IC_SPIKE_DOWN: { action: "block" },
-          IC_DOWN:       dslope_d1_live !== null && dslope_d1_live > 0.5
-                           ? { action: "unchanged", mode: "strict" }
-                           : { action: "block" },
+          IC_DOWN:       _fadeOkBuy ? { action: "unchanged", mode: "strict" } : { action: "block" },
           IC_NEUTRE:     { action: "block" },
           IC_UP:         { action: "REVERSAL",  mode: "strict" },
           IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
@@ -272,19 +271,13 @@ const TopOpportunities_V8R = (() => {
         D1_FADING_UP: {
           IC_SPIKE_UP:   { action: "block" },
           IC_UP:         { action: "block" },
-          IC_NEUTRE:     dslope_d1_live !== null && dslope_d1_live < -0.5
-                           ? { action: "EARLY",     mode: "strict" }
-                           : { action: "block" },
-          IC_DOWN:       dslope_d1_live !== null && dslope_d1_live < -0.5
-                           ? { action: "unchanged", mode: "strict" }
-                           : { action: "block" },
+          IC_NEUTRE:     _fadeOkSell ? { action: "EARLY",     mode: "strict" } : { action: "block" },
+          IC_DOWN:       _fadeOkSell ? { action: "unchanged", mode: "strict" } : { action: "block" },
           IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
         },
         D1_STRONG_UP: {
           IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         dslope_d1_live !== null && dslope_d1_live < -0.5
-                           ? { action: "unchanged", mode: "strict" }
-                           : { action: "block" },
+          IC_UP:         _fadeOkSell ? { action: "unchanged", mode: "strict" } : { action: "block" },
           IC_NEUTRE:     { action: "block" },
           IC_DOWN:       { action: "REVERSAL",  mode: "strict" },
           IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },

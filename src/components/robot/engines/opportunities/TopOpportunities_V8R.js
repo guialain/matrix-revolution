@@ -1048,6 +1048,12 @@ const TopOpportunities_V8R = (() => {
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
+        const _slope_h1_s0_dbg  = num(row?.slope_h1_s0);
+        const _slope_h1_dbg     = num(row?.slope_h1);
+        const _dslope_h1_dbg    = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
+          ? _slope_h1_s0_dbg - _slope_h1_dbg
+          : null;
+
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
         const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
@@ -1065,12 +1071,6 @@ const TopOpportunities_V8R = (() => {
                       ));
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;
-
-        const _slope_h1_s0_dbg  = num(row?.slope_h1_s0);
-        const _slope_h1_dbg     = num(row?.slope_h1);
-        const _dslope_h1_dbg    = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
-          ? _slope_h1_s0_dbg - _slope_h1_dbg
-          : null;
 
         const _dbg_args = [
           num(row?.rsi_h1_s0),

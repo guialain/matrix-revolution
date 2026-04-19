@@ -112,6 +112,119 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
+  // D1 MATRICES — déclarées au niveau module pour éviter le TDZ dans le bundle
+  // minifié (Rolldown hisse les `const` déclarés dans des blocs `if` au scope
+  // de la fonction, ce qui crée un TDZ si le bloc n'est pas exécuté en premier).
+  //
+  // Entrées avec _gate:"buy" → conditionnelles sur _fadeOkBuy  (dslope_d1_live > 0.5)
+  // Entrées avec _gate:"sell"→ conditionnelles sur _fadeOkSell (dslope_d1_live < -0.5)
+  // Résolution : (_raw._gate === "buy" && !_fadeOkBuy) ? { action:"block" } : _raw
+  // ============================================================================
+  const D1_BUY_MATRIX = {
+    D1_STRONG_UP: {
+      IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "relaxed" },
+      IC_DOWN:       { action: "REVERSAL",     mode: "soft"    },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_UP:         { action: "CONTINUATION", mode: "relaxed" },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_FADING_UP: {
+      IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "soft"    },
+      IC_DOWN:       { action: "REVERSAL",     mode: "normal"  },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_UP:         { action: "CONTINUATION", mode: "soft"    },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_EMERGING_UP: {
+      IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
+      IC_DOWN:       { action: "unchanged", mode: "soft"   },
+      IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
+      IC_UP:         { action: "unchanged", mode: "soft"   },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_FLAT: {
+      IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "normal"  },
+      IC_DOWN:       { action: "unchanged",    mode: "normal"  },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_UP:         { action: "unchanged",    mode: "normal"  },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_EMERGING_DOWN: {
+      IC_SPIKE_DOWN: { action: "block" },
+      IC_DOWN:       { action: "block" },
+      IC_NEUTRE:     { action: "EARLY",     mode: "strict"  },
+      IC_UP:         { action: "REVERSAL",  mode: "normal"  },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_FADING_DOWN: {
+      IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
+      IC_DOWN:       { action: "block" },
+      IC_NEUTRE:     { action: "EARLY",     mode: "strict", _gate: "buy" },
+      IC_UP:         { action: "unchanged", mode: "strict", _gate: "buy" },
+      IC_SPIKE_UP:   { action: "block" },
+    },
+    D1_STRONG_DOWN: {
+      IC_SPIKE_DOWN: { action: "block" },
+      IC_DOWN:       { action: "unchanged", mode: "strict", _gate: "buy" },
+      IC_NEUTRE:     { action: "block" },
+      IC_UP:         { action: "REVERSAL",  mode: "strict" },
+      IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
+    },
+  };
+
+  const D1_SELL_MATRIX = {
+    D1_STRONG_DOWN: {
+      IC_SPIKE_UP:   { action: "REVERSAL",     mode: "relaxed" },
+      IC_UP:         { action: "REVERSAL",     mode: "soft"    },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_DOWN:       { action: "CONTINUATION", mode: "relaxed" },
+      IC_SPIKE_DOWN: { action: "block" },
+    },
+    D1_FADING_DOWN: {
+      IC_SPIKE_UP:   { action: "REVERSAL",     mode: "soft"    },
+      IC_UP:         { action: "REVERSAL",     mode: "normal"  },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_DOWN:       { action: "CONTINUATION", mode: "soft"    },
+      IC_SPIKE_DOWN: { action: "block" },
+    },
+    D1_EMERGING_DOWN: {
+      IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
+      IC_UP:         { action: "unchanged", mode: "soft"   },
+      IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
+      IC_DOWN:       { action: "unchanged", mode: "soft"   },
+      IC_SPIKE_DOWN: { action: "block" },
+    },
+    D1_FLAT: {
+      IC_SPIKE_UP:   { action: "REVERSAL",     mode: "normal"  },
+      IC_UP:         { action: "unchanged",    mode: "normal"  },
+      IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
+      IC_DOWN:       { action: "unchanged",    mode: "normal"  },
+      IC_SPIKE_DOWN: { action: "block" },
+    },
+    D1_EMERGING_UP: {
+      IC_SPIKE_UP:   { action: "block" },
+      IC_UP:         { action: "block" },
+      IC_NEUTRE:     { action: "EARLY",     mode: "strict"  },
+      IC_DOWN:       { action: "REVERSAL",  mode: "normal"  },
+      IC_SPIKE_DOWN: { action: "block" },
+    },
+    D1_FADING_UP: {
+      IC_SPIKE_UP:   { action: "block" },
+      IC_UP:         { action: "block" },
+      IC_NEUTRE:     { action: "EARLY",     mode: "strict", _gate: "sell" },
+      IC_DOWN:       { action: "unchanged", mode: "strict", _gate: "sell" },
+      IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
+    },
+    D1_STRONG_UP: {
+      IC_SPIKE_UP:   { action: "block" },
+      IC_UP:         { action: "unchanged", mode: "strict", _gate: "sell" },
+      IC_NEUTRE:     { action: "block" },
+      IC_DOWN:       { action: "REVERSAL",  mode: "strict" },
+      IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
+    },
+  };
+
+  // ============================================================================
   // 3D RESOLUTION : intradayLevel x slopeH4Level x dslopeH4 => { type, mode }
   // dslopeH4 = slope_h4_s0 - slope_h4 (accélération H4 live)
   // d1State  = getD1State(slope_d1_s0, dslope_d1_s0) — croisé avec intradayLevel
@@ -138,58 +251,6 @@ const TopOpportunities_V8R = (() => {
     const _fadeOkSell = dslope_d1_live !== null && dslope_d1_live < -0.5;
 
     if (side === "BUY") {
-      const D1_BUY_MATRIX = {
-        D1_STRONG_UP: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "relaxed" },
-          IC_DOWN:       { action: "REVERSAL",     mode: "soft"    },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_UP:         { action: "CONTINUATION", mode: "relaxed" },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_FADING_UP: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "soft"    },
-          IC_DOWN:       { action: "REVERSAL",     mode: "normal"  },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_UP:         { action: "CONTINUATION", mode: "soft"    },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_EMERGING_UP: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
-          IC_DOWN:       { action: "unchanged", mode: "soft"   },
-          IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
-          IC_UP:         { action: "unchanged", mode: "soft"   },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_FLAT: {
-          IC_SPIKE_DOWN: { action: "REVERSAL",     mode: "normal"  },
-          IC_DOWN:       { action: "unchanged",    mode: "normal"  },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_UP:         { action: "unchanged",    mode: "normal"  },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_EMERGING_DOWN: {
-          IC_SPIKE_DOWN: { action: "block" },
-          IC_DOWN:       { action: "block" },
-          IC_NEUTRE:     { action: "EARLY",        mode: "strict"  },
-          IC_UP:         { action: "REVERSAL",     mode: "normal"  },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_FADING_DOWN: {
-          IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
-          IC_DOWN:       { action: "block" },
-          IC_NEUTRE:     _fadeOkBuy ? { action: "EARLY",     mode: "strict" } : { action: "block" },
-          IC_UP:         _fadeOkBuy ? { action: "unchanged", mode: "strict" } : { action: "block" },
-          IC_SPIKE_UP:   { action: "block" },
-        },
-        D1_STRONG_DOWN: {
-          IC_SPIKE_DOWN: { action: "block" },
-          IC_DOWN:       _fadeOkBuy ? { action: "unchanged", mode: "strict" } : { action: "block" },
-          IC_NEUTRE:     { action: "block" },
-          IC_UP:         { action: "REVERSAL",  mode: "strict" },
-          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
-        },
-      };
-
       // IC group pour la matrice D1
       const icGroup =
         intradayLevel === "SPIKE_UP"                                                                             ? "IC_SPIKE_UP"  :
@@ -198,7 +259,8 @@ const TopOpportunities_V8R = (() => {
         (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN") ? "IC_DOWN"      :
         "IC_SPIKE_DOWN"; // SPIKE_DOWN seulement
 
-      const d1Entry = D1_BUY_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
+      const _rawBuy = D1_BUY_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
+      const d1Entry = (_rawBuy._gate === "buy" && !_fadeOkBuy) ? { action: "block" } : _rawBuy;
       if (d1Entry.action === "block") return null;
 
       // Spike mode préservé si SPIKE_DOWN + H4 aligné (jamais écrasé par la matrice)
@@ -232,59 +294,8 @@ const TopOpportunities_V8R = (() => {
         (intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP")     ? "IC_UP"         :
         "IC_SPIKE_UP"; // SPIKE_UP seulement
 
-      const D1_SELL_MATRIX = {
-        D1_STRONG_DOWN: {
-          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "relaxed" },
-          IC_UP:         { action: "REVERSAL",     mode: "soft"    },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_DOWN:       { action: "CONTINUATION", mode: "relaxed" },
-          IC_SPIKE_DOWN: { action: "block" },
-        },
-        D1_FADING_DOWN: {
-          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "soft"    },
-          IC_UP:         { action: "REVERSAL",     mode: "normal"  },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_DOWN:       { action: "CONTINUATION", mode: "soft"    },
-          IC_SPIKE_DOWN: { action: "block" },
-        },
-        D1_EMERGING_DOWN: {
-          IC_SPIKE_UP:   { action: "REVERSAL",  mode: "spike"  },
-          IC_UP:         { action: "unchanged", mode: "soft"   },
-          IC_NEUTRE:     { action: "EARLY",     mode: "normal" },
-          IC_DOWN:       { action: "unchanged", mode: "soft"   },
-          IC_SPIKE_DOWN: { action: "block" },
-        },
-        D1_FLAT: {
-          IC_SPIKE_UP:   { action: "REVERSAL",     mode: "normal"  },
-          IC_UP:         { action: "unchanged",    mode: "normal"  },
-          IC_NEUTRE:     { action: "unchanged",    mode: "normal"  },
-          IC_DOWN:       { action: "unchanged",    mode: "normal"  },
-          IC_SPIKE_DOWN: { action: "block" },
-        },
-        D1_EMERGING_UP: {
-          IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         { action: "block" },
-          IC_NEUTRE:     { action: "EARLY",        mode: "strict"  },
-          IC_DOWN:       { action: "REVERSAL",     mode: "normal"  },
-          IC_SPIKE_DOWN: { action: "block" },
-        },
-        D1_FADING_UP: {
-          IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         { action: "block" },
-          IC_NEUTRE:     _fadeOkSell ? { action: "EARLY",     mode: "strict" } : { action: "block" },
-          IC_DOWN:       _fadeOkSell ? { action: "unchanged", mode: "strict" } : { action: "block" },
-          IC_SPIKE_DOWN: { action: "REVERSAL", mode: "spike" },
-        },
-        D1_STRONG_UP: {
-          IC_SPIKE_UP:   { action: "block" },
-          IC_UP:         _fadeOkSell ? { action: "unchanged", mode: "strict" } : { action: "block" },
-          IC_NEUTRE:     { action: "block" },
-          IC_DOWN:       { action: "REVERSAL",  mode: "strict" },
-          IC_SPIKE_DOWN: { action: "REVERSAL",  mode: "spike"  },
-        },
-      };
-
-      const d1Entry = D1_SELL_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
+      const _rawSell = D1_SELL_MATRIX[d1State]?.[icGroup] ?? { action: "block" };
+      const d1Entry = (_rawSell._gate === "sell" && !_fadeOkSell) ? { action: "block" } : _rawSell;
       if (d1Entry.action === "block") return null;
 
       // Spike mode préservé si SPIKE_UP + H4 aligné (jamais écrasé par la matrice)

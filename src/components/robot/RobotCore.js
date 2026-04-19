@@ -117,7 +117,11 @@ const RobotCore = {
       intraday_change: row.intraday_change ?? null,
     }));
 
-    const allOpps = TopOpportunities_V8R.evaluate(topRows, { debug: true, scoreMin: 0 });
+    // Architecture multi-traders : spacing technique moteur (1 min, anti-rafale)
+    // distinct du cooldown UI personnel géré par SignalFrequency côté trader.
+    // Un signal valide est republié toutes les 1 min tant qu'il persiste,
+    // pour permettre au trader de le voir même s'il ne regarde pas en temps réel.
+    const allOpps = TopOpportunities_V8R.evaluate(topRows, { minSignalSpacingMinutes: 1, debug: true, scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

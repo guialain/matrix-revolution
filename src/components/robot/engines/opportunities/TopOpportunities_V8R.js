@@ -31,6 +31,19 @@ import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinu
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
 
+// ============================================================================
+// SPACING TECHNIQUE MOTEUR (ne pas confondre avec cooldown UI) :
+// Le paramètre minSignalSpacingMinutes géré par applyDedupeAndSpacing est
+// un spacing TECHNIQUE fixe (1 min par défaut, anti-rafale). Son rôle :
+// empêcher la publication de doublons sur ticks rapprochés (robot qui
+// tourne aux 5-10 sec), tout en laissant republier un signal persistant
+// à chaque minute pour donner au trader la chance de le voir.
+//
+// Le cooldown personnalisé par utilisateur (5/10/15 min selon préférence)
+// est géré au niveau de la couche trader via SignalFrequency.js, PAS ici.
+// Ne pas fusionner les deux : ils ont des rôles distincts.
+// ============================================================================
+
 const TopOpportunities_V8R = (() => {
 
   const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);

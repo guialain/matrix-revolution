@@ -696,13 +696,6 @@ const TopOpportunities_V8R = (() => {
      && zscore > -g.z5070)
       return { route: "SELL-[28-50]-CONT-RESUME", side: "SELL", modeOverride: "soft" };
 
-    // SELL [0-28] CONT-RESUME — continuation baissière extrême (ex: GBPJPY rsi<28)
-    if (rsi < 28
-     && !isLateEntry
-     && dslope_h1 < -1.5
-     && zscore > -g.z5070)
-      return { route: "SELL-[0-28]-CONT-RESUME", side: "SELL", modeOverride: "strict" };
-
     // ── ROUTES NORMALES ──────────────────────────────────────────────────────
 
     // SELL [72-100] — extreme overbought
@@ -756,7 +749,6 @@ const TopOpportunities_V8R = (() => {
     "BUY-[50-72]-CONT-RESUME":  "MID_HIGH",
     "SELL-[50-72]-CONT-RESUME": "MID_HIGH",
     "SELL-[28-50]-CONT-RESUME": "LOW_MID",
-    "SELL-[0-28]-CONT-RESUME":  "EXTREME_LOW",
   };
 
   // ============================================================================

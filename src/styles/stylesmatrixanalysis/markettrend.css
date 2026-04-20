@@ -81,10 +81,11 @@
 }
 
 .mt-ch {
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.25);
-  letter-spacing: 0.12em;
+  letter-spacing: 1.5px;
+  color: #8aa;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -101,6 +102,7 @@
 }
 
 .mt-row {
+  padding: 10px 0;
   transition: background 0.2s;
   cursor: default;
 }
@@ -114,10 +116,10 @@
 .mt-cell { box-sizing: border-box; min-width: 0; }
 
 .mt-asset {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: #ffe9c2;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.5px;
+  color: #eee;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,8 +129,8 @@
 
 .mt-pct-value {
   display: block;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
@@ -140,7 +142,7 @@
 
 .mt-mval {
   text-align: right;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -174,10 +176,10 @@
 
 .mt-mbadge {
   display: inline-block;
-  padding: 1px 3px;
-  font-size: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.5px;
   border-radius: 2px;
   font-family: 'Courier New', Courier, monospace;
   white-space: nowrap;
@@ -236,13 +238,7 @@
 .mt-separator {
   margin: 0 10px;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05) 30%,
-    rgba(255, 255, 255, 0.05) 70%,
-    transparent
-  );
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* ─── ANIMATION ─────────────────────────────────────────── */

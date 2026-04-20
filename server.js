@@ -547,9 +547,7 @@ app.get("/api/mt5data", (req, res) => {
 
       macro: macroRaw && {
         slots: Array.from({ length: 6 }, (_, i) => ({
-          symbol:          macroRaw[`symbol_${i}`],
-          bid:             num(macroRaw[`bid_${i}`]),
-          intraday_change: num(macroRaw[`intraday_change_${i}`])
+          symbol: macroRaw[`symbol_${i}`],
         }))
       },
 

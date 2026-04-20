@@ -70,8 +70,9 @@
 .mt-row {
   display: grid;
   grid-template-columns:
-    minmax(85px, 1fr)     /* ASSET */
-    minmax(110px, 1.3fr)  /* DAILY% + progbar */
+    minmax(85px, 0.9fr)   /* ASSET */
+    minmax(60px, 0.7fr)   /* DAILY% (valeur) */
+    minmax(70px, 0.9fr)   /* JAUGE */
     minmax(58px, 0.8fr)   /* INTRA */
     minmax(58px, 0.8fr)   /* D1 */
     minmax(58px, 0.8fr)   /* H4 */
@@ -143,9 +144,12 @@
 }
 
 .mt-pct {
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
+  /* valeur seule — .mt-cell gère le centrage */
+}
+
+.mt-gauge {
+  /* la barre stretch via width:100% sur .mt-progbar-track */
+  width: 100%;
 }
 
 .mt-pct-value {

@@ -50,7 +50,7 @@
 
 .matrix-bottom-row {
   display: grid;
-  grid-template-columns: 45fr 55fr;
+  grid-template-columns: 30fr 70fr;
   gap: 8px;
   min-height: 0;
 }

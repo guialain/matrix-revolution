@@ -157,6 +157,7 @@ export default function MarketTrend() {
       <div className="mt-col-headers">
         <div className="mt-ch mt-ch-asset" title="Asset">ASSET</div>
         <div className="mt-ch mt-ch-pct"   title="Daily change %">DAILY%</div>
+        <div className="mt-ch mt-ch-gauge" title="Daily change gauge"></div>
         <div className="mt-ch mt-ch-intra" title="Intraday level classification">INTRA</div>
         <div className="mt-ch mt-ch-d1"    title="Slope RSI D1">D1</div>
         <div className="mt-ch mt-ch-h4"    title="Slope RSI H4">H4</div>
@@ -205,6 +206,9 @@ export default function MarketTrend() {
                       ? `${change > 0 ? "+" : ""}${change.toFixed(2)}%`
                       : "—"}
                   </span>
+                </div>
+
+                <div className="mt-cell mt-gauge">
                   {change != null && <ProgressBar value={change} maxVal={maxAbs} />}
                 </div>
 

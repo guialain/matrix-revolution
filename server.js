@@ -850,11 +850,20 @@ app.post("/api/signals/publish", (req, res) => {
 
   const { validOpportunities = [], waitOpportunities = [] } = req.body;
   const now = Date.now();
-  const existing = signalsStore[key].validOpportunities;
+  const existingValid = signalsStore[key].validOpportunities;
+  const existingWait  = signalsStore[key].waitOpportunities;
 
   // Preserve original emittedAt — don't reset on re-publish
   const fresh = validOpportunities.map(op => {
-    const prev = existing.find(e => e.symbol === op.symbol && e.side === op.side);
+    const prev = existingValid.find(e => e.symbol === op.symbol && e.side === op.side);
+    return {
+      ...op,
+      emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
+    };
+  }).filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
+
+  const freshWait = waitOpportunities.map(op => {
+    const prev = existingWait.find(e => e.symbol === op.symbol && e.side === op.side);
     return {
       ...op,
       emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
@@ -862,10 +871,10 @@ app.post("/api/signals/publish", (req, res) => {
   }).filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
 
   signalsStore[key].validOpportunities = fresh;
-  signalsStore[key].waitOpportunities = waitOpportunities;
+  signalsStore[key].waitOpportunities = freshWait;
   signalsStore[key].lastUpdate = now;
 
-  res.json({ ok: true, valid: fresh.length, wait: waitOpportunities.length });
+  res.json({ ok: true, valid: fresh.length, wait: freshWait.length });
 });
 
 // GET /api/signals — returns current signal store for user (TTL 30s)
@@ -938,9 +947,11 @@ app.get("/api/signals", (req, res) => {
   ensureSignalBuckets(key);
   const now = Date.now();
   const store = signalsStore[key];
+  const fresh = op => op.emittedAt && (now - op.emittedAt) < 30000;
   res.json({
     ...store,
-    validOpportunities: (store.validOpportunities ?? []).filter(op => op.emittedAt && (now - op.emittedAt) < 30000),
+    validOpportunities: (store.validOpportunities ?? []).filter(fresh),
+    waitOpportunities:  (store.waitOpportunities  ?? []).filter(fresh),
   });
 });
 

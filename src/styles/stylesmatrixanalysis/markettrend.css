@@ -70,14 +70,14 @@
 .mt-row {
   display: grid;
   grid-template-columns:
-    minmax(85px, 1fr)    /* ASSET */
-    minmax(110px, 1.3fr) /* DAILY% + progbar */
-    minmax(65px, 0.9fr)  /* D1 */
-    minmax(65px, 0.9fr)  /* INTRA */
-    minmax(65px, 0.9fr)  /* H4 */
-    minmax(65px, 0.9fr)  /* H1 */
-    minmax(50px, 0.7fr)  /* RSI */
-    minmax(70px, 0.7fr); /* Z */
+    minmax(85px, 1fr)     /* ASSET */
+    minmax(110px, 1.3fr)  /* DAILY% + progbar */
+    minmax(58px, 0.8fr)   /* D1 */
+    minmax(58px, 0.8fr)   /* INTRA */
+    minmax(58px, 0.8fr)   /* H4 */
+    minmax(58px, 0.8fr)   /* H1 */
+    minmax(55px, 0.75fr)  /* RSI */
+    minmax(65px, 0.8fr);  /* Z */
   gap: 8px;
   align-items: center;
 }

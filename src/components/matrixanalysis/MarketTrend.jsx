@@ -26,7 +26,7 @@ const LVL_ABBR = {
   EXPLOSIVE_UP:  "EXP+",
   STRONG_UP:     "STR+",
   SOFT_UP:       "SFT+",
-  NEUTRE:        "---",
+  NEUTRE:        "FLAT",
   SOFT_DOWN:     "SFT-",
   STRONG_DOWN:   "STR-",
   EXPLOSIVE_DOWN:"EXP-",
@@ -176,9 +176,10 @@ export default function MarketTrend() {
 
 
           const d1State  = getD1State(raw.slope_d1_s0, raw.dslope_d1);
-          const intraLvl = getIntradayLevelBySymbol(raw.intraday_change, symbol);
-          const h4Lvl    = getSlopeLevel(raw.slope_h4_s0, symbol);
-          const h1Lvl    = getSlopeLevel(raw.slope_h1_s0, symbol);
+          // null quand la donnée brute est absente → RegimeBadge retombe sur "---"
+          const intraLvl = raw.intraday_change == null ? null : getIntradayLevelBySymbol(raw.intraday_change, symbol);
+          const h4Lvl    = raw.slope_h4_s0     == null ? null : getSlopeLevel(raw.slope_h4_s0, symbol);
+          const h1Lvl    = raw.slope_h1_s0     == null ? null : getSlopeLevel(raw.slope_h1_s0, symbol);
 
           const rsiVal  = Number.isFinite(Number(raw.rsi_h1_s0))   ? Number(raw.rsi_h1_s0)   : null;
           const zVal    = Number.isFinite(Number(raw.zscore_h1_s0)) ? Number(raw.zscore_h1_s0) : null;

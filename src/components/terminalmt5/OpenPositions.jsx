@@ -155,7 +155,7 @@ function closePosition(p, e) {
   // =========================
   return (
     <div className="open-positions">
-      <div className="open-positions-title">OPEN POSITIONS</div>
+      <div className="open-positions-title">OPEN POSITIONS ({rows.length})</div>
 
 
       <div className="portfolio-table-wrapper">

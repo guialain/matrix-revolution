@@ -190,6 +190,20 @@
   border-bottom: none;
 }
 
+/* Alignement uniforme : toutes les cellules centrées, TF à gauche */
+.nmt-thead > *,
+.nmt-trow > * {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.nmt-thead > *:first-child,
+.nmt-trow > *:first-child {
+  justify-content: flex-start;
+}
+
 .nmt-tf {
   font-weight: 700;
   color: #e8d9a8;
@@ -205,7 +219,6 @@
   font-family: monospace;
   font-weight: 700;
   color: #e8d9a8;
-  text-align: right;
 }
 
 /* ─── BADGES PILL ──────────────────────────────────────── */

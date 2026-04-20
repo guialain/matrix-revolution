@@ -111,8 +111,8 @@
 }
 
 .mt-row {
-  padding: 8px 16px;
-  min-height: 36px;
+  padding: 6px 16px;
+  min-height: 32px;
   transition: background 0.2s;
   cursor: default;
 }

@@ -39,7 +39,7 @@ const D1_CSS = {
   D1_STRONG_UP:    "mb-str-up",
   D1_FADING_UP:    "mb-sft-up",
   D1_EMERGING_UP:  "mb-emr",
-  D1_FLAT:         "mb-flat",
+  D1_FLAT:         "mt-level-flat",
   D1_EMERGING_DOWN:"mb-emr",
   D1_FADING_DOWN:  "mb-sft-dn",
   D1_STRONG_DOWN:  "mb-str-dn",

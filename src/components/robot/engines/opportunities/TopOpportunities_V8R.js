@@ -210,6 +210,9 @@ const TopOpportunities_V8R = (() => {
                          : d1Entry.mode;
 
       if (d1Entry.action !== "unchanged") {
+        // IC=NEUTRE : exiger dslopeH4 ≥ 2.0 même pour EARLY direct (EMERGING_*, FADING_DOWN)
+        if (intradayLevel === "NEUTRE" && d1Entry.action === "EARLY"
+            && !(dslopeH4 !== null && dslopeH4 >= 2.0)) return null;
         return { type: d1Entry.action, ...(buyFinalMode ? { mode: buyFinalMode } : {}) };
       }
 
@@ -246,6 +249,9 @@ const TopOpportunities_V8R = (() => {
                           : d1Entry.mode;
 
       if (d1Entry.action !== "unchanged") {
+        // IC=NEUTRE : exiger dslopeH4 ≤ -2.0 même pour EARLY direct (EMERGING_*, FADING_UP)
+        if (intradayLevel === "NEUTRE" && d1Entry.action === "EARLY"
+            && !(dslopeH4 !== null && dslopeH4 <= -2.0)) return null;
         return { type: d1Entry.action, ...(sellFinalMode ? { mode: sellFinalMode } : {}) };
       }
 

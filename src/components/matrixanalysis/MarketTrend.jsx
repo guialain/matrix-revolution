@@ -50,7 +50,7 @@ const LVL_CSS = {
   EXPLOSIVE_UP:  "mb-str-up",
   STRONG_UP:     "mb-str-up",
   SOFT_UP:       "mb-sft-up",
-  NEUTRE:        "mb-flat",
+  NEUTRE:        "mt-level-flat",
   SOFT_DOWN:     "mb-sft-dn",
   STRONG_DOWN:   "mb-str-dn",
   EXPLOSIVE_DOWN:"mb-str-dn",

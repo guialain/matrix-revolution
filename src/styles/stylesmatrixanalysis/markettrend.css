@@ -68,7 +68,7 @@
 .mt-col-headers,
 .mt-row {
   display: grid;
-  grid-template-columns: auto 58px repeat(4, 44px) 28px 42px;
+  grid-template-columns: 90px 100px 72px 72px 72px 72px 60px 60px;
   gap: 4px;
   align-items: center;
   padding: 5px 10px;
@@ -221,6 +221,17 @@
   color: #ff3d5a;
   background: rgba(255, 61, 90, 0.12);
   border: 1px solid rgba(255, 61, 90, 0.4);
+}
+
+.mt-level-flat {
+  background: rgba(150, 150, 150, 0.12);
+  color: #888;
+  border: 1px solid rgba(150, 150, 150, 0.25);
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 /* ─── VALUE COLORS (RSI & Zscore) ───────────────────────── */

@@ -189,6 +189,10 @@ const TopOpportunities_V8R = (() => {
     const _fadeOkSell = dslope_d1_live !== null && dslope_d1_live < -0.5;
 
     if (side === "BUY") {
+      // IC=NEUTRE : BUY autorisé uniquement si D1 accélère nettement UP (>0.5)
+      // Zone morte [-0.5, 0.5] = wait (pas de signal)
+      if (intradayLevel === "NEUTRE" && !(dslope_d1_live !== null && dslope_d1_live > 0.5)) return null;
+
       // IC group pour la matrice D1
       const icGroup =
         intradayLevel === "SPIKE_UP"                                                                             ? "IC_SPIKE_UP"  :
@@ -228,6 +232,10 @@ const TopOpportunities_V8R = (() => {
     }
 
     if (side === "SELL") {
+      // IC=NEUTRE : SELL autorisé uniquement si D1 accélère nettement DOWN (<-0.5)
+      // Zone morte [-0.5, 0.5] = wait (pas de signal)
+      if (intradayLevel === "NEUTRE" && !(dslope_d1_live !== null && dslope_d1_live < -0.5)) return null;
+
       // IC group pour la matrice D1 (miroir BUY)
       const icGroup =
         intradayLevel === "SPIKE_DOWN"                                                                             ? "IC_SPIKE_DOWN" :

@@ -215,7 +215,7 @@ const TopOpportunities_V8R = (() => {
 
       // "unchanged" — logique H4 existante, mode de la matrice appliqué
       if (intradayLevel === "NEUTRE")
-        return (dslopeH4 !== null && dslopeH4 >= 1.5) ? { type: "EARLY", mode: d1Entry.mode } : null;
+        return (dslopeH4 !== null && dslopeH4 >= 2.0) ? { type: "EARLY", mode: d1Entry.mode } : null;
       if (intradayLevel === "SPIKE_DOWN")
         return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: "spike" } : null;
       if (!h4Up) return null;
@@ -251,7 +251,7 @@ const TopOpportunities_V8R = (() => {
 
       // "unchanged" — logique H4 existante, mode de la matrice appliqué
       if (intradayLevel === "NEUTRE")
-        return (dslopeH4 !== null && dslopeH4 <= -1.5) ? { type: "EARLY", mode: d1Entry.mode } : null;
+        return (dslopeH4 !== null && dslopeH4 <= -2.0) ? { type: "EARLY", mode: d1Entry.mode } : null;
       if (intradayLevel === "SPIKE_UP")
         return h4Down && dh4OkSell ? { type: "REVERSAL", mode: "spike" } : null;
       if (!h4Down) return null;

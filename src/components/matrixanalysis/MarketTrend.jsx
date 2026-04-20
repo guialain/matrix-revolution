@@ -155,14 +155,14 @@ export default function MarketTrend() {
 
       {/* ── COLUMN HEADERS ── */}
       <div className="mt-col-headers">
-        <div className="mt-ch mt-ch-asset">ASSET</div>
-        <div className="mt-ch mt-ch-pct">DAILY%</div>
-        <div className="mt-ch mt-ch-reg">D1</div>
-        <div className="mt-ch mt-ch-reg">INTRA</div>
-        <div className="mt-ch mt-ch-reg">H4</div>
-        <div className="mt-ch mt-ch-reg">H1</div>
-        <div className="mt-ch mt-ch-rsi">RSI</div>
-        <div className="mt-ch mt-ch-z">Z</div>
+        <div className="mt-ch mt-ch-asset" title="Asset">ASSET</div>
+        <div className="mt-ch mt-ch-pct"   title="Daily change %">DAILY%</div>
+        <div className="mt-ch mt-ch-intra" title="Intraday level classification">INTRA</div>
+        <div className="mt-ch mt-ch-d1"    title="Slope RSI D1">D1</div>
+        <div className="mt-ch mt-ch-h4"    title="Slope RSI H4">H4</div>
+        <div className="mt-ch mt-ch-h1"    title="Slope RSI H1">H1</div>
+        <div className="mt-ch mt-ch-rsi"   title="RSI H1">RSI</div>
+        <div className="mt-ch mt-ch-z"     title="Z-score H1 (bollinger bands)">Z</div>
       </div>
 
       {/* ── ROWS ── */}
@@ -209,11 +209,11 @@ export default function MarketTrend() {
                 </div>
 
                 <div className="mt-cell mt-regime">
-                  <RegimeBadge level={d1State} abbrMap={D1_ABBR} cssMap={D1_CSS} />
+                  <RegimeBadge level={intraLvl} abbrMap={LVL_ABBR} cssMap={LVL_CSS} />
                 </div>
 
                 <div className="mt-cell mt-regime">
-                  <RegimeBadge level={intraLvl} abbrMap={LVL_ABBR} cssMap={LVL_CSS} />
+                  <RegimeBadge level={d1State} abbrMap={D1_ABBR} cssMap={D1_CSS} />
                 </div>
 
                 <div className="mt-cell mt-regime">

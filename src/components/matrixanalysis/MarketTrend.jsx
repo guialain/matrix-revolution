@@ -121,11 +121,18 @@ export default function MarketTrend() {
     );
   }
 
-  const slots  = data.macro.slots;
-  const mw     = data.marketWatch ?? [];
+  const slots = data.macro.slots;
+  const mw    = data.marketWatch ?? [];
+
+  // Map for O(1) lookup instead of repeated find()
+  const mwMap = new Map(mw.map(r => [r.symbol, r]));
 
   const maxAbs = Math.max(
-    ...slots.map(r => Math.abs(Number.isFinite(r.intraday_change) ? r.intraday_change : 0))
+    ...slots.map(slot => {
+      const r = mwMap.get(slot.symbol) ?? {};
+      const v = Number(r.intraday_change);
+      return Math.abs(Number.isFinite(v) ? v : 0);
+    })
   ) || 1;
 
   return (
@@ -162,9 +169,11 @@ export default function MarketTrend() {
       <div className="mt-rows">
         {slots.map((slot, i) => {
           const symbol = slot.symbol;
-          const raw    = mw.find(r => r.symbol === symbol) ?? {};
-          const change = Number.isFinite(slot.intraday_change) ? slot.intraday_change : null;
+          const raw    = mwMap.get(symbol) ?? {};
+          const _chg   = Number(raw.intraday_change);
+          const change = Number.isFinite(_chg) ? _chg : null;
           const dir    = change > 0 ? "up" : change < 0 ? "down" : "flat";
+
 
           const d1State  = getD1State(raw.slope_d1_s0, raw.dslope_d1);
           const intraLvl = getIntradayLevelBySymbol(raw.intraday_change, symbol);

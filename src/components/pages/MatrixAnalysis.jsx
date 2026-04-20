@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 // hooks (remonter à src/)
 import useMT5Data from "../../hooks/useMT5Data";
 import useRobotCore from "../../hooks/useRobotCore";
+import { sendSwitchSymbol } from "../../utilitaires/sendMT5Instructions";
 
 // matrixanalysis components (déjà dans src/components)
 import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
@@ -64,7 +65,7 @@ export default function MatrixAnalysis() {
         </div>
 
         <div className="matrix-col">
-          <MarketWatch />
+          <MarketWatch onSwitchSymbol={sendSwitchSymbol} />
         </div>
 
       </div>

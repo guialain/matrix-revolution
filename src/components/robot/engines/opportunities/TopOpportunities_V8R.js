@@ -25,7 +25,8 @@
 
 import { getRiskConfig } from "../config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
-import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
+import { getSlopeConfig } from "../config/SlopeConfig.js";
+import { getIntradayLevel, getSlopeLevel, getD1State } from "../../../../utils/marketLevels.js";
 import { getDrsiConfig } from "../config/DrsiConfig.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
@@ -47,82 +48,6 @@ import { resolveMarket } from "../trading/AssetEligibility.js";
 const TopOpportunities_V8R = (() => {
 
   const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
-
-  // ============================================================================
-  // NIVEAU 1 — REGIME FUNCTIONS
-  // ============================================================================
-  function getIntradayLevel(intra, cfg) {
-    if (intra === null) return "NEUTRE";
-    if (intra >  cfg.spikeUp)       return "SPIKE_UP";
-    if (intra >= cfg.explosiveUp)   return "EXPLOSIVE_UP";
-    if (intra >= cfg.strongUp)      return "STRONG_UP";
-    if (intra >= cfg.softUp)        return "SOFT_UP";
-    if (intra >  cfg.softDown)      return "NEUTRE";
-    if (intra >  cfg.strongDown)    return "SOFT_DOWN";
-    if (intra >  cfg.explosiveDown) return "STRONG_DOWN";
-    if (intra >  cfg.spikeDown)     return "EXPLOSIVE_DOWN";
-    return "SPIKE_DOWN";
-  }
-
-  const SLOPE_CLASS_TO_LEVEL = {
-    up_extreme:   "EXPLOSIVE_UP",
-    up_strong:    "STRONG_UP",
-    up_weak:      "SOFT_UP",
-    flat:         "NEUTRE",
-    down_weak:    "SOFT_DOWN",
-    down_strong:  "STRONG_DOWN",
-    down_extreme: "EXPLOSIVE_DOWN",
-  };
-
-  function getSlopeLevel(slope, symbol) {
-    if (slope === null) return "NEUTRE";
-    return SLOPE_CLASS_TO_LEVEL[getSlopeClass(slope, symbol)] ?? "NEUTRE";
-  }
-
-  // ============================================================================
-  // D1 STATE — matrice slope_d1_s0 × dslope_d1_s0
-  // Seuils calibrés sur 8 assets (~159k bougies H1) :
-  //   SLOPE_STRONG = 2.2 (≈ p80)  SLOPE_SOFT = 0.5 (≈ p40)
-  //   DSLOPE_THR   = 0.5 (≈ p58)
-  //
-  //   slope \ dslope  ACCEL(≥0.5)    NEUTRE(-0.5,0.5)  DECEL(≤-0.5)
-  //   STRONG_UP       STRONG_UP       STRONG_UP          FADING_UP
-  //   SOFT_UP         FADING_UP       FADING_UP          FLAT
-  //   FLAT            EMERGING_UP     FLAT               EMERGING_DOWN
-  //   SOFT_DOWN       FLAT            FADING_DOWN        FADING_DOWN
-  //   STRONG_DOWN     FADING_DOWN     STRONG_DOWN        STRONG_DOWN
-  // ============================================================================
-  const D1_SLOPE_STRONG = 2.2;
-  const D1_SLOPE_SOFT   = 0.5;
-  const D1_DSLOPE_THR   = 0.5;
-
-  function getD1State(slope_d1_s0, dslope_d1_s0) {
-    if (slope_d1_s0 === null || dslope_d1_s0 === null) return "D1_FLAT";
-
-    const accel  = dslope_d1_s0 >=  D1_DSLOPE_THR;
-    const decel  = dslope_d1_s0 <= -D1_DSLOPE_THR;
-
-    if (slope_d1_s0 >= D1_SLOPE_STRONG) {
-      if (decel)  return "D1_FADING_UP";
-      return "D1_STRONG_UP";                          // accel ou neutre
-    }
-    if (slope_d1_s0 >= D1_SLOPE_SOFT) {
-      if (decel)  return "D1_FLAT";
-      return "D1_FADING_UP";                          // accel ou neutre
-    }
-    if (slope_d1_s0 > -D1_SLOPE_SOFT) {
-      if (accel)  return "D1_EMERGING_UP";
-      if (decel)  return "D1_EMERGING_DOWN";
-      return "D1_FLAT";
-    }
-    if (slope_d1_s0 > -D1_SLOPE_STRONG) {
-      if (accel)  return "D1_FLAT";
-      return "D1_FADING_DOWN";                        // neutre ou decel
-    }
-    // STRONG_DOWN
-    if (accel)  return "D1_FADING_DOWN";
-    return "D1_STRONG_DOWN";                          // neutre ou decel
-  }
 
   // ============================================================================
   // D1 MATRICES — déclarées au niveau module pour éviter le TDZ dans le bundle

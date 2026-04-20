@@ -249,17 +249,22 @@
   border: 1px solid rgba(150, 150, 150, 0.25);
 }
 
-/* ─── VALUE COLORS (RSI & Zscore) ───────────────────────── */
+/* ─── VALUE COLORS (RSI & Zscore) ─────────────────────────
+   Affichage simplifié : seules les zones extrêmes sont colorées.
+   Les zones intermédiaires restent grises (la logique 4/9-zones de
+   marketLevels.js reste intacte côté moteur).
+*/
 
-.mv-xlow  { color: #00ff88; }
-.mv-vlow  { color: #33dd88; }
-.mv-low   { color: #66cc88; }
-.mv-slow  { color: #99bb99; }
-.mv-neut  { color: #8899aa; }
-.mv-shigh { color: #bb9988; }
-.mv-high  { color: #dd7777; }
-.mv-vhigh { color: #ee5566; }
-.mv-xhigh { color: #ff3d5a; }
+.mv-xlow  { color: #00ff88; font-weight: 700; }   /* EXTREME_LOW  */
+.mv-xhigh { color: #ff3d5a; font-weight: 700; }   /* EXTREME_HIGH */
+
+.mv-vlow,
+.mv-low,
+.mv-slow,
+.mv-neut,
+.mv-shigh,
+.mv-high,
+.mv-vhigh { color: #888; }
 
 /* ─── SEPARATOR ─────────────────────────────────────────── */
 

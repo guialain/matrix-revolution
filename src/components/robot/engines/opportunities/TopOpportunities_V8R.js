@@ -480,7 +480,7 @@ const TopOpportunities_V8R = (() => {
   // slope_h1_s0 = orientation H1 courante (EXHAUSTION + EARLY)
   // g.antiSpike = seuil |dslope_h1| max pour zones [28-72]
   // ============================================================================
-  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g) {
+  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
@@ -526,15 +526,17 @@ const TopOpportunities_V8R = (() => {
     // Reprise continuation H1 dans le sens du trade — dslope_h1 seul suffit,
     // pas de contrainte slope_h1_s0.
 
-    // BUY [28-50] CONT-RESUME — reprise continuation, H1 repart
-    if (rsi >= 28 && rsi < 50
+    // BUY [28-50] CONT-RESUME — bloqué si EARLY (pas de tendance établie à reprendre)
+    if (signalType !== "EARLY"
+     && rsi >= 28 && rsi < 50
      && !isLateEntry
      && dslope_h1 > 1.5
      && zscore < g.z3050)
       return { route: "BUY-[28-50]-CONT-RESUME", side: "BUY", modeOverride: "relaxed" };
 
-    // BUY [50-72] CONT-RESUME
-    if (rsi >= 50 && rsi < 72
+    // BUY [50-72] CONT-RESUME — bloqué si EARLY
+    if (signalType !== "EARLY"
+     && rsi >= 50 && rsi < 72
      && !isLateEntry
      && dslope_h1 > 1.5
      && zscore < g.z5070)
@@ -574,7 +576,7 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // SELL ROUTES (miroir)
   // ============================================================================
-  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g) {
+  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
@@ -620,15 +622,17 @@ const TopOpportunities_V8R = (() => {
     // Reprise continuation baissière H1 — dslope_h1 seul suffit,
     // pas de contrainte slope_h1_s0.
 
-    // SELL [50-72] CONT-RESUME — reprise continuation baissière
-    if (rsi >= 50 && rsi < 72
+    // SELL [50-72] CONT-RESUME — bloqué si EARLY (pas de tendance établie à reprendre)
+    if (signalType !== "EARLY"
+     && rsi >= 50 && rsi < 72
      && !isLateEntry
      && dslope_h1 < -1.5
      && zscore > -g.z3050)
       return { route: "SELL-[50-72]-CONT-RESUME", side: "SELL", modeOverride: "relaxed" };
 
-    // SELL [28-50] CONT-RESUME
-    if (rsi >= 28 && rsi < 50
+    // SELL [28-50] CONT-RESUME — bloqué si EARLY
+    if (signalType !== "EARLY"
+     && rsi >= 28 && rsi < 50
      && !isLateEntry
      && dslope_h1 < -1.5
      && zscore > -g.z5070)
@@ -785,7 +789,7 @@ const TopOpportunities_V8R = (() => {
         const buyMode = buyRes.mode ?? computeMode(
           buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
-        match = matchBuyRoute(...args, gBuy);
+        match = matchBuyRoute(...args, gBuy, buyRes.type);
         if (match) { signalType = buyRes.type; signalMode = match.modeOverride ?? buyMode; }
       }
 
@@ -795,7 +799,7 @@ const TopOpportunities_V8R = (() => {
           const sellMode = sellRes.mode ?? computeMode(
             sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
-          match = matchSellRoute(...args, gSell);
+          match = matchSellRoute(...args, gSell, sellRes.type);
           if (match) { signalType = sellRes.type; signalMode = match.modeOverride ?? sellMode; }
         }
       }

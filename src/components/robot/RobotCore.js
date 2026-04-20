@@ -71,6 +71,14 @@ const RobotCore = {
       timestamp:   row.timestamp    ?? null,
       price:       row.price        ?? null,
       close:       row.close        ?? row.price ?? null,
+      // D1
+      rsi_d1:      row.rsi_d1      ?? null,
+      slope_d1:    row.slope_d1    ?? null,
+      dslope_d1:   row.dslope_d1   ?? null,
+      drsi_d1:     row.drsi_d1     ?? null,
+      rsi_d1_s0:   row.rsi_d1_s0   ?? null,
+      slope_d1_s0: row.slope_d1_s0 ?? null,
+      drsi_d1_s0:  row.drsi_d1_s0  ?? null,
       // H4
       slope_h4:    row.slope_h4     ?? null,
       slope_h4_s0: row.slope_h4_s0  ?? null,

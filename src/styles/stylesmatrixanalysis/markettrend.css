@@ -94,7 +94,7 @@
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #7a9;
+  color: #e8d9a8;
   text-align: center;
   white-space: nowrap;
   cursor: help;
@@ -136,7 +136,7 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #e8e8e8;
+  color: #e8d9a8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -154,6 +154,7 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  color: #e8d9a8;   /* override par .mt-up / .mt-down (vert/rouge) */
 }
 
 .mt-regime {
@@ -171,7 +172,7 @@
 
 .mt-up   { color: #00ff88; }
 .mt-down { color: #ff3d5a; }
-.mt-flat { color: #8899aa; }
+.mt-flat { color: #e8d9a8; }
 
 /* ─── PROGRESS BAR ──────────────────────────────────────── */
 
@@ -245,9 +246,9 @@
 }
 
 .mt-level-flat {
-  color: #888;
-  background: rgba(150, 150, 150, 0.12);
-  border: 1px solid rgba(150, 150, 150, 0.25);
+  color: #a89e7a;
+  background: rgba(232, 217, 168, 0.08);
+  border: 1px solid rgba(232, 217, 168, 0.2);
 }
 
 /* ─── VALUE COLORS (RSI & Zscore) ─────────────────────────
@@ -265,7 +266,7 @@
 .mv-neut,
 .mv-shigh,
 .mv-high,
-.mv-vhigh { color: #888; }
+.mv-vhigh { color: #e8d9a8; }
 
 /* ─── SEPARATOR ─────────────────────────────────────────── */
 

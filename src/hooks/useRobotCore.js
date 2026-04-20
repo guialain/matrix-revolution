@@ -160,12 +160,15 @@ export default function useRobotCore(snapshot) {
 
     const finalValidOps = [];
     const expiredOps = [];
+    const EXPIRED_GRACE_MS = SIGNAL_TTL_MS; // garde les expired 30s supplémentaires pour l'affichage, puis purge
 
     for (const [key, entry] of Object.entries(persistedValid.current)) {
       if (entry.expiresAt > now) {
         finalValidOps.push(entry.op);
-      } else {
+      } else if (now - entry.expiresAt < EXPIRED_GRACE_MS) {
         expiredOps.push({ ...entry.op, state: "EXPIRED" });
+      } else {
+        delete persistedValid.current[key]; // purge définitive après 2×TTL
       }
     }
 

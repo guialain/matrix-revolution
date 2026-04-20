@@ -1,5 +1,6 @@
 /* =========================================================
    MARKET TREND — BLOOMBERG TERMINAL STYLE
+   8 colonnes : ASSET | DAILY% | D1 | INTRA | H4 | H1 | RSI | Z
 ========================================================= */
 
 .markettrend-panel {
@@ -22,7 +23,7 @@
   letter-spacing: 0.1em;
 }
 
-/* ─── TOP BAR ────────────────────────────────────────────── */
+/* ─── TOP BAR ──────────────────────────────────────────── */
 
 .mt-topbar {
   display: flex;
@@ -62,13 +63,20 @@
   letter-spacing: 0.1em;
 }
 
-/* ─── COLUMN HEADERS ─────────────────────────────────────── */
+/* ─── GRID (8 colonnes) ─────────────────────────────────── */
+
+.mt-col-headers,
+.mt-row {
+  display: grid;
+  grid-template-columns: auto 58px repeat(4, 44px) 28px 42px;
+  gap: 4px;
+  align-items: center;
+  padding: 5px 10px;
+}
+
+/* ─── COLUMN HEADERS ────────────────────────────────────── */
 
 .mt-col-headers {
-  display: grid;
-  grid-template-columns: 1fr 0.7fr 1.4fr 70px;
-  gap: 24px;
-  padding: 5px 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
@@ -77,13 +85,15 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.25);
   letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
-.mt-ch-bid,
-.mt-ch-pct  { text-align: right; }
-.mt-ch-dir  { text-align: center; }
+.mt-ch-pct,
+.mt-ch-rsi,
+.mt-ch-z   { text-align: right; }
+.mt-ch-reg { text-align: center; }
 
-/* ─── ROWS ───────────────────────────────────────────────── */
+/* ─── ROWS ──────────────────────────────────────────────── */
 
 .mt-rows {
   display: flex;
@@ -91,11 +101,6 @@
 }
 
 .mt-row {
-  display: grid;
-  grid-template-columns: 1fr 0.7fr 1.4fr 70px;
-  gap: 24px;
-  align-items: center;
-  padding: 5px 14px;
   transition: background 0.2s;
   cursor: default;
 }
@@ -104,47 +109,49 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* ─── CELLS ──────────────────────────────────────────────── */
+/* ─── CELLS ─────────────────────────────────────────────── */
 
 .mt-cell { box-sizing: border-box; min-width: 0; }
 
 .mt-asset {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffe9c2;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mt-bid {
-  text-align: right;
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffe9c2;
-  letter-spacing: 0.02em;
-}
-
-.mt-pct {
-  text-align: right;
-}
+.mt-pct { text-align: right; }
 
 .mt-pct-value {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.mt-dir {
+.mt-regime {
+  text-align: center;
+  line-height: 1;
+}
+
+.mt-mval {
   text-align: right;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
-/* ─── DIRECTION COLORS ───────────────────────────────────── */
+/* ─── DIRECTION COLORS ──────────────────────────────────── */
 
 .mt-up   { color: #00ff88; }
 .mt-down { color: #ff3d5a; }
 .mt-flat { color: #8899aa; }
 
-/* ─── PROGRESS BAR ───────────────────────────────────────── */
+/* ─── PROGRESS BAR ──────────────────────────────────────── */
 
 .mt-progbar-track {
   position: relative;
@@ -153,7 +160,7 @@
   background: rgba(255, 255, 255, 0.06);
   border-radius: 2px;
   overflow: hidden;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .mt-progbar-fill {
@@ -163,42 +170,71 @@
   transition: width 0.6s ease;
 }
 
-/* ─── DIR BADGE ──────────────────────────────────────────── */
+/* ─── REGIME BADGES (mt-mbadge) ─────────────────────────── */
 
-.mt-badge {
+.mt-mbadge {
   display: inline-block;
-  padding: 2px 7px;
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  padding: 1px 3px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 2px;
   font-family: 'Courier New', Courier, monospace;
-  border-radius: 3px;
+  white-space: nowrap;
 }
 
-.mt-badge-up {
+.mb-str-up {
   color: #00ff88;
   background: rgba(0, 255, 136, 0.12);
   border: 1px solid rgba(0, 255, 136, 0.4);
-  box-shadow: 0 0 8px rgba(0, 255, 136, 0.2);
 }
 
-.mt-badge-down {
+.mb-sft-up {
+  color: #7fddaa;
+  background: rgba(127, 221, 170, 0.10);
+  border: 1px solid rgba(127, 221, 170, 0.3);
+}
+
+.mb-emr {
+  color: #f5c26b;
+  background: rgba(245, 194, 107, 0.10);
+  border: 1px solid rgba(245, 194, 107, 0.3);
+}
+
+.mb-flat {
+  color: #556677;
+  background: rgba(85, 102, 119, 0.10);
+  border: 1px solid rgba(85, 102, 119, 0.2);
+}
+
+.mb-sft-dn {
+  color: #dd8888;
+  background: rgba(221, 136, 136, 0.10);
+  border: 1px solid rgba(221, 136, 136, 0.3);
+}
+
+.mb-str-dn {
   color: #ff3d5a;
   background: rgba(255, 61, 90, 0.12);
   border: 1px solid rgba(255, 61, 90, 0.4);
-  box-shadow: 0 0 8px rgba(255, 61, 90, 0.2);
 }
 
-.mt-badge-flat {
-  color: #8899aa;
-  background: rgba(136, 153, 170, 0.1);
-  border: 1px solid rgba(136, 153, 170, 0.3);
-}
+/* ─── VALUE COLORS (RSI & Zscore) ───────────────────────── */
 
-/* ─── SEPARATOR ──────────────────────────────────────────── */
+.mv-xlow  { color: #00ff88; }
+.mv-vlow  { color: #33dd88; }
+.mv-low   { color: #66cc88; }
+.mv-slow  { color: #99bb99; }
+.mv-neut  { color: #8899aa; }
+.mv-shigh { color: #bb9988; }
+.mv-high  { color: #dd7777; }
+.mv-vhigh { color: #ee5566; }
+.mv-xhigh { color: #ff3d5a; }
+
+/* ─── SEPARATOR ─────────────────────────────────────────── */
 
 .mt-separator {
-  margin: 0 14px;
+  margin: 0 10px;
   height: 1px;
   background: linear-gradient(
     90deg,
@@ -209,27 +245,7 @@
   );
 }
 
-/* ─── FOOTER ─────────────────────────────────────────────── */
-
-.mt-footer {
-  padding: 5px 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  display: flex;
-  justify-content: flex-end;
-  gap: 16px;
-}
-
-.mt-legend {
-  font-size: 8px;
-  letter-spacing: 0.1em;
-  opacity: 0.5;
-}
-
-.mt-legend-up   { color: #00ff88; }
-.mt-legend-down { color: #ff3d5a; }
-.mt-legend-flat { color: #8899aa; }
-
-/* ─── ANIMATION ──────────────────────────────────────────── */
+/* ─── ANIMATION ─────────────────────────────────────────── */
 
 @keyframes mt-blink {
   0%, 100% { opacity: 1; }

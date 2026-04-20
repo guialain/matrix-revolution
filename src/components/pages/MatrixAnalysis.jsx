@@ -1,15 +1,11 @@
-import { useState, useCallback } from "react";
-
 // hooks (remonter à src/)
 import useMT5Data from "../../hooks/useMT5Data";
-import useRobotCore from "../../hooks/useRobotCore";
 import { sendSwitchSymbol } from "../../utilitaires/sendMT5Instructions";
 
 // matrixanalysis components (déjà dans src/components)
-import IndicatorsMatrix from "../matrixanalysis/IndicatorsMatrix";
+import NeomatrixMTAnalysis from "../matrixanalysis/NeomatrixMTAnalysis";
 import AccountLevels from "../matrixanalysis/AccountLevels";
 import MarketTrend from "../matrixanalysis/MarketTrend";
-import ConvergenceMultiTF from "../matrixanalysis/ConvergenceMultiTF";
 import MarketWatch from "../marketopportunities/MarketWatch";
 
 // styles
@@ -34,8 +30,6 @@ export default function MatrixAnalysis() {
     marketWatch: data.marketWatch ?? [],
   } : null;
 
-  const robotData = useRobotCore(snapshot);
-
   // ==================================================
   // STATES
   // ==================================================
@@ -56,8 +50,7 @@ export default function MatrixAnalysis() {
       <div className="matrix-layout">
 
         <div className="matrix-col">
-          <ConvergenceMultiTF snapshot={snapshot} robot={robotData} />
-          <IndicatorsMatrix snapshot={snapshot} />
+          <NeomatrixMTAnalysis snapshot={snapshot} />
           <div className="matrix-bottom-row">
             <AccountLevels snapshot={snapshot} />
             <MarketTrend snapshot={snapshot} />

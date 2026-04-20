@@ -6,6 +6,7 @@
 .markettrend-panel {
   width: 100%;
   box-sizing: border-box;
+  padding: 0;
   background: #020508;
   border: 1px solid rgba(0, 200, 100, 0.25);
   border-radius: 8px;
@@ -63,47 +64,54 @@
   letter-spacing: 0.1em;
 }
 
-/* ─── GRID (8 colonnes) ─────────────────────────────────── */
+/* ─── GRID (8 colonnes, fractions flexibles) ───────────── */
 
 .mt-col-headers,
 .mt-row {
   display: grid;
-  grid-template-columns: 90px 90px 62px 62px 62px 62px 55px 55px;
-  gap: 4px;
+  grid-template-columns:
+    minmax(85px, 1fr)    /* ASSET */
+    minmax(110px, 1.3fr) /* DAILY% + progbar */
+    minmax(65px, 0.9fr)  /* D1 */
+    minmax(65px, 0.9fr)  /* INTRA */
+    minmax(65px, 0.9fr)  /* H4 */
+    minmax(65px, 0.9fr)  /* H1 */
+    minmax(50px, 0.7fr)  /* RSI */
+    minmax(55px, 0.7fr); /* Z */
+  gap: 8px;
   align-items: center;
-  padding: 5px 10px;
 }
 
 /* ─── COLUMN HEADERS ────────────────────────────────────── */
 
 .mt-col-headers {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mt-ch {
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  color: #8aa;
+  font-weight: 700;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  opacity: 0.8;
+  color: #7a9;
+  text-align: center;
   white-space: nowrap;
 }
 
-.mt-ch-pct,
-.mt-ch-rsi,
-.mt-ch-z   { text-align: right; }
-.mt-ch-reg { text-align: center; }
+.mt-ch-asset { text-align: left; }
 
 /* ─── ROWS ──────────────────────────────────────────────── */
 
 .mt-rows {
   display: flex;
   flex-direction: column;
+  padding: 4px 0;
 }
 
 .mt-row {
-  padding: 10px 0;
+  padding: 12px 16px;
+  min-height: 48px;
   transition: background 0.2s;
   cursor: default;
 }
@@ -114,19 +122,30 @@
 
 /* ─── CELLS ─────────────────────────────────────────────── */
 
-.mt-cell { box-sizing: border-box; min-width: 0; }
+.mt-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 0;
+}
 
 .mt-asset {
+  justify-content: flex-start;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #eee;
+  color: #e8e8e8;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.mt-pct { text-align: right; }
+.mt-pct {
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
 
 .mt-pct-value {
   display: block;
@@ -137,12 +156,11 @@
 }
 
 .mt-regime {
-  text-align: center;
   line-height: 1;
 }
 
 .mt-mval {
-  text-align: right;
+  font-family: monospace;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -163,7 +181,6 @@
   background: rgba(255, 255, 255, 0.06);
   border-radius: 2px;
   overflow: hidden;
-  margin-top: 2px;
 }
 
 .mt-progbar-fill {
@@ -176,13 +193,16 @@
 /* ─── REGIME BADGES (mt-mbadge) ─────────────────────────── */
 
 .mt-mbadge {
-  display: inline-block;
-  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: monospace;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  border-radius: 2px;
-  font-family: 'Courier New', Courier, monospace;
   white-space: nowrap;
 }
 
@@ -224,14 +244,9 @@
 }
 
 .mt-level-flat {
-  background: rgba(150, 150, 150, 0.12);
   color: #888;
+  background: rgba(150, 150, 150, 0.12);
   border: 1px solid rgba(150, 150, 150, 0.25);
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
 }
 
 /* ─── VALUE COLORS (RSI & Zscore) ───────────────────────── */
@@ -249,9 +264,7 @@
 /* ─── SEPARATOR ─────────────────────────────────────────── */
 
 .mt-separator {
-  margin: 0 10px;
-  height: 1px;
-  background: rgba(255, 255, 255, 0.05);
+  display: none;
 }
 
 /* ─── ANIMATION ─────────────────────────────────────────── */

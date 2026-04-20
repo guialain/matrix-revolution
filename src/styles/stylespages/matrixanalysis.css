@@ -39,14 +39,12 @@
   height: 100%;
 }
 
-/* ─── LEFT COL — blocs proportionnels ───────────────────── */
+/* ─── LEFT COL — 60 / 40 vertical split ─────────────────── */
 
-/* ConvergenceMultiTF : prend le plus de place */
-.matrix-col:first-child > *:nth-child(1) { flex: 2 1 0; min-height: 0; overflow: hidden; }
-/* IndicatorsMatrix */
-.matrix-col:first-child > *:nth-child(2) { flex: 2 1 0; min-height: 0; overflow: hidden; }
-/* Bottom row (AccountLevels + MarketTrend) */
-.matrix-col:first-child > *:nth-child(3) { flex: 1 0 auto; min-height: 0; }
+/* NeomatrixMTAnalysis : 60% */
+.matrix-col:first-child > *:nth-child(1) { flex: 60 1 0; min-height: 0; overflow: hidden; }
+/* Bottom row (AccountLevels + MarketTrend) : 40% */
+.matrix-col:first-child > *:nth-child(2) { flex: 40 1 0; min-height: 0; overflow: hidden; }
 
 /* ─── BOTTOM ROW (AccountLevels + MarketTrend) ───────────── */
 

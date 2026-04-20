@@ -140,3 +140,42 @@ export function getZscoreZone(zscore) {
   if (v <  2.84) return "VERY_HIGH";
   return "EXTREME_HIGH";
 }
+
+// ============================================================================
+// DSLOPE LEVEL — classification de l'accélération pour display
+// Seuils calibrés sur distribution empirique US_TECH100
+// (5996 bougies H1). Asset-agnostique mais TF-specific.
+// À calibrer asset-specific dans une session future.
+// ============================================================================
+const DSLOPE_THRESHOLDS = {
+  M5:  { explo: 5.5, acc: 2.0, soft: 0.8 },
+  M15: { explo: 5.0, acc: 1.7, soft: 0.7 },
+  H1:  { explo: 4.7, acc: 1.5, soft: 0.5 },
+  H4:  { explo: 3.5, acc: 1.2, soft: 0.4 },
+  D1:  { explo: 2.5, acc: 1.0, soft: 0.3 },
+};
+
+export function getDslopeLevel(dslope, tf) {
+  if (dslope === null || dslope === undefined ||
+      !Number.isFinite(Number(dslope))) return "UNKNOWN";
+  const thr = DSLOPE_THRESHOLDS[tf] ?? DSLOPE_THRESHOLDS.H1;
+  const v = Number(dslope);
+  if (v >  thr.explo) return "EXPLO_UP";
+  if (v >  thr.acc)   return "ACC_UP";
+  if (v >  thr.soft)  return "SFT_UP";
+  if (v < -thr.explo) return "EXPLO_DOWN";
+  if (v < -thr.acc)   return "ACC_DOWN";
+  if (v < -thr.soft)  return "SFT_DOWN";
+  return "FLAT";
+}
+
+export const DSLOPE_LEVEL_ABBR = {
+  EXPLO_UP:   "EXPLO+",
+  ACC_UP:     "ACC+",
+  SFT_UP:     "SFT+",
+  FLAT:       "FLAT",
+  SFT_DOWN:   "SFT-",
+  ACC_DOWN:   "ACC-",
+  EXPLO_DOWN: "EXPLO-",
+  UNKNOWN:    "—",
+};

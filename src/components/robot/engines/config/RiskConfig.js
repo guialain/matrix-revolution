@@ -173,17 +173,17 @@ export const RISK_CONFIG = {
   // ── METAL ─────────────────────────────────────────────────────────────────
 
   GOLD: {
-    tpAtr: 0.50, slAtr: 1.85, atrH1Cap: 38.60, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.50, slAtr: 1.80, atrH1Cap: 38.60, maxHoldH: 96, reversalEnabled: true,
     spread: 1.26,
-    targetLeveragePerTrade: 1.50,
+    targetLeveragePerTrade: 1.00,
     contractSize: 100, refPrice: 4811, baseToEUR: 0.847,
     tickSize: 0.01,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   SILVER: {
-    tpAtr: 0.50, slAtr: 1.85, atrH1Cap: 1.653, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.85, atrH1Cap: 1.653, maxHoldH: 96, reversalEnabled: true,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
-    spread: 0.148,
+    spread: 0.065,
     targetLeveragePerTrade: 0.50,
     contractSize: 10000, refPrice: 79.05, baseToEUR: 0.847,
     tickSize: 0.001,

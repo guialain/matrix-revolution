@@ -22,35 +22,35 @@ export const RISK_CONFIG = {
   // ── FX ────────────────────────────────────────────────────────────────────
 
   EURUSD: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.00298, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.00298, maxHoldH: 96, reversalEnabled: true,
     spread: 0.00008,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 1.169, baseToEUR: 1.000,
     volume_min: 0.01, volume_max: 150000, volume_step: 0.01,
   },
   AUDUSD: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.00224, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.00224, maxHoldH: 96, reversalEnabled: true,
     spread: 0.00008,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 0.705, baseToEUR: 0.847,
     volume_min: 0.01, volume_max: 151, volume_step: 0.01,
   },
   USDCHF: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.00240, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.00240, maxHoldH: 96, reversalEnabled: true,
     spread: 0.00015,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 0.789, baseToEUR: 0.847,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   GBPUSD: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.00319, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.00319, maxHoldH: 96, reversalEnabled: true,
     spread: 0.00012,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 1.343, baseToEUR: 1.076,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   USDJPY: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.439, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.439, maxHoldH: 96, reversalEnabled: true,
     spread: 0.013,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 158.95, baseToEUR: 0.847,
@@ -64,14 +64,14 @@ export const RISK_CONFIG = {
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   GBPJPY: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.60, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.60, maxHoldH: 96, reversalEnabled: true,
     spread: 0.030,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 213.44, baseToEUR: 1.076,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
   AUDJPY: {
-    tpAtr: 0.55, slAtr: 1.75, atrH1Cap: 0.40, maxHoldH: 96, reversalEnabled: true,
+    tpAtr: 0.55, slAtr: 1.65, atrH1Cap: 0.40, maxHoldH: 96, reversalEnabled: true,
     spread: 0.020,
     targetLeveragePerTrade: 3.0,
     contractSize: 100000, refPrice: 110.22, baseToEUR: 0.847,

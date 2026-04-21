@@ -149,42 +149,18 @@ const SignalFilters = (() => {
       : null;
 
     if (side === "BUY") {
-      if (slope_s0 !== null && slope_s0 < th.slopeMinDown) {
-        console.log(`[M5_SETUP BLOCK BUY ${opp.symbol}] antispike slope=${slope_s0.toFixed(2)} < ${th.slopeMinDown}`);
-        return false;
-      }
-      if (slope_s0 !== null && slope_s0 > th.slopeMaxUp) {
-        console.log(`[M5_SETUP BLOCK BUY ${opp.symbol}] chasing slope=${slope_s0.toFixed(2)} > ${th.slopeMaxUp}`);
-        return false;
-      }
-      if (rsi_s0 !== null && rsi_s0 > th.rsiMax) {
-        console.log(`[M5_SETUP BLOCK BUY ${opp.symbol}] rsi=${rsi_s0.toFixed(1)} > ${th.rsiMax}`);
-        return false;
-      }
-      if (dslope !== null && dslope < th.dslopeMin) {
-        console.log(`[M5_SETUP BLOCK BUY ${opp.symbol}] dslope=${dslope.toFixed(2)} < ${th.dslopeMin}`);
-        return false;
-      }
+      if (slope_s0 !== null && slope_s0 < th.slopeMinDown) return false;
+      if (slope_s0 !== null && slope_s0 > th.slopeMaxUp)   return false;
+      if (rsi_s0   !== null && rsi_s0   > th.rsiMax)       return false;
+      if (dslope   !== null && dslope   < th.dslopeMin)    return false;
       return true;
     }
 
     if (side === "SELL") {
-      if (slope_s0 !== null && slope_s0 > -th.slopeMinDown) {
-        console.log(`[M5_SETUP BLOCK SELL ${opp.symbol}] antispike slope=${slope_s0.toFixed(2)} > ${-th.slopeMinDown}`);
-        return false;
-      }
-      if (slope_s0 !== null && slope_s0 < -th.slopeMaxUp) {
-        console.log(`[M5_SETUP BLOCK SELL ${opp.symbol}] chasing slope=${slope_s0.toFixed(2)} < ${-th.slopeMaxUp}`);
-        return false;
-      }
-      if (rsi_s0 !== null && rsi_s0 < (100 - th.rsiMax)) {
-        console.log(`[M5_SETUP BLOCK SELL ${opp.symbol}] rsi=${rsi_s0.toFixed(1)} < ${100 - th.rsiMax}`);
-        return false;
-      }
-      if (dslope !== null && dslope > -th.dslopeMin) {
-        console.log(`[M5_SETUP BLOCK SELL ${opp.symbol}] dslope=${dslope.toFixed(2)} > ${-th.dslopeMin}`);
-        return false;
-      }
+      if (slope_s0 !== null && slope_s0 > -th.slopeMinDown) return false;
+      if (slope_s0 !== null && slope_s0 < -th.slopeMaxUp)   return false;
+      if (rsi_s0   !== null && rsi_s0   < (100 - th.rsiMax)) return false;
+      if (dslope   !== null && dslope   > -th.dslopeMin)    return false;
       return true;
     }
 

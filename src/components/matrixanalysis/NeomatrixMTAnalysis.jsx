@@ -115,9 +115,9 @@ function fmt(v, decimals) {
 function SynthRow({ label, sublabel, verdict, status, dir, fill }) {
   return (
     <div className="nmt-syn-row">
-      <div className="nmt-syn-label-wrap">
-        <span className="nmt-syn-label">{label}</span>
-        <span className="nmt-syn-sublabel">{sublabel}</span>
+      <div className="nmt-synth-label">
+        <span className="nmt-synth-title">{label}</span>
+        <span className="nmt-synth-tfs">{sublabel}</span>
       </div>
       <div className="nmt-syn-bar">
         <div className="nmt-progbar-track">

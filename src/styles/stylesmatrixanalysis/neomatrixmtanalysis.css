@@ -101,22 +101,24 @@
   padding: 6px 0;
 }
 
-.nmt-syn-label-wrap {
+.nmt-synth-label {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  gap: 10px;
 }
 
-.nmt-syn-label {
-  font-size: 12px;
+.nmt-synth-title {
   font-weight: 700;
+  font-size: 14px;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
-.nmt-syn-sublabel {
-  font-size: 10px;
-  color: rgba(232, 217, 168, 0.5);
+.nmt-synth-tfs {
+  font-size: 11px;
+  opacity: 0.6;
+  font-family: monospace;
+  color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 

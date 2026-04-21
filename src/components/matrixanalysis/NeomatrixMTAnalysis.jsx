@@ -114,6 +114,15 @@ function num(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+// Couleur de la cellule dSLOPE selon seuils de significativité (±1.5)
+function dslopeColor(dslope) {
+  const v = Number(dslope);
+  if (!Number.isFinite(v)) return "rgba(232, 217, 168, 0.6)"; // neutre/absent
+  if (v >=  1.5) return "#7AE582"; // vert — bullish significatif
+  if (v <= -1.5) return "#FF6B6B"; // rouge — bearish significatif
+  return "#e8d9a8";                // or-blanc — zone neutre
+}
+
 function fmt(v, decimals) {
   const n = num(v);
   return n == null ? "—" : n.toFixed(decimals);
@@ -242,7 +251,9 @@ export default function NeomatrixMTAnalysis({ snapshot }) {
                     <div className={`nmt-signal nmt-dir-${sigDir}`}>{sig}</div>
                     <div className="nmt-num">{fmt(r.s0, 4)}</div>
                     <div><Badge abbr={slopeLbl}  cls={slopeCls}  /></div>
-                    <div className="nmt-num">{fmt(r.dLive, 4)}</div>
+                    <div className="nmt-num" style={{ color: dslopeColor(r.dLive) }}>
+                      {fmt(r.dLive, 4)}
+                    </div>
                     <div><Badge abbr={dslopeLbl} cls={dslopeCls} /></div>
                     <div className="nmt-num">{r.rsi != null ? r.rsi.toFixed(0) : "—"}</div>
                     <div className="nmt-num">{r.z   != null ? r.z.toFixed(2)   : "—"}</div>

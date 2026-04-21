@@ -6,12 +6,16 @@
 // v6:
 //   - Suppression M5 Contrary (bloquait pullback/charge légitimes)
 //   - Suppression filtre M5 Accel hardcodé (absorbé dans SetupOK)
-//   - Gate 1 Overextended : slope/zscore/rsi extrêmes dans le sens
-//   - Gate 2 SetupOK : anti-spike + pullback sain + dslope retournement
-//   - Seuils adaptatifs par mode (relaxed/normal/strict)
-//   - Calibrés empiriquement sur US_TECH100 M5 (74001 bougies)
-//   - Anti-spike slope : ±8/±7/±6
-//   - dslope retournement : -0.5/+0.5/+1.5 (plus strict en mode REV)
+//   - Gate 1 Overextended : combo 2-of-3 (slope/zscore/rsi)
+//     slopeAbs 4.5/3.5/2.5 (plus strict que Gate 2 pour combos)
+//   - Gate 2 SetupOK : AND 4 conditions (slopeMaxUp, slopeMinDown,
+//     dslopeMin, rsiMax) — centré timing + anti-spike
+//     slopeMaxUp 5.0/4.0/3.0 (hard cap chasing)
+//     rsiMax 70/65/60 (aligné avec Gate 1 rsi)
+//     dslopeMin -0.5/+0.5/+1.5 (retournement exigé, strict REV)
+//     slopeMinDown ±8/±7/±6 (anti-spike news/krach)
+//   - Seuils calibrés empiriquement sur US_TECH100 M5 (74001 bougies)
+//   - dslope_m5 calculé live (s0 - s1), cohérent avec V8R H4/H1/D1
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -30,16 +34,16 @@ const SignalFilters = (() => {
   // =========================================================
   const M5_THRESHOLDS = {
     relaxed: {
-      overextended: { slopeAbs: 5.5, zscoreAbs: 2.6, rsi: 72 },
-      setup:        { slopeMaxUp: 3.0, slopeMinDown: -8, dslopeMin: -0.5, rsiMax: 65 },
+      overextended: { slopeAbs: 4.5, zscoreAbs: 2.6, rsi: 72 },
+      setup:        { slopeMaxUp: 5.0, slopeMinDown: -8, dslopeMin: -0.5, rsiMax: 70 },
     },
     normal: {
-      overextended: { slopeAbs: 4.5, zscoreAbs: 2.1, rsi: 68 },
-      setup:        { slopeMaxUp: 2.0, slopeMinDown: -7, dslopeMin:  0.5, rsiMax: 60 },
+      overextended: { slopeAbs: 3.5, zscoreAbs: 2.1, rsi: 68 },
+      setup:        { slopeMaxUp: 4.0, slopeMinDown: -7, dslopeMin:  0.5, rsiMax: 65 },
     },
     strict: {
-      overextended: { slopeAbs: 3.0, zscoreAbs: 1.8, rsi: 65 },
-      setup:        { slopeMaxUp: 1.0, slopeMinDown: -6, dslopeMin:  1.5, rsiMax: 55 },
+      overextended: { slopeAbs: 2.5, zscoreAbs: 1.8, rsi: 65 },
+      setup:        { slopeMaxUp: 3.0, slopeMinDown: -6, dslopeMin:  1.5, rsiMax: 60 },
     },
   };
 

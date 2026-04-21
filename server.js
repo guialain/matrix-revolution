@@ -568,6 +568,11 @@ app.get("/api/mt5data", (req, res) => {
           rsi_d1_s0:       num(r.rsi_d1_s0),
           slope_d1_s0:     num(r.slope_d1_s0),
           drsi_d1_s0:      num(r.drsi_d1_s0),
+          // D1 OHLC (bougie en cours)
+          open_d1:         num(r.open_d1),
+          high_d1:         num(r.high_d1),
+          low_d1:          num(r.low_d1),
+          close_d1:        num(r.close_d1),
           // H4
           rsi_h4:          num(r.rsi_h4),
           slope_h4:        num(r.slope_h4),

@@ -79,6 +79,11 @@ const RobotCore = {
       rsi_d1_s0:   row.rsi_d1_s0   ?? null,
       slope_d1_s0: row.slope_d1_s0 ?? null,
       drsi_d1_s0:  row.drsi_d1_s0  ?? null,
+      // D1 OHLC (bougie en cours)
+      open_d1:     row.open_d1     ?? null,
+      high_d1:     row.high_d1     ?? null,
+      low_d1:      row.low_d1      ?? null,
+      close_d1:    row.close_d1    ?? null,
       // H4
       slope_h4:    row.slope_h4     ?? null,
       slope_h4_s0: row.slope_h4_s0  ?? null,

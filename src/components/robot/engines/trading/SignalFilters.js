@@ -1,12 +1,17 @@
 // ============================================================================
-// SignalFilters.js — v5 (s0 M5 intégré)
+// SignalFilters.js — v6 (Gate M5 repensé : Overextended + SetupOK)
 //
-// Chain: Score → Weekend → Hours → Volatility → M5 Contrary → M5 Overextended → VALID
+// Chain: Weekend → Hours → Volatility → M5 Overextended → M5 SetupOK → VALID
 //
-// v6: M5 s0 only
-//   - isM5Contrary    : rsi_m5_s0, slope_m5_s0, drsi_m5_s0
-//   - isM5Overextended: slope_m5_s0, zscore_m5_s0
-//   - m5Confidence    : dslope_m5 (s1) + slope_m5_s0 concordants
+// v6:
+//   - Suppression de M5 Contrary (bloquait les pullback/charge valides)
+//   - Suppression du filtre M5 Accel hardcodé (absorbé dans SetupOK)
+//   - Gate 1 — M5 Overextended : évite d'entrer trop tard dans le sens
+//     (slope, zscore, rsi extrêmes dans le sens du trade)
+//   - Gate 2 — M5 SetupOK : valide positivement la config M5 (pullback
+//     sain ou retournement propre)
+//   - Seuils adaptatifs par mode (relaxed / normal / strict)
+//   - Calibrés empiriquement sur US_TECH100 M5 (74001 bougies)
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -25,16 +30,16 @@ const SignalFilters = (() => {
   // =========================================================
   const M5_THRESHOLDS = {
     relaxed: {
-      contrary:     { rsi: 68, slopeAbs: 7, drsiAbs: 4, dslopeAbs: 4 },
-      overextended: { slopeAbs: 5.5, zscoreAbs: 2.6 },
+      overextended: { slopeAbs: 5.5, zscoreAbs: 2.6, rsi: 72 },
+      setup:        { slopeMax: 2.0, rsiMax: 60, dslopeMin: -3.5 },
     },
     normal: {
-      contrary:     { rsi: 65, slopeAbs: 5, drsiAbs: 2, dslopeAbs: 2 },
-      overextended: { slopeAbs: 4.5, zscoreAbs: 2.1 },
+      overextended: { slopeAbs: 4.5, zscoreAbs: 2.1, rsi: 68 },
+      setup:        { slopeMax: 1.5, rsiMax: 55, dslopeMin: -2.5 },
     },
     strict: {
-      contrary:     { rsi: 55, slopeAbs: 3, drsiAbs: 1.5, dslopeAbs: 1.5 },
-      overextended: { slopeAbs: 3.0, zscoreAbs: 1.8 },
+      overextended: { slopeAbs: 3.0, zscoreAbs: 1.8, rsi: 65 },
+      setup:        { slopeMax: 1.0, rsiMax: 50, dslopeMin: -1.5 },
     },
   };
 
@@ -92,48 +97,62 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 CONTRARY — momentum opposé au signal H1
-  // Utilise s1 ET s0 : bloque si l'un OU l'autre est contraire
+  // M5 OVEREXTENDED — prix/momentum trop étiré DANS le sens du trade
+  // Bloque si on entre trop tard : slope, zscore ou RSI extrêmes.
   // =========================================================
-  function isM5Contrary(opp, side, th) {
+  function isM5Overextended(opp, side, th) {
     const slope_s0 = num(opp?.slope_m5_s0);
+    const zm5_s0   = num(opp?.zscore_m5_s0);
     const rsi_s0   = num(opp?.rsi_m5_s0);
-    const drsi_s0  = num(opp?.drsi_m5_s0);
 
     if (side === "BUY") {
+      if (slope_s0 !== null && slope_s0 > th.slopeAbs)   return true;
+      if (zm5_s0   !== null && zm5_s0   > th.zscoreAbs)  return true;
       if (rsi_s0   !== null && rsi_s0   > th.rsi)        return true;
-      if (slope_s0 !== null && slope_s0 < -th.slopeAbs)  return true;
-      if (drsi_s0  !== null && drsi_s0  < -th.drsiAbs)   return true;
     }
 
     if (side === "SELL") {
+      if (slope_s0 !== null && slope_s0 < -th.slopeAbs)  return true;
+      if (zm5_s0   !== null && zm5_s0   < -th.zscoreAbs) return true;
       if (rsi_s0   !== null && rsi_s0   < (100 - th.rsi)) return true;
-      if (slope_s0 !== null && slope_s0 > th.slopeAbs)    return true;
-      if (drsi_s0  !== null && drsi_s0  > th.drsiAbs)     return true;
     }
 
     return false;
   }
 
   // =========================================================
-  // M5 OVEREXTENDED — prix/momentum trop étiré
-  // Utilise s1 ET s0 pour détecter l'extension en cours
+  // M5 SETUP OK — valide que le M5 est en config pullback/retournement sain
+  //
+  // BUY : slope_m5 pas trop positif (pas de chasing) + rsi_m5 pas déjà
+  //       en zone haute + dslope_m5 pas en cascade baissière violente
+  // SELL : symétrique
   // =========================================================
-  function isM5Overextended(opp, side, th) {
+  function isM5SetupOK(opp, side, th) {
     const slope_s0 = num(opp?.slope_m5_s0);
-    const zm5_s0   = num(opp?.zscore_m5_s0);
+    const rsi_s0   = num(opp?.rsi_m5_s0);
+    const dslope   = num(opp?.dslope_m5);
 
     if (side === "BUY") {
-      if (slope_s0 !== null && slope_s0 > th.slopeAbs)  return true;
-      if (zm5_s0   !== null && zm5_s0   > th.zscoreAbs) return true;
+      // slope_m5 ne doit pas être trop positif (pas de chasing)
+      if (slope_s0 !== null && slope_s0 > th.slopeMax) return false;
+      // rsi_m5 pas déjà en zone haute
+      if (rsi_s0 !== null && rsi_s0 > th.rsiMax) return false;
+      // dslope_m5 pas en cascade baissière violente
+      if (dslope !== null && dslope < th.dslopeMin) return false;
+      return true;
     }
 
     if (side === "SELL") {
-      if (slope_s0 !== null && slope_s0 < -th.slopeAbs)  return true;
-      if (zm5_s0   !== null && zm5_s0   < -th.zscoreAbs) return true;
+      // slope_m5 pas trop négatif (pas de chasing baissier)
+      if (slope_s0 !== null && slope_s0 < -th.slopeMax) return false;
+      // rsi_m5 pas déjà en zone basse
+      if (rsi_s0 !== null && rsi_s0 < (100 - th.rsiMax)) return false;
+      // dslope_m5 pas en cascade haussière violente
+      if (dslope !== null && dslope > -th.dslopeMin) return false;
+      return true;
     }
 
-    return false;
+    return true;
   }
 
   // =========================================================
@@ -200,38 +219,22 @@ const SignalFilters = (() => {
         continue;
       }
 
-      // 4. M5 contrary — seuils adaptés au contexte intraday
+      // 4. M5 Overextended — ne pas entrer trop tard dans le sens
       const m5Level = resolveM5Level(opp);
       const m5Th    = M5_THRESHOLDS[m5Level];
 
-      if (isM5Contrary(opp, side, m5Th.contrary)) {
-        waitOpportunities.push({ ...opp, state: "WAIT_M5_CONTRARY", m5Level });
-        continue;
-      }
-
-      // 5. M5 overextended — seuils adaptés au contexte intraday
       if (isM5Overextended(opp, side, m5Th.overextended)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_OVEREXTENDED", m5Level });
         continue;
       }
 
-      // 6. M5 dslope — accélération M5 contraire = news/spike en cours
-      // CONT/EARLY seulement : pour REV l'impulsion est souvent le setup
-      const sigType    = String(opp?.type ?? "").toUpperCase();
-      const dslope_m5  = num(opp?.dslope_m5);
-      if (dslope_m5 !== null && sigType !== "REVERSAL") {
-        const dslopeThr = 2.0;
-        if (side === "BUY"  && dslope_m5 < -dslopeThr) {
-          waitOpportunities.push({ ...opp, state: "WAIT_M5_ACCEL", m5Level });
-          continue;
-        }
-        if (side === "SELL" && dslope_m5 >  dslopeThr) {
-          waitOpportunities.push({ ...opp, state: "WAIT_M5_ACCEL", m5Level });
-          continue;
-        }
+      // 5. M5 SetupOK — valider config pullback/retournement sain
+      if (!isM5SetupOK(opp, side, m5Th.setup)) {
+        waitOpportunities.push({ ...opp, state: "WAIT_M5_SETUP", m5Level });
+        continue;
       }
 
-      // 7. M5 confidence — calculé sur les opportunités valides
+      // 6. M5 confidence — calculé sur les opportunités valides
       const m5Confidence = getM5Confidence(opp, side);
 
       validOpportunities.push({

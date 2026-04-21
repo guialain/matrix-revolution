@@ -141,8 +141,12 @@ const SignalFilters = (() => {
   // =========================================================
   function isM5SetupOK(opp, side, th) {
     const slope_s0 = num(opp?.slope_m5_s0);
+    const slope_s1 = num(opp?.slope_m5);
     const rsi_s0   = num(opp?.rsi_m5_s0);
-    const dslope   = num(opp?.dslope_m5);
+    // dslope live (s0 − s1) — aligné sur V8R, évite la valeur CSV (s1 − s2) décalée
+    const dslope   = (slope_s0 !== null && slope_s1 !== null)
+      ? slope_s0 - slope_s1
+      : null;
 
     if (side === "BUY") {
       if (slope_s0 !== null && slope_s0 < th.slopeMinDown) {
@@ -197,10 +201,14 @@ const SignalFilters = (() => {
   // Utilisé downstream pour sizing ou filtrage additionnel
   // =========================================================
   function getM5Confidence(opp, side) {
-    const dslope   = num(opp?.dslope_m5);   // s1
-    const rsi      = num(opp?.rsi_m5);      // s1
     const slope_s0 = num(opp?.slope_m5_s0); // s0
+    const slope_s1 = num(opp?.slope_m5);    // s1
+    const rsi      = num(opp?.rsi_m5);      // s1
     const rsi_s0   = num(opp?.rsi_m5_s0);   // s0
+    // dslope live (s0 − s1) — aligné sur V8R
+    const dslope   = (slope_s0 !== null && slope_s1 !== null)
+      ? slope_s0 - slope_s1
+      : null;
 
     if (dslope === null || slope_s0 === null) return "normal";
 

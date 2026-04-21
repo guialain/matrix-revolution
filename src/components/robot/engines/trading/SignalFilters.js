@@ -4,14 +4,14 @@
 // Chain: Weekend → Hours → Volatility → M5 Overextended → M5 SetupOK → VALID
 //
 // v6:
-//   - Suppression de M5 Contrary (bloquait les pullback/charge valides)
+//   - Suppression M5 Contrary (bloquait pullback/charge légitimes)
 //   - Suppression filtre M5 Accel hardcodé (absorbé dans SetupOK)
-//   - Gate 1 Overextended : évite d'entrer trop tard (slope/zscore/rsi extrêmes)
-//   - Gate 2 SetupOK : valide positivement l'entrée (pullback sain, anti-spike,
-//     pas de chasing, RSI OK, dslope en retournement)
-//   - Seuils adaptatifs par mode (relaxed / normal / strict)
+//   - Gate 1 Overextended : slope/zscore/rsi extrêmes dans le sens
+//   - Gate 2 SetupOK : anti-spike + pullback sain + dslope retournement
+//   - Seuils adaptatifs par mode (relaxed/normal/strict)
 //   - Calibrés empiriquement sur US_TECH100 M5 (74001 bougies)
-//   - Anti-spike : slope_m5 limité à ±8/±7/±6 selon mode
+//   - Anti-spike slope : ±8/±7/±6
+//   - dslope retournement : -0.5/+0.5/+1.5 (plus strict en mode REV)
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -35,11 +35,11 @@ const SignalFilters = (() => {
     },
     normal: {
       overextended: { slopeAbs: 4.5, zscoreAbs: 2.1, rsi: 68 },
-      setup:        { slopeMaxUp: 2.0, slopeMinDown: -7, dslopeMin:  0,   rsiMax: 60 },
+      setup:        { slopeMaxUp: 2.0, slopeMinDown: -7, dslopeMin:  0.5, rsiMax: 60 },
     },
     strict: {
       overextended: { slopeAbs: 3.0, zscoreAbs: 1.8, rsi: 65 },
-      setup:        { slopeMaxUp: 1.0, slopeMinDown: -6, dslopeMin: +0.5, rsiMax: 55 },
+      setup:        { slopeMaxUp: 1.0, slopeMinDown: -6, dslopeMin:  1.5, rsiMax: 55 },
     },
   };
 

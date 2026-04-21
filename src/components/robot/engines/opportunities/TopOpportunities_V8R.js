@@ -718,7 +718,8 @@ const TopOpportunities_V8R = (() => {
       minSignalSpacingMinutes: num(opts?.minSignalSpacingMinutes) ?? 0,
       maxSignals:              num(opts?.maxSignals) ?? Infinity,
       scoreMin: num(opts?.scoreMin) ?? 0,
-      debug: Boolean(opts?.debug),
+      debug:   Boolean(opts?.debug),   // funnel agrégé (console.info + table + breakdown)
+      verbose: Boolean(opts?.verbose), // logs par row ([D1], [EXHAUSTION], [g7 FAIL], …)
     };
 
     let opps = [];
@@ -820,7 +821,7 @@ const TopOpportunities_V8R = (() => {
 
       if (!match) continue;
 
-      if (TOP_CFG.debug) {
+      if (TOP_CFG.verbose) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
         if (signalMode === "spike" && (d1State === "D1_FADING_UP" || d1State === "D1_FADING_DOWN"))
           console.log(`[D1_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike forcé par D1`);
@@ -1039,10 +1040,12 @@ const TopOpportunities_V8R = (() => {
           : matchSellRoute(..._dbg_args, g);
 
         if (!routeMatch) {
-          const rsi      = num(row?.rsi_h1_s0);
-          const zscore   = num(row?.zscore_h1_s0);
-          const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
-          console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
+          if (TOP_CFG.verbose) {
+            const rsi      = num(row?.rsi_h1_s0);
+            const zscore   = num(row?.zscore_h1_s0);
+            const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
+            console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
+          }
           continue;
         }
 

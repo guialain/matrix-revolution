@@ -5,13 +5,13 @@
 //
 // v6:
 //   - Suppression de M5 Contrary (bloquait les pullback/charge valides)
-//   - Suppression du filtre M5 Accel hardcodé (absorbé dans SetupOK)
-//   - Gate 1 — M5 Overextended : évite d'entrer trop tard dans le sens
-//     (slope, zscore, rsi extrêmes dans le sens du trade)
-//   - Gate 2 — M5 SetupOK : valide positivement la config M5 (pullback
-//     sain ou retournement propre)
+//   - Suppression filtre M5 Accel hardcodé (absorbé dans SetupOK)
+//   - Gate 1 Overextended : évite d'entrer trop tard (slope/zscore/rsi extrêmes)
+//   - Gate 2 SetupOK : valide positivement l'entrée (pullback sain, anti-spike,
+//     pas de chasing, RSI OK, dslope en retournement)
 //   - Seuils adaptatifs par mode (relaxed / normal / strict)
 //   - Calibrés empiriquement sur US_TECH100 M5 (74001 bougies)
+//   - Anti-spike : slope_m5 limité à ±8/±7/±6 selon mode
 // ============================================================================
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
@@ -31,15 +31,15 @@ const SignalFilters = (() => {
   const M5_THRESHOLDS = {
     relaxed: {
       overextended: { slopeAbs: 5.5, zscoreAbs: 2.6, rsi: 72 },
-      setup:        { slopeMax: 2.0, rsiMax: 60, dslopeMin: -3.5 },
+      setup:        { slopeMaxUp: 3.0, slopeMinDown: -8, dslopeMin: -0.5, rsiMax: 65 },
     },
     normal: {
       overextended: { slopeAbs: 4.5, zscoreAbs: 2.1, rsi: 68 },
-      setup:        { slopeMax: 1.5, rsiMax: 55, dslopeMin: -2.5 },
+      setup:        { slopeMaxUp: 2.0, slopeMinDown: -7, dslopeMin:  0,   rsiMax: 60 },
     },
     strict: {
       overextended: { slopeAbs: 3.0, zscoreAbs: 1.8, rsi: 65 },
-      setup:        { slopeMax: 1.0, rsiMax: 50, dslopeMin: -1.5 },
+      setup:        { slopeMaxUp: 1.0, slopeMinDown: -6, dslopeMin: +0.5, rsiMax: 55 },
     },
   };
 
@@ -121,11 +121,14 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 SETUP OK — valide que le M5 est en config pullback/retournement sain
+  // M5 SETUP OK — valide que le M5 est en config d'entrée propre
   //
-  // BUY : slope_m5 pas trop positif (pas de chasing) + rsi_m5 pas déjà
-  //       en zone haute + dslope_m5 pas en cascade baissière violente
-  // SELL : symétrique
+  // BUY :
+  //   - Anti-spike : slope M5 pas en chute libre extrême (slopeMinDown)
+  //   - Pas de chasing : slope M5 pas trop positif (slopeMaxUp)
+  //   - RSI M5 pas en zone haute (rsiMax)
+  //   - dslope M5 pas en cascade baissière (dslopeMin)
+  // SELL : symétrique miroir
   // =========================================================
   function isM5SetupOK(opp, side, th) {
     const slope_s0 = num(opp?.slope_m5_s0);
@@ -133,22 +136,18 @@ const SignalFilters = (() => {
     const dslope   = num(opp?.dslope_m5);
 
     if (side === "BUY") {
-      // slope_m5 ne doit pas être trop positif (pas de chasing)
-      if (slope_s0 !== null && slope_s0 > th.slopeMax) return false;
-      // rsi_m5 pas déjà en zone haute
-      if (rsi_s0 !== null && rsi_s0 > th.rsiMax) return false;
-      // dslope_m5 pas en cascade baissière violente
-      if (dslope !== null && dslope < th.dslopeMin) return false;
+      if (slope_s0 !== null && slope_s0 < th.slopeMinDown) return false;
+      if (slope_s0 !== null && slope_s0 > th.slopeMaxUp)   return false;
+      if (rsi_s0   !== null && rsi_s0   > th.rsiMax)       return false;
+      if (dslope   !== null && dslope   < th.dslopeMin)    return false;
       return true;
     }
 
     if (side === "SELL") {
-      // slope_m5 pas trop négatif (pas de chasing baissier)
-      if (slope_s0 !== null && slope_s0 < -th.slopeMax) return false;
-      // rsi_m5 pas déjà en zone basse
-      if (rsi_s0 !== null && rsi_s0 < (100 - th.rsiMax)) return false;
-      // dslope_m5 pas en cascade haussière violente
-      if (dslope !== null && dslope > -th.dslopeMin) return false;
+      if (slope_s0 !== null && slope_s0 > -th.slopeMinDown) return false;
+      if (slope_s0 !== null && slope_s0 < -th.slopeMaxUp)   return false;
+      if (rsi_s0   !== null && rsi_s0   < (100 - th.rsiMax)) return false;
+      if (dslope   !== null && dslope   > -th.dslopeMin)    return false;
       return true;
     }
 

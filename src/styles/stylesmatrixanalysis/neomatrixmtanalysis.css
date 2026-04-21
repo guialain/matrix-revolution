@@ -109,13 +109,13 @@
 
 .nmt-synth-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 16px;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
 .nmt-synth-tfs {
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.6;
   font-family: monospace;
   color: #e8d9a8;
@@ -162,20 +162,20 @@
 .nmt-table {
   display: flex;
   flex-direction: column;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .nmt-thead,
 .nmt-trow {
   display: grid;
-  grid-template-columns: 40px 70px 1fr 75px 1fr 85px 50px 55px;
-  gap: 8px;
+  grid-template-columns: 45px 80px 1fr 150px 1fr 150px 60px 70px;
+  gap: 10px;
   align-items: center;
-  padding: 6px 4px;
+  padding: 8px 4px;
 }
 
 .nmt-thead {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
   color: #e8d9a8;
@@ -207,18 +207,21 @@
 }
 
 .nmt-tf {
+  font-size: 15px;
   font-weight: 700;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
 .nmt-signal {
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .nmt-num {
   font-family: monospace;
+  font-size: 14px;
   font-weight: 700;
   color: #e8d9a8;
 }
@@ -229,11 +232,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 55px;
-  padding: 3px 10px;
+  min-width: 110px;
+  padding: 4px 12px;
   border-radius: 12px;
   font-family: monospace;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
   white-space: nowrap;

@@ -10,7 +10,6 @@ import {
   getSlopeLevel,
   getD1State,
   getDslopeLevel,
-  DSLOPE_LEVEL_ABBR,
 } from "../../utils/marketLevels.js";
 import "../../styles/stylesmatrixanalysis/neomatrixmtanalysis.css";
 
@@ -25,29 +24,39 @@ const TFS = [
 ];
 const TF_UPPER = { d1: "D1", h4: "H4", h1: "H1", m15: "M15", m5: "M5" };
 
-// ── Abbreviations slope level (intraday/slope + d1) ──────────────────────────
-
-const SLOPE_ABBR = {
-  SPIKE_UP:       "SPK+",
-  EXPLOSIVE_UP:   "EXP+",
-  STRONG_UP:      "STR+",
-  SOFT_UP:        "SFT+",
-  NEUTRE:         "FLAT",
-  SOFT_DOWN:      "SFT-",
-  STRONG_DOWN:    "STR-",
-  EXPLOSIVE_DOWN: "EXP-",
-  SPIKE_DOWN:     "SPK-",
-};
-
-const D1_ABBR = {
-  D1_STRONG_UP:    "STR+",
-  D1_FADING_UP:    "FAD+",
-  D1_EMERGING_UP:  "EMR+",
-  D1_FLAT:         "FLAT",
-  D1_EMERGING_DOWN:"EMR-",
-  D1_FADING_DOWN:  "FAD-",
-  D1_STRONG_DOWN:  "STR-",
-};
+// ── Full-name labels (NEOMATRIX uses verbose badges) ─────────────────────────
+// Input: level key from getSlopeLevel / getD1State / getDslopeLevel
+// Output: "STRONG_UP", "EXPLOSIVE_DOWN", "ACCEL_UP", etc.
+function fullLabel(level) {
+  if (!level) return "—";
+  const clean = level.startsWith("D1_") ? level.slice(3) : level;
+  const map = {
+    // Slope levels (getSlopeLevel / getD1State after D1_ strip)
+    STRONG_UP:      "STRONG_UP",
+    SOFT_UP:        "SOFT_UP",
+    EMERGING_UP:    "EMERGING_UP",
+    FADING_UP:      "FADING_UP",
+    SPIKE_UP:       "SPIKE_UP",
+    EXPLOSIVE_UP:   "EXPLOSIVE_UP",
+    FLAT:           "FLAT",
+    NEUTRE:         "FLAT",
+    STRONG_DOWN:    "STRONG_DOWN",
+    SOFT_DOWN:      "SOFT_DOWN",
+    EMERGING_DOWN:  "EMERGING_DOWN",
+    FADING_DOWN:    "FADING_DOWN",
+    SPIKE_DOWN:     "SPIKE_DOWN",
+    EXPLOSIVE_DOWN: "EXPLOSIVE_DOWN",
+    // Dslope level keys (getDslopeLevel)
+    EXPLO_UP:       "EXPLOSIVE_UP",
+    EXPLO_DOWN:     "EXPLOSIVE_DOWN",
+    ACC_UP:         "ACCEL_UP",
+    ACC_DOWN:       "ACCEL_DOWN",
+    SFT_UP:         "SOFT_UP",
+    SFT_DOWN:       "SOFT_DOWN",
+    UNKNOWN:        "—",
+  };
+  return map[clean] ?? clean;
+}
 
 // ── Direction helpers ────────────────────────────────────────────────────────
 
@@ -219,13 +228,11 @@ export default function NeomatrixMTAnalysis({ snapshot }) {
               </div>
 
               {rows.map(r => {
-                const sig      = signalFromSlope(r.slopeLevel);
-                const sigDir   = sig === "BUY" ? "up" : sig === "SELL" ? "down" : "flat";
-                const slopeAbbr = r.key === "d1"
-                  ? (D1_ABBR[r.slopeLevel] ?? "—")
-                  : (SLOPE_ABBR[r.slopeLevel] ?? "—");
-                const slopeCls  = `nmt-badge-${dirOfSlopeLevel(r.slopeLevel)}`;
-                const dslopeAbbr = DSLOPE_LEVEL_ABBR[r.dslopeLevel] ?? "—";
+                const sig        = signalFromSlope(r.slopeLevel);
+                const sigDir     = sig === "BUY" ? "up" : sig === "SELL" ? "down" : "flat";
+                const slopeLbl   = fullLabel(r.slopeLevel);
+                const slopeCls   = `nmt-badge-${dirOfSlopeLevel(r.slopeLevel)}`;
+                const dslopeLbl  = fullLabel(r.dslopeLevel);
                 const dslopeCls  = `nmt-badge-${dirOfDslopeLevel(r.dslopeLevel)}`;
 
                 return (
@@ -233,9 +240,9 @@ export default function NeomatrixMTAnalysis({ snapshot }) {
                     <div className="nmt-tf">{r.label}</div>
                     <div className={`nmt-signal nmt-dir-${sigDir}`}>{sig}</div>
                     <div className="nmt-num">{fmt(r.s0, 4)}</div>
-                    <div><Badge abbr={slopeAbbr}  cls={slopeCls}  /></div>
+                    <div><Badge abbr={slopeLbl}  cls={slopeCls}  /></div>
                     <div className="nmt-num">{fmt(r.dLive, 4)}</div>
-                    <div><Badge abbr={dslopeAbbr} cls={dslopeCls} /></div>
+                    <div><Badge abbr={dslopeLbl} cls={dslopeCls} /></div>
                     <div className="nmt-num">{r.rsi != null ? r.rsi.toFixed(0) : "—"}</div>
                     <div className="nmt-num">{r.z   != null ? r.z.toFixed(2)   : "—"}</div>
                   </div>

@@ -97,27 +97,36 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 OVEREXTENDED — prix/momentum trop étiré DANS le sens du trade
-  // Bloque si on entre trop tard : slope, zscore ou RSI extrêmes.
+  // M5 OVEREXTENDED — prix/momentum trop étiré (logique 2-sur-3)
+  //
+  // Blocage si au moins 2 des 3 critères convergent :
+  //   - slope_m5_s0 extrême (pente RSI M5)
+  //   - zscore_m5_s0 extrême (position vs Bollinger)
+  //   - rsi_m5_s0 extrême
+  //
+  // Un seul critère isolé peut être du bruit (bougie impulsive).
+  // Deux critères convergents = vraie over-extension → attendre pullback.
   // =========================================================
   function isM5Overextended(opp, side, th) {
     const slope_s0 = num(opp?.slope_m5_s0);
     const zm5_s0   = num(opp?.zscore_m5_s0);
     const rsi_s0   = num(opp?.rsi_m5_s0);
 
+    let triggers = 0;
+
     if (side === "BUY") {
-      if (slope_s0 !== null && slope_s0 > th.slopeAbs)   return true;
-      if (zm5_s0   !== null && zm5_s0   > th.zscoreAbs)  return true;
-      if (rsi_s0   !== null && rsi_s0   > th.rsi)        return true;
+      if (slope_s0 !== null && slope_s0 > th.slopeAbs)    triggers++;
+      if (zm5_s0   !== null && zm5_s0   > th.zscoreAbs)   triggers++;
+      if (rsi_s0   !== null && rsi_s0   > th.rsi)         triggers++;
     }
 
     if (side === "SELL") {
-      if (slope_s0 !== null && slope_s0 < -th.slopeAbs)  return true;
-      if (zm5_s0   !== null && zm5_s0   < -th.zscoreAbs) return true;
-      if (rsi_s0   !== null && rsi_s0   < (100 - th.rsi)) return true;
+      if (slope_s0 !== null && slope_s0 < -th.slopeAbs)   triggers++;
+      if (zm5_s0   !== null && zm5_s0   < -th.zscoreAbs)  triggers++;
+      if (rsi_s0   !== null && rsi_s0   < (100 - th.rsi)) triggers++;
     }
 
-    return false;
+    return triggers >= 2;
   }
 
   // =========================================================

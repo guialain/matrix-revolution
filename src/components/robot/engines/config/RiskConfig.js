@@ -220,9 +220,9 @@ export const RISK_CONFIG = {
 
   WHEAT: {
     tpAtr: 0.60, slAtr: 1.80, atrH1Cap: 5.50, maxHoldH: 96, reversalEnabled: true,
-    spread: 0.05, spread_price: 0.05,
-    targetLeveragePerTrade: 0.50,
-    contractSize: 100, refPrice: 584, baseToEUR: 0.847,
+    spread: 1.0, spread_price: 1.0,
+    targetLeveragePerTrade: 0.40,
+    contractSize: 100, refPrice: 596, baseToEUR: 0.847,
     tickSize: 0.25,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },

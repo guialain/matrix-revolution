@@ -28,6 +28,7 @@ import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
 import { getSlopeConfig } from "../config/SlopeConfig.js";
 import { getIntradayLevel, getSlopeLevel, getD1State } from "../../../../utils/marketLevels.js";
 import { getDrsiConfig } from "../config/DrsiConfig.js";
+import { getLateEntryThreshold, getVolatilityRegime } from "../config/VolatilityConfig.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
@@ -494,15 +495,14 @@ const TopOpportunities_V8R = (() => {
   // slope_h1_s0 = orientation H1 courante (EXHAUSTION + EARLY)
   // g.antiSpike = seuil |dslope_h1| max pour zones [28-72]
   // ============================================================================
-  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType) {
+  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType, lateEntryThr = 0.8) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
 
-    // Late entry gate — bougie H1 courante trop étendue vs ATR
-    const LATE_ENTRY_THR = 0.8;
-    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > LATE_ENTRY_THR;
+    // Late entry gate — bougie H1 courante trop étendue vs ATR, seuil adaptatif par régime volatilité
+    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > lateEntryThr;
 
     // EARLY : slope_h1_s0 + dslope_h1 requis
     const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 >  g.slopeH1Min);
@@ -590,15 +590,14 @@ const TopOpportunities_V8R = (() => {
   // ============================================================================
   // SELL ROUTES (miroir)
   // ============================================================================
-  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType) {
+  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, range_ratio_h1, g, signalType, lateEntryThr = 0.8) {
     if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
 
-    // Late entry gate — bougie H1 courante trop étendue vs ATR
-    const LATE_ENTRY_THR = 0.8;
-    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > LATE_ENTRY_THR;
+    // Late entry gate — bougie H1 courante trop étendue vs ATR, seuil adaptatif par régime volatilité
+    const isLateEntry = range_ratio_h1 !== null && range_ratio_h1 > lateEntryThr;
 
     // EARLY : slope_h1_s0 + dslope_h1 requis
     const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 < -g.slopeH1Min);
@@ -795,6 +794,13 @@ const TopOpportunities_V8R = (() => {
         range_ratio_h1,
       ];
 
+      // Late entry threshold adaptatif selon régime volatilité
+      const _atr_m15 = num(row?.atr_m15);
+      const _close   = num(row?.close);
+      const _volRegime = getVolatilityRegime(symbol, _atr_m15, _close);
+      const lateEntryThr = getLateEntryThreshold(symbol, _atr_m15, _close);
+      console.log(`[LATE_ENTRY] ${symbol} regime=${_volRegime} thr=${lateEntryThr} range_ratio=${range_ratio_h1} isLate=${range_ratio_h1 !== null && range_ratio_h1 > lateEntryThr}`);
+
       let match = null;
       let signalType = null;
       let signalMode = null;
@@ -804,7 +810,7 @@ const TopOpportunities_V8R = (() => {
         const buyMode = buyRes.mode ?? computeMode(
           buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
-        match = matchBuyRoute(...args, gBuy, buyRes.type);
+        match = matchBuyRoute(...args, gBuy, buyRes.type, lateEntryThr);
         if (match) { signalType = buyRes.type; signalMode = match.modeOverride ?? buyMode; }
       }
 
@@ -814,7 +820,7 @@ const TopOpportunities_V8R = (() => {
           const sellMode = sellRes.mode ?? computeMode(
             sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
-          match = matchSellRoute(...args, gSell, sellRes.type);
+          match = matchSellRoute(...args, gSell, sellRes.type, lateEntryThr);
           if (match) { signalType = sellRes.type; signalMode = match.modeOverride ?? sellMode; }
         }
       }

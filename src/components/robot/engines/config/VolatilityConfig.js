@@ -52,3 +52,20 @@ export function getVolatilityRegime(symbol, atr_m15, close) {
 export function isTradableVolatility(symbol, atr_m15, close) {
   return TRADABLE_REGIMES.has(getVolatilityRegime(symbol, atr_m15, close));
 }
+
+// ============================================================================
+// LATE ENTRY — seuil range_ratio_h1 adaptatif selon régime de volatilité
+// Permet l'entrée sur bougie H1 plus étendue quand marché explose
+// (continuation légitime) vs bloquer tôt en régime calme.
+// ============================================================================
+export const LATE_ENTRY_THR_BY_REGIME = {
+  low:   0.6,
+  med:   0.8,
+  high:  1.5,
+  explo: 2.0,
+};
+
+export function getLateEntryThreshold(symbol, atr_m15, close) {
+  const regime = getVolatilityRegime(symbol, atr_m15, close);
+  return LATE_ENTRY_THR_BY_REGIME[regime] ?? 0.8;
+}

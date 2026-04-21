@@ -190,9 +190,16 @@ const TopOpportunities_V8R = (() => {
     const _fadeOkSell = dslope_d1_live !== null && dslope_d1_live < -0.5;
 
     if (side === "BUY") {
-      // IC=NEUTRE : BUY autorisé uniquement si D1 accélère nettement UP (>0.5)
-      // Zone morte [-0.5, 0.5] = wait (pas de signal)
-      if (intradayLevel === "NEUTRE" && !(dslope_d1_live !== null && dslope_d1_live > 0.5)) return null;
+      // IC=NEUTRE : gate dslope_d1 UNIQUEMENT pour setups CONT (side aligné D1).
+      // Les REV (BUY contre-tendance D1 down, prix qui remonte) restent possibles.
+      // D1_FLAT = skip gate (pas de biais directionnel à confirmer).
+      if (intradayLevel === "NEUTRE") {
+        const isContBuy =
+          d1State === "D1_STRONG_UP" ||
+          d1State === "D1_FADING_UP" ||
+          d1State === "D1_EMERGING_UP";
+        if (isContBuy && !(dslope_d1_live !== null && dslope_d1_live > 0.5)) return null;
+      }
 
       // IC group pour la matrice D1
       const icGroup =
@@ -233,9 +240,16 @@ const TopOpportunities_V8R = (() => {
     }
 
     if (side === "SELL") {
-      // IC=NEUTRE : SELL autorisé uniquement si D1 accélère nettement DOWN (<-0.5)
-      // Zone morte [-0.5, 0.5] = wait (pas de signal)
-      if (intradayLevel === "NEUTRE" && !(dslope_d1_live !== null && dslope_d1_live < -0.5)) return null;
+      // IC=NEUTRE : gate dslope_d1 UNIQUEMENT pour setups CONT (side aligné D1).
+      // Les REV (SELL contre-tendance D1 up, prix qui redescend) restent possibles.
+      // D1_FLAT = skip gate (pas de biais directionnel à confirmer).
+      if (intradayLevel === "NEUTRE") {
+        const isContSell =
+          d1State === "D1_STRONG_DOWN" ||
+          d1State === "D1_FADING_DOWN" ||
+          d1State === "D1_EMERGING_DOWN";
+        if (isContSell && !(dslope_d1_live !== null && dslope_d1_live < -0.5)) return null;
+      }
 
       // IC group pour la matrice D1 (miroir BUY)
       const icGroup =

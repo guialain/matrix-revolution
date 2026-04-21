@@ -156,9 +156,10 @@ export default function NeomatrixMTAnalysis({ snapshot }) {
   const rows = TFS.map(({ key, label }) => {
     const s0    = num(raw?.[`slope_${key}_s0`]);
     const s1    = num(raw?.[`slope_${key}`]);
-    const dLive = key === "d1"
-      ? (s0 != null && s1 != null ? s0 - s1 : null)
-      : num(raw?.[`dslope_${key}`]);
+    // dslope LIVE (s0 − s1) pour tous les TF — aligné sur V8R et SignalFilters.
+    // Les champs CSV dslope_xx représentent s1−s2 (entre deux bougies closed),
+    // pas la valeur live vs bougie en cours.
+    const dLive = (s0 != null && s1 != null) ? s0 - s1 : null;
     const rsi   = num(raw?.[`rsi_${key}_s0`]);
     const z     = key === "d1" ? null : num(raw?.[`zscore_${key}_s0`]);
 

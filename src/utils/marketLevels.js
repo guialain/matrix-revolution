@@ -179,3 +179,71 @@ export const DSLOPE_LEVEL_ABBR = {
   EXPLO_DOWN: "EXPLO-",
   UNKNOWN:    "—",
 };
+
+// ============================================================================
+// D1 FRAMEWORK V2 — classifiers symétriques + alignement s1×s0
+// Remplace l'ancien getD1State dans le routing V8R (getD1State reste exporté
+// pour les logs/debug et la compatibilité marketTrend).
+// ============================================================================
+
+export const SLOPE_D1_THRESHOLDS = {
+  EXTREME: 5.00,
+  STRONG:  2.20,
+  WEAK:    0.82,
+};
+
+export const DSLOPE_D1_THRESHOLDS = {
+  STRONG: 5.00,
+  MEDIUM: 1.50,
+  WEAK:   0.50,
+};
+
+export const DSLOPE_D1_ANTI_SPIKE = 5.00;
+
+export function getSlopeD1Zone(slope) {
+  if (slope === null || slope === undefined || !Number.isFinite(Number(slope))) return null;
+  const v = Number(slope);
+  if (v <= -5.00) return 'down_extreme';
+  if (v <= -2.20) return 'down_strong';
+  if (v <= -0.82) return 'down_weak';
+  if (v <   0.82) return 'flat';
+  if (v <   2.20) return 'up_weak';
+  if (v <   5.00) return 'up_strong';
+  return 'up_extreme';
+}
+
+export function getDslopeD1Zone(dslope) {
+  if (dslope === null || dslope === undefined || !Number.isFinite(Number(dslope))) return null;
+  const v = Number(dslope);
+  if (v <= -5.00) return 'dslope_strong_deceleration';
+  if (v <= -1.50) return 'dslope_medium_deceleration';
+  if (v <= -0.50) return 'dslope_weak_deceleration';
+  if (v <   0.50) return 'dslope_neutral';
+  if (v <   1.50) return 'dslope_weak_acceleration';
+  if (v <   5.00) return 'dslope_medium_acceleration';
+  return 'dslope_strong_acceleration';
+}
+
+const UP_ZONES_D1   = new Set(['up_weak', 'up_strong', 'up_extreme']);
+const DOWN_ZONES_D1 = new Set(['down_weak', 'down_strong', 'down_extreme']);
+
+export function getAlignmentD1(zone_s1, zone_s0) {
+  if (zone_s1 === null || zone_s0 === null) return null;
+  const s1Up   = UP_ZONES_D1.has(zone_s1);
+  const s1Down = DOWN_ZONES_D1.has(zone_s1);
+  const s0Up   = UP_ZONES_D1.has(zone_s0);
+  const s0Down = DOWN_ZONES_D1.has(zone_s0);
+  const s1Flat = zone_s1 === 'flat';
+  const s0Flat = zone_s0 === 'flat';
+
+  if (s1Up   && s0Up)   return 'aligned_up';
+  if (s1Down && s0Down) return 'aligned_down';
+  if (s1Flat && s0Flat) return 'aligned_flat';
+  if (s1Flat && s0Up)   return 'transition_up';
+  if (s1Flat && s0Down) return 'transition_down';
+  if (s1Up   && s0Flat) return 'fade_up';
+  if (s1Down && s0Flat) return 'fade_down';
+  if (s1Down && s0Up)   return 'inversion_up';
+  if (s1Up   && s0Down) return 'inversion_down';
+  return null;
+}

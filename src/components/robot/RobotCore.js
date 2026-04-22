@@ -134,7 +134,7 @@ const RobotCore = {
     // distinct du cooldown UI personnel géré par SignalFrequency côté trader.
     // Un signal valide est republié toutes les 1 min tant qu'il persiste,
     // pour permettre au trader de le voir même s'il ne regarde pas en temps réel.
-    const allOpps = TopOpportunities_V8R.evaluate(topRows, { minSignalSpacingMinutes: 1, debug: true, verbose: true, scoreMin: 0 });
+    const allOpps = TopOpportunities_V8R.evaluate(topRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

@@ -308,7 +308,8 @@ function runTrailingStop() {
   }
 }
 
-setInterval(runTrailingStop, 1000);
+// Trailing stop désactivé temporairement — réactiver en décommentant
+// setInterval(runTrailingStop, 1000);
 
 // ============================================================================
 // TIMEFRAME MAPPER

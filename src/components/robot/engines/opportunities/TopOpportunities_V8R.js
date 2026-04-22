@@ -773,7 +773,8 @@ const TopOpportunities_V8R = (() => {
       const _close   = num(row?.close);
       const _volRegime = getVolatilityRegime(symbol, _atr_m15, _close);
       const lateEntryThr = getLateEntryThreshold(symbol, _atr_m15, _close);
-      console.log(`[LATE_ENTRY] ${symbol} regime=${_volRegime} thr=${lateEntryThr} range_ratio=${range_ratio_h1} isLate=${range_ratio_h1 !== null && range_ratio_h1 > lateEntryThr}`);
+      const _isLate = range_ratio_h1 !== null && range_ratio_h1 > lateEntryThr;
+      if (_isLate) console.log(`[LATE_ENTRY] ${symbol} regime=${_volRegime} thr=${lateEntryThr} range_ratio=${range_ratio_h1?.toFixed(2)}`);
 
       let match = null;
       let signalType = null;

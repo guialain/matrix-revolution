@@ -786,6 +786,20 @@ const TopOpportunities_V8R = (() => {
       const _alignmentD1 = getAlignmentD1(_zoneS1, _zoneS0);
       if (TOP_CFG.verbose) {
         console.log(`[D1_V2] ${symbol} alignment=${_alignmentD1} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope_d1=${_dslope_d1_live?.toFixed(2)}`);
+
+        // Sanity check : cohérence signe(dslope) vs progression zones s1→s0
+        if (_dslope_d1_live !== null && _zoneS1 !== null && _zoneS0 !== null) {
+          const zoneRank = {
+            'down_extreme': 0, 'down_strong': 1, 'down_weak': 2, 'flat': 3,
+            'up_weak': 4, 'up_strong': 5, 'up_extreme': 6
+          };
+          const rankDiff = zoneRank[_zoneS0] - zoneRank[_zoneS1];
+          const signMismatch = (rankDiff > 0 && _dslope_d1_live < 0) ||
+                               (rankDiff < 0 && _dslope_d1_live > 0);
+          if (signMismatch) {
+            console.warn(`[D1_V2 INCOHERENCE] ${symbol} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope=${_dslope_d1_live.toFixed(2)} slope_d1=${_slope_d1} slope_d1_s0=${_sd1s0}`);
+          }
+        }
       }
 
       const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live);

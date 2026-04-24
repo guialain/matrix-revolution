@@ -414,17 +414,14 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // GATE ACCÉLÉRATION — cohérence directionnelle dslope_h1_live + dslopeH4
-  // Seuils fixes : la métrique doit aller dans le sens du trade
+  // GATE ACCÉLÉRATION — cohérence directionnelle dslope_h1_live
+  // Seuil signe : la métrique doit aller dans le sens du trade
+  // (Phase B-1 : doublon dslopeH4 retiré, params type/intradayLevel supprimés)
   // ============================================================================
-  function accelContextGate(side, type, intradayLevel, dslope_h1_live, dslopeH4) {
-    if (side === "BUY") {
-      if (dslope_h1_live !== null && dslope_h1_live < 0) return false;
-      if (dslopeH4       !== null && dslopeH4       < 0) return false;
-    } else {
-      if (dslope_h1_live !== null && dslope_h1_live > 0) return false;
-      if (dslopeH4       !== null && dslopeH4       > 0) return false;
-    }
+  function accelContextGate(side, dslope_h1_live) {
+    if (dslope_h1_live === null) return true;
+    if (side === "BUY"  && dslope_h1_live < 0) return false;
+    if (side === "SELL" && dslope_h1_live > 0) return false;
     return true;
   }
 
@@ -904,7 +901,7 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _dslope_h1_live, dslopeH4)) continue;
+      if (signalMode !== "spike" && !accelContextGate(match.side, _dslope_h1_live)) continue;
 
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
@@ -1069,7 +1066,7 @@ const TopOpportunities_V8R = (() => {
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
         const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _dslopeH4Thr);
-        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _dslope_h1_dbg, _dsh4)) continue;
+        if (activeMode !== "spike" && !accelContextGate(activeSide, _dslope_h1_dbg)) continue;
         cAccelGate++;
 
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;

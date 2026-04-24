@@ -55,9 +55,35 @@ const ALIGNED_DOWN_MATRIX = {
   },
 };
 
+// ─── Cellules EXTRÊMES (étape 2a — 14 cellules) ──────────────────────────
+// Anti-FOMO : retournements violents (8 cellules, block both sides)
+// Sortie d'extrême : décélération du mouvement violent (6 cellules)
+// Si key présente mais cell[side] === null → block explicite pour ce side.
+// ─────────────────────────────────────────────────────────────────────────
+
+const EXTREME_CELLS = {
+  // Anti-FOMO : passages violents en zone extrême (block BUY et SELL)
+  'flat|up_extreme':         { BUY: null, SELL: null },
+  'down_weak|up_extreme':    { BUY: null, SELL: null },
+  'down_strong|up_extreme':  { BUY: null, SELL: null },
+  'down_extreme|up_extreme': { BUY: null, SELL: null },
+  'flat|down_extreme':       { BUY: null, SELL: null },
+  'up_weak|down_extreme':    { BUY: null, SELL: null },
+  'up_strong|down_extreme':  { BUY: null, SELL: null },
+  'up_extreme|down_extreme': { BUY: null, SELL: null },
+
+  // Sortie d'extrême — décélération du mouvement violent
+  'down_extreme|flat':       { BUY: { side: 'BUY',  mode: 'strict' }, SELL: null },
+  'down_extreme|up_weak':    { BUY: { side: 'BUY',  mode: 'strict' }, SELL: null },
+  'down_extreme|up_strong':  { BUY: { side: 'BUY',  mode: 'normal' }, SELL: null },
+  'up_extreme|flat':         { BUY: null, SELL: { side: 'SELL', mode: 'strict' } },
+  'up_extreme|down_weak':    { BUY: null, SELL: { side: 'SELL', mode: 'strict' } },
+  'up_extreme|down_strong':  { BUY: null, SELL: { side: 'SELL', mode: 'normal' } },
+};
+
 // ─── Résolveur H1 ────────────────────────────────────────────────────────
 
-export function resolveH1Alignment(slope_h1, slope_h1_s0, symbol) {
+export function resolveH1Alignment(slope_h1, slope_h1_s0, side, symbol) {
   if (!Number.isFinite(slope_h1) || !Number.isFinite(slope_h1_s0)) return null;
 
   const zone_s1 = getSlopeClass(slope_h1, symbol);
@@ -77,7 +103,15 @@ export function resolveH1Alignment(slope_h1, slope_h1_s0, symbol) {
     return { skip: true, zone_s1, zone_s0 };
   }
 
-  // Zones non-alignées (transitions, fades, inversions) — étape 2 future
+  // Cellules extrêmes (étape 2a) — dispatcher par side
+  const extremeKey = `${zone_s1}|${zone_s0}`;
+  if (extremeKey in EXTREME_CELLS) {
+    const hit = EXTREME_CELLS[extremeKey][side];
+    if (hit) return { ...hit, zone_s1, zone_s0, extreme: true };
+    return { block: true, zone_s1, zone_s0, extreme: true };
+  }
+
+  // Zones non-alignées restantes (transitions modérées, inversions modérées) — étape 2b future
   return { deferred: true, zone_s1, zone_s0 };
 }
 

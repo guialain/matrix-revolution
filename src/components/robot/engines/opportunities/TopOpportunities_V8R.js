@@ -1,7 +1,7 @@
 // ============================================================================
 // TopOpportunities_V8R.js — H1 ROUTER V8R
 //
-// RESOLVE = IC (intradayChange) + slopeH4 + drsiH4S0 → TYPE
+// RESOLVE = D1 alignment + IC (intradayChange) + slopeH4 + dslopeH4 → TYPE
 //
 // REVERSAL = trade CONTRE l'IC (pas un retournement de marché)
 //   IC baissier + H4 haussier = pullback dans uptrend H4 → REV BUY
@@ -9,7 +9,7 @@
 //   IC haussier + H4 haussier = trend aligné             → CONT BUY
 //   (miroir pour SELL)
 //
-//   IC                   slopeH4       drsiH4S0      => TYPE
+//   IC                   slopeH4       dslopeH4      => TYPE
 //   ──────────────────────────────────────────────────────────
 //   UP/STRONG/EXP_UP     UP/STRONG_UP  NEUTRE/UP+    => CONT  BUY
 //   DOWN/STRONG/EXP_DOWN UP/STRONG_UP  NEUTRE/UP+    => REV   BUY  (IC dip, H4 tient)
@@ -34,7 +34,6 @@ import {
   getAlignmentD1,
   DSLOPE_D1_ANTI_SPIKE,
 } from "../../../../utils/marketLevels.js";
-import { getDrsiConfig } from "../config/DrsiConfig.js";
 import { getLateEntryThreshold, getVolatilityRegime } from "../config/VolatilityConfig.js";
 import { resolveH1Alignment, combineMode } from "./H1Alignment.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
@@ -331,8 +330,8 @@ const TopOpportunities_V8R = (() => {
 
   // ============================================================================
   // GATE PRESETS — spike > relaxed > soft > normal > strict
-  // drsi / drsiRev = seuils sur drsi_h1_s0
-  // antiSpike     = seuil drsiSafe par asset (slopeCfg.antiSpikeH1S0)
+  // dslopeMin / dslopeRev = seuils sur dslope_h1 (variation slope H1)
+  // antiSpike             = seuil |dslope_h1| max par asset (slopeCfg.antiSpikeH1S0)
   // ============================================================================
   function buildGates(side, mode, type, antiSpike) {
     const isRev = (type === "REVERSAL");
@@ -342,7 +341,6 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0.3, dslopeRev: 0.1, zRev: 99,
         dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
-        drsiH4Sum: null,
         slopeH1Min:  0.5,   // slope_h1_s0 dans le sens du trade
         dslopeH1Min: 0.3,   // dslope_h1 confirme accélération H1
         antiSpike,
@@ -354,7 +352,6 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0, dslopeRev: 0, zRev: 99,
         dslopeThr: 0,
         z3050: 99, z5070: 99,
-        drsiH4Sum: null,
         antiSpike,
       };
     }
@@ -364,13 +361,11 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0, dslopeRev: 0, zRev: 99,
         dslopeThr: 0,
         z3050: 99, z5070: 99,
-        drsiH4Sum: null,
         antiSpike,
       } : {
         dslopeMin: 0, dslopeRev: 0, zRev: 99,
         dslopeThr: 0,
         z3050: 2.3, z5070: 2.3,
-        drsiH4Sum: null,
         antiSpike,
       };
     }
@@ -380,13 +375,11 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
         dslopeThr: 0.2,
         z3050: 99, z5070: 99,
-        drsiH4Sum: null,
         antiSpike,
       } : {
         dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
         dslopeThr: 0.2,
         z3050: 1.8, z5070: 1.8,
-        drsiH4Sum: 0,
         antiSpike,
       };
     }
@@ -396,13 +389,11 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
         dslopeThr: 0.3,
         z3050: 99, z5070: 99,
-        drsiH4Sum: null,
         antiSpike,
       } : {
         dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
         dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
-        drsiH4Sum: 0,
         antiSpike,
       };
     }
@@ -412,63 +403,26 @@ const TopOpportunities_V8R = (() => {
       dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
       dslopeThr: 0.5,
       z3050: 99, z5070: 99,
-      drsiH4Sum: null,
       antiSpike,
     } : {
       dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
       dslopeThr: 0.5,
       z3050: 1.6, z5070: 1.6,
-      drsiH4Sum: 0,
       antiSpike,
     };
   }
 
   // ============================================================================
-  // GATE ACCÉLÉRATION — drsi_h1_s0 (H1) + dslopeH4 (H4) vs percentiles calibrés
+  // GATE ACCÉLÉRATION — cohérence directionnelle dslope_h1_live + dslopeH4
+  // Seuils fixes : la métrique doit aller dans le sens du trade
   // ============================================================================
-  function accelContextGate(side, type, intradayLevel, drsi_h1_s0, dslopeH4, symbol) {
-    const cfg = getDrsiConfig(symbol, intradayLevel);
-
-    if (cfg?.h1) {
-      const isRev = (type === "REVERSAL" || type === "EARLY");
-      const h1 = cfg.h1;
-      const h4 = cfg.h4;
-
-      if (side === "BUY") {
-        const h1Thr = isRev ? h1.p50 : h1.p25;
-        if (drsi_h1_s0 !== null && drsi_h1_s0 < h1Thr) return false;
-        if (h4 && dslopeH4 !== null) {
-          const h4Thr = isRev ? h4.p50 : h4.p25;
-          if (dslopeH4 < h4Thr) return false;
-        }
-      } else {
-        const h1Thr = isRev ? h1.p50 : h1.p75;
-        if (drsi_h1_s0 !== null && drsi_h1_s0 > h1Thr) return false;
-        if (h4 && dslopeH4 !== null) {
-          const h4Thr = isRev ? h4.p50 : h4.p75;
-          if (dslopeH4 > h4Thr) return false;
-        }
-      }
-      return true;
-    }
-
-    // Fallback seuils fixes
-    if (side === "SELL") {
-      const SELL_FLOOR = {
-        SOFT_UP:[-0.20,-0.10], STRONG_UP:[-0.50,-0.30], EXPLOSIVE_UP:[-1.00,-0.50],
-        NEUTRE:[-0.40,0], SOFT_DOWN:[-0.35,0], STRONG_DOWN:[-0.25,0], EXPLOSIVE_DOWN:[-0.20,0],
-      };
-      const [h1Min, h4Min] = SELL_FLOOR[intradayLevel] ?? [0, 0];
-      if (drsi_h1_s0 !== null && drsi_h1_s0 > h1Min) return false;
-      if (dslopeH4   !== null && dslopeH4   > h4Min) return false;
+  function accelContextGate(side, type, intradayLevel, dslope_h1_live, dslopeH4) {
+    if (side === "BUY") {
+      if (dslope_h1_live !== null && dslope_h1_live < 0) return false;
+      if (dslopeH4       !== null && dslopeH4       < 0) return false;
     } else {
-      const BUY_CEIL = {
-        SOFT_DOWN:[0.20,0.10], STRONG_DOWN:[0.50,0.30], EXPLOSIVE_DOWN:[1.00,0.50],
-        NEUTRE:[0.40,0], SOFT_UP:[0.35,0], STRONG_UP:[0.25,0], EXPLOSIVE_UP:[0.20,0],
-      };
-      const [h1Max, h4Max] = BUY_CEIL[intradayLevel] ?? [0, 0];
-      if (drsi_h1_s0 !== null && drsi_h1_s0 < h1Max) return false;
-      if (dslopeH4   !== null && dslopeH4   < h4Max) return false;
+      if (dslope_h1_live !== null && dslope_h1_live > 0) return false;
+      if (dslopeH4       !== null && dslopeH4       > 0) return false;
     }
     return true;
   }
@@ -767,19 +721,13 @@ const TopOpportunities_V8R = (() => {
       const riskCfg  = getRiskConfig(symbol);
       const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
       const slopeCfg = getSlopeConfig(symbol);
-      const drsiH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
+      const dslopeH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
       const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
       const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
       // Gate ATR — filtre volatilité extrême (> 4x cap)
       const atrH1 = num(row?.atr_h1);
       if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
-
-      // Anti-spike AVANT resolve3D
-      // drsi_h1    = bougie H1 précédente (fermée, >1h) → ne bloque pas
-      // drsi_h1_s0 = bougie H1 courante (en cours)      → bloque si spike
-      const _drsi_h1_s0 = num(row?.drsi_h1_s0);
-      if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= antiSpikeH1S0) continue;
 
       const intra = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);
@@ -870,7 +818,7 @@ const TopOpportunities_V8R = (() => {
           console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → BUY ${buyRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
         }
         const buyMode = buyRes.mode ?? computeMode(
-          buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
+          buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, dslopeH4Thr);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
         match = matchBuyRoute(...args, gBuy, buyRes.type, lateEntryThr);
         if (match) { signalType = buyRes.type; signalMode = match.modeOverride ?? buyMode; }
@@ -887,7 +835,7 @@ const TopOpportunities_V8R = (() => {
             console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → SELL ${sellRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
           }
           const sellMode = sellRes.mode ?? computeMode(
-            sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
+            sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, dslopeH4Thr);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
           match = matchSellRoute(...args, gSell, sellRes.type, lateEntryThr);
           if (match) { signalType = sellRes.type; signalMode = match.modeOverride ?? sellMode; }
@@ -953,7 +901,7 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _dslope_h1_live, dslopeH4, symbol)) continue;
+      if (signalMode !== "spike" && !accelContextGate(match.side, signalType, intradayLevel, _dslope_h1_live, dslopeH4)) continue;
 
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
@@ -1011,7 +959,6 @@ const TopOpportunities_V8R = (() => {
         // H4
         slope_h4:    num(row?.slope_h4),
         dslope_h4:   num(row?.dslope_h4),
-        drsi_h4:     num(row?.drsi_h4),
         rsi_h4_s0:   num(row?.rsi_h4_s0),
         slope_h4_s0: num(row?.slope_h4_s0),
         dslopeH4:    dslopeH4,
@@ -1021,7 +968,6 @@ const TopOpportunities_V8R = (() => {
         slope_h1:       num(row?.slope_h1),
         dslope_h1:      _dslope_h1_live,      // live = slope_h1_s0 - slope_h1
         dslope_h1_csv:  num(row?.dslope_h1),  // original CSV pour debug
-        drsi_h1:        num(row?.drsi_h1),
         zscore_h1:      num(row?.zscore_h1),
         dz_h1:          num(row?.dz_h1),
         atr_h1:         num(row?.atr_h1),
@@ -1031,7 +977,6 @@ const TopOpportunities_V8R = (() => {
         // H1 s0
         rsi_h1_s0:    num(row?.rsi_h1_s0),
         slope_h1_s0:  num(row?.slope_h1_s0),
-        drsi_h1_s0:   num(row?.drsi_h1_s0),
         zscore_h1_s0: num(row?.zscore_h1_s0),
 
         // M15
@@ -1044,13 +989,11 @@ const TopOpportunities_V8R = (() => {
         rsi_m5:    num(row?.rsi_m5),
         slope_m5:  num(row?.slope_m5),
         dslope_m5: num(row?.dslope_m5),
-        drsi_m5:   num(row?.drsi_m5),
         zscore_m5: num(row?.zscore_m5),
 
         // M5 s0
         rsi_m5_s0:    num(row?.rsi_m5_s0),
         slope_m5_s0:  num(row?.slope_m5_s0),
-        drsi_m5_s0:   num(row?.drsi_m5_s0),
         zscore_m5_s0: num(row?.zscore_m5_s0),
 
         close:           num(row?.close),
@@ -1073,7 +1016,7 @@ const TopOpportunities_V8R = (() => {
     // DEBUG PIPELINE
     // ============================================================================
     if (TOP_CFG.debug) {
-      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cDrsiGate = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
+      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cAccelGate = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -1084,13 +1027,16 @@ const TopOpportunities_V8R = (() => {
         const _riskCfg     = getRiskConfig(sym);
         const _intCfg      = INTRADAY_CONFIG[sym] ?? INTRADAY_CONFIG.default;
         const _slopeCfg    = getSlopeConfig(sym);
-        const _drsiH4Thr   = _slopeCfg.dslopeH4Thr ?? 0.3;
+        const _dslopeH4Thr   = _slopeCfg.dslopeH4Thr ?? 0.3;
         const _antiSpike   = num(_slopeCfg?.antiSpikeH1S0) ?? 8;
 
-        const _drsi_h1    = num(row?.drsi_h1);
-        const _drsi_h1_s0 = num(row?.drsi_h1_s0);
-        if (_drsi_h1    !== null && Math.abs(_drsi_h1)    >= 8)          continue;
-        if (_drsi_h1_s0 !== null && Math.abs(_drsi_h1_s0) >= _antiSpike) continue;
+        // Anti-spike mirror of evaluate(): only dslope_h1_live
+        const _slope_h1_s0_dbg = num(row?.slope_h1_s0);
+        const _slope_h1_dbg    = num(row?.slope_h1);
+        const _dslope_h1_dbg   = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
+          ? _slope_h1_s0_dbg - _slope_h1_dbg
+          : null;
+        if (_dslope_h1_dbg !== null && Math.abs(_dslope_h1_dbg) >= _antiSpike) continue;
         cAntiSpike++;
 
         const intra         = num(row?.intraday_change);
@@ -1110,23 +1056,17 @@ const TopOpportunities_V8R = (() => {
         const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1 !== null)
           ? getD1State(_dbg_sd1s0, _dbg_dslope_d1) : "D1_FLAT";
 
-        const _dbg_slope_h1_s0 = num(row?.slope_h1_s0);
+        const _dbg_slope_h1_s0 = _slope_h1_s0_dbg;
         const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY",  1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0, _dbg_slope_h1_s0, sym);
         const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL", 1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0, _dbg_slope_h1_s0, sym);
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
-        const _slope_h1_s0_dbg  = num(row?.slope_h1_s0);
-        const _slope_h1_dbg     = num(row?.slope_h1);
-        const _dslope_h1_dbg    = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
-          ? _slope_h1_s0_dbg - _slope_h1_dbg
-          : null;
-
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
-        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _drsiH4Thr);
-        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _dslope_h1_dbg, _dsh4, sym)) continue;
-        cDrsiGate++;
+        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _dslopeH4Thr);
+        if (activeMode !== "spike" && !accelContextGate(activeSide, activeRes.type, intradayLevel, _dslope_h1_dbg, _dsh4)) continue;
+        cAccelGate++;
 
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
         cReversalKill++;
@@ -1172,8 +1112,8 @@ const TopOpportunities_V8R = (() => {
         "0 — total rows":         { count: cTotal,        pct: "100%" },
         "1 — after anti-spike":   { count: cAntiSpike,    pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
         "2 — after resolve3D":    { count: cResolve,      pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "3 — after drsiGate":     { count: cDrsiGate,     pct: ((cDrsiGate/cResolve)*100).toFixed(1)+"%" },
-        "4 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cDrsiGate)*100).toFixed(1)+"%" },
+        "3 — after accelGate":    { count: cAccelGate,    pct: ((cAccelGate/cResolve)*100).toFixed(1)+"%" },
+        "4 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cAccelGate)*100).toFixed(1)+"%" },
         "5 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
         "6 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });

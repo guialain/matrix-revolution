@@ -1,7 +1,8 @@
 // ============================================================================
 // TopOpportunities_V8R.js — H1 ROUTER V8R
 //
-// RESOLVE = D1 alignment + IC (intradayChange) + slopeH4 + dslopeH4 → TYPE
+// RESOLVE = D1 alignment + IC (intradayChange) + slopeH1Level + dslopeH1 → TYPE
+// (PHASE A : H4 substitue par H1, redondances a dedupliquer en Phase B)
 //
 // REVERSAL = trade CONTRE l'IC (pas un retournement de marché)
 //   IC baissier + H4 haussier = pullback dans uptrend H4 → REV BUY
@@ -732,13 +733,15 @@ const TopOpportunities_V8R = (() => {
       const intra = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);
 
-      const slope_h4_raw = num(row?.slope_h4_s0) !== null
-        ? num(row.slope_h4_s0) : num(row?.slope_h4);
-      const slopeH4Level = getSlopeLevel(slope_h4_raw, symbol);
+      const slope_h1_raw_for_level = num(row?.slope_h1_s0) !== null
+        ? num(row.slope_h1_s0) : num(row?.slope_h1);
+      const slopeH4Level = getSlopeLevel(slope_h1_raw_for_level, symbol);
 
-      const _sh4s0  = num(row?.slope_h4_s0);
-      const _sh4s1  = num(row?.slope_h4);
-      const dslopeH4 = (_sh4s0 !== null && _sh4s1 !== null) ? _sh4s0 - _sh4s1 : null;
+      // dslopeH4 = ancienne metrique H4, maintenant alimentee par H1
+      // Sera dedupliquee en Phase B avec _dslope_h1_live
+      const dslopeH4 = (num(row?.slope_h1_s0) !== null && num(row?.slope_h1) !== null)
+        ? num(row.slope_h1_s0) - num(row.slope_h1)
+        : null;
 
       // D1 state — module la résolution BUY + SELL (miroir)
       // dslope_d1_live = slope_d1_s0 - slope_d1 (s0 vs s1 fermée)
@@ -1041,10 +1044,11 @@ const TopOpportunities_V8R = (() => {
 
         const intra         = num(row?.intraday_change);
         const intradayLevel = getIntradayLevel(intra, _intCfg);
-        const slope_h4_raw  = num(row?.slope_h4_s0) !== null ? num(row.slope_h4_s0) : num(row?.slope_h4);
-        const slopeH4Level  = getSlopeLevel(slope_h4_raw, sym);
-        const _ds0 = num(row?.slope_h4_s0);
-        const _ds1 = num(row?.slope_h4);
+        const slope_h1_raw_for_level_dbg = num(row?.slope_h1_s0) !== null
+          ? num(row.slope_h1_s0) : num(row?.slope_h1);
+        const slopeH4Level  = getSlopeLevel(slope_h1_raw_for_level_dbg, sym);
+        const _ds0 = num(row?.slope_h1_s0);
+        const _ds1 = num(row?.slope_h1);
         const _dsh4 = (_ds0 !== null && _ds1 !== null) ? _ds0 - _ds1 : null;
 
         const _dbg_sd1s0    = num(row?.slope_d1_s0);
@@ -1130,8 +1134,8 @@ const TopOpportunities_V8R = (() => {
         const _thr  = _sc.dslopeH4Thr ?? 0.3;
         const intra = num(row?.intraday_change);
         const il  = getIntradayLevel(intra, _ic);
-        const sh4  = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
-        const _s0  = num(row?.slope_h4_s0), _s1 = num(row?.slope_h4);
+        const sh4  = getSlopeLevel(num(row?.slope_h1_s0) ?? num(row?.slope_h1), _sym);
+        const _s0  = num(row?.slope_h1_s0), _s1 = num(row?.slope_h1);
         const dsh4 = (_s0 !== null && _s1 !== null) ? _s0 - _s1 : null;
         const _bk_sd1     = num(row?.slope_d1_s0);
         const _bk_sl_d1   = num(row?.slope_d1);

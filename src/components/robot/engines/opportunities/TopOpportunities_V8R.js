@@ -68,22 +68,48 @@ const TopOpportunities_V8R = (() => {
   // Anti-spike |dslope_d1| ≥ 5 appliqué en amont.
   // ============================================================================
 
-  function resolveAlignedUp(dslope_d1) {
-    if (dslope_d1 === null) return null;
-    if (dslope_d1 <= -5.00) return null;
-    if (dslope_d1 >= +1.50) return { side: 'BUY', mode: 'relaxed', type: 'CONTINUATION' };
-    if (dslope_d1 >= -0.50) return { side: 'BUY', mode: 'normal',  type: 'CONTINUATION' };
-    if (dslope_d1 >= -1.50) return { side: 'BUY', mode: 'soft',    type: 'CONTINUATION' };
-    return { side: 'BUY', mode: 'strict', type: 'CONTINUATION' };
+  function resolveAlignedUp(dslope_d1_live, dslope_d1_s0, side) {
+    if (dslope_d1_live === null) return null;
+
+    // Side BUY = CONTINUATION aligné D1 (comportement existant)
+    if (side === 'BUY') {
+      if (dslope_d1_live <= -5.00) return null;
+      if (dslope_d1_live >= +1.50) return { side: 'BUY', mode: 'relaxed', type: 'CONTINUATION' };
+      if (dslope_d1_live >= -0.50) return { side: 'BUY', mode: 'normal',  type: 'CONTINUATION' };
+      if (dslope_d1_live >= -1.50) return { side: 'BUY', mode: 'soft',    type: 'CONTINUATION' };
+      return { side: 'BUY', mode: 'strict', type: 'CONTINUATION' };
+    }
+
+    // Side SELL = contra-D1, autorisé uniquement si dslope_d1_s0 < -1.5
+    if (side === 'SELL') {
+      if (dslope_d1_s0 !== null && dslope_d1_s0 < -1.5) {
+        return { side: 'SELL', mode: 'strict', type: 'REVERSAL' };
+      }
+      return null;
+    }
+    return null;
   }
 
-  function resolveAlignedDown(dslope_d1) {
-    if (dslope_d1 === null) return null;
-    if (dslope_d1 >= +5.00) return null;
-    if (dslope_d1 <= -1.50) return { side: 'SELL', mode: 'relaxed', type: 'CONTINUATION' };
-    if (dslope_d1 <= +0.50) return { side: 'SELL', mode: 'normal',  type: 'CONTINUATION' };
-    if (dslope_d1 <= +1.50) return { side: 'SELL', mode: 'soft',    type: 'CONTINUATION' };
-    return { side: 'SELL', mode: 'strict', type: 'CONTINUATION' };
+  function resolveAlignedDown(dslope_d1_live, dslope_d1_s0, side) {
+    if (dslope_d1_live === null) return null;
+
+    // Side SELL = CONTINUATION aligné D1 (comportement existant)
+    if (side === 'SELL') {
+      if (dslope_d1_live >= +5.00) return null;
+      if (dslope_d1_live <= -1.50) return { side: 'SELL', mode: 'relaxed', type: 'CONTINUATION' };
+      if (dslope_d1_live <= +0.50) return { side: 'SELL', mode: 'normal',  type: 'CONTINUATION' };
+      if (dslope_d1_live <= +1.50) return { side: 'SELL', mode: 'soft',    type: 'CONTINUATION' };
+      return { side: 'SELL', mode: 'strict', type: 'CONTINUATION' };
+    }
+
+    // Side BUY = contra-D1, autorisé uniquement si dslope_d1_s0 > +1.5
+    if (side === 'BUY') {
+      if (dslope_d1_s0 !== null && dslope_d1_s0 > 1.5) {
+        return { side: 'BUY', mode: 'strict', type: 'REVERSAL' };
+      }
+      return null;
+    }
+    return null;
   }
 
   function resolveTransitionUp(dslope_d1) {
@@ -179,7 +205,8 @@ const TopOpportunities_V8R = (() => {
   //   Output : { type, mode } ou null (block)
   // ============================================================================
   function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0,
-                    slope_d1_s1 = null, slope_d1_s0 = null, dslope_d1_live = null) {
+                    slope_d1_s1 = null, slope_d1_s0 = null, dslope_d1_live = null,
+                    dslope_d1_s0 = null) {
 
     // Anti-spike dslope_d1 global (anti-FOMO)
     if (dslope_d1_live !== null) {
@@ -198,8 +225,8 @@ const TopOpportunities_V8R = (() => {
     // Dispatcher : résolveur selon classe d'alignement
     let d1Resolved = null;
     switch (alignment) {
-      case 'aligned_up':      d1Resolved = resolveAlignedUp(dslope_d1_live); break;
-      case 'aligned_down':    d1Resolved = resolveAlignedDown(dslope_d1_live); break;
+      case 'aligned_up':      d1Resolved = resolveAlignedUp(dslope_d1_live, dslope_d1_s0, side); break;
+      case 'aligned_down':    d1Resolved = resolveAlignedDown(dslope_d1_live, dslope_d1_s0, side); break;
       case 'transition_up':   d1Resolved = resolveTransitionUp(dslope_d1_live); break;
       case 'transition_down': d1Resolved = resolveTransitionDown(dslope_d1_live); break;
       case 'inversion_up':    d1Resolved = resolveInversionUp(icGroup, slope_d1_s0); break;
@@ -751,6 +778,7 @@ const TopOpportunities_V8R = (() => {
       const _dslope_d1_live = (_sd1s0 !== null && _slope_d1 !== null)
         ? _sd1s0 - _slope_d1
         : null;
+      const _dslope_d1_s0 = num(row?.dslope_d1_s0); // CSV : s0 vs s(-1), utilisé pour le contra-D1
       const d1State = (_sd1s0 !== null && _dslope_d1_live !== null)
         ? getD1State(_sd1s0, _dslope_d1_live)
         : "D1_FLAT";
@@ -792,7 +820,7 @@ const TopOpportunities_V8R = (() => {
       const _zoneS0 = getSlopeD1Zone(_sd1s0);
       const _alignmentD1 = getAlignmentD1(_zoneS1, _zoneS0);
       if (TOP_CFG.verbose) {
-        console.log(`[D1_V2] ${symbol} alignment=${_alignmentD1} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope_d1=${_dslope_d1_live?.toFixed(2)}`);
+        console.log(`[D1_V2] ${symbol} alignment=${_alignmentD1} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope_live=${_dslope_d1_live?.toFixed(2)} dslope_s0=${_dslope_d1_s0?.toFixed(2)}`);
 
         // Sanity check : cohérence signe(dslope) vs progression zones s1→s0
         if (_dslope_d1_live !== null && _zoneS1 !== null && _zoneS0 !== null) {
@@ -809,8 +837,12 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live);
+      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0);
       if (buyRes) {
+        if (TOP_CFG.verbose && buyRes.type === 'REVERSAL'
+            && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
+          console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → BUY ${buyRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
+        }
         const buyMode = buyRes.mode ?? computeMode(
           buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
@@ -819,8 +851,12 @@ const TopOpportunities_V8R = (() => {
       }
 
       if (!match) {
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, _slope_d1, _sd1s0, _dslope_d1_live);
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0);
         if (sellRes) {
+          if (TOP_CFG.verbose && sellRes.type === 'REVERSAL'
+              && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
+            console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → SELL ${sellRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
+          }
           const sellMode = sellRes.mode ?? computeMode(
             sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, drsiH4Thr);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
@@ -1024,11 +1060,12 @@ const TopOpportunities_V8R = (() => {
         const _dbg_dslope_d1 = (_dbg_sd1s0 !== null && _dbg_slope_d1 !== null)
           ? _dbg_sd1s0 - _dbg_slope_d1
           : null;
+        const _dbg_dslope_d1_s0 = num(row?.dslope_d1_s0);
         const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1 !== null)
           ? getD1State(_dbg_sd1s0, _dbg_dslope_d1) : "D1_FLAT";
 
-        const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY",  1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1);
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL", 1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1);
+        const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY",  1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0);
+        const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL", 1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0);
         if (!buyRes && !sellRes) continue;
         cResolve++;
 
@@ -1109,12 +1146,13 @@ const TopOpportunities_V8R = (() => {
         const sh4  = getSlopeLevel(num(row?.slope_h4_s0) ?? num(row?.slope_h4), _sym);
         const _s0  = num(row?.slope_h4_s0), _s1 = num(row?.slope_h4);
         const dsh4 = (_s0 !== null && _s1 !== null) ? _s0 - _s1 : null;
-        const _bk_sd1   = num(row?.slope_d1_s0);
-        const _bk_sl_d1 = num(row?.slope_d1);
-        const _bk_dsd1  = (_bk_sd1 !== null && _bk_sl_d1 !== null) ? _bk_sd1 - _bk_sl_d1 : null;
-        const _bk_d1    = (_bk_sd1 !== null && _bk_dsd1 !== null) ? getD1State(_bk_sd1, _bk_dsd1) : "D1_FLAT";
-        const br  = resolve3D(il, sh4, dsh4, "BUY",  1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1);
-        const sr  = resolve3D(il, sh4, dsh4, "SELL", 1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1);
+        const _bk_sd1     = num(row?.slope_d1_s0);
+        const _bk_sl_d1   = num(row?.slope_d1);
+        const _bk_dsd1    = (_bk_sd1 !== null && _bk_sl_d1 !== null) ? _bk_sd1 - _bk_sl_d1 : null;
+        const _bk_dsd1_s0 = num(row?.dslope_d1_s0);
+        const _bk_d1      = (_bk_sd1 !== null && _bk_dsd1 !== null) ? getD1State(_bk_sd1, _bk_dsd1) : "D1_FLAT";
+        const br  = resolve3D(il, sh4, dsh4, "BUY",  1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1, _bk_dsd1_s0);
+        const sr  = resolve3D(il, sh4, dsh4, "SELL", 1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1, _bk_dsd1_s0);
         if (br) resolveBreakdown[`${br.type}_BUY`]  = (resolveBreakdown[`${br.type}_BUY`]  ?? 0) + 1;
         if (sr) resolveBreakdown[`${sr.type}_SELL`] = (resolveBreakdown[`${sr.type}_SELL`] ?? 0) + 1;
       }

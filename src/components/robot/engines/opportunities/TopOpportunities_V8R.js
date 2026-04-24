@@ -36,7 +36,7 @@ import {
   DSLOPE_D1_ANTI_SPIKE,
 } from "../../../../utils/marketLevels.js";
 import { getLateEntryThreshold, getVolatilityRegime } from "../config/VolatilityConfig.js";
-import { resolveH1Alignment, combineMode } from "./H1Alignment.js";
+import { resolveH1Alignment } from "./H1Alignment.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
@@ -597,7 +597,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.zRev)
-      return { route: "BUY-[0-28]-EXHAUSTION", side: "BUY", modeOverride: "relaxed" };
+      return { route: "BUY-[0-28]-EXHAUSTION", side: "BUY" };
 
     // BUY [28-50] EXHAUSTION
     if (rsi >= 28 && rsi < 50
@@ -605,7 +605,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.z3050)
-      return { route: "BUY-[28-50]-EXHAUSTION", side: "BUY", modeOverride: "normal" };
+      return { route: "BUY-[28-50]-EXHAUSTION", side: "BUY" };
 
     // BUY [50-72] EXHAUSTION
     if (rsi >= 50 && rsi < 72
@@ -613,7 +613,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 < -0.5
      && dslope_h1 > 1.5
      && zscore < g.z5070)
-      return { route: "BUY-[50-72]-EXHAUSTION", side: "BUY", modeOverride: "strict" };
+      return { route: "BUY-[50-72]-EXHAUSTION", side: "BUY" };
 
     // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
     // Reprise continuation H1 dans le sens du trade — dslope_h1 seul suffit,
@@ -625,7 +625,7 @@ const TopOpportunities_V8R = (() => {
      && !isLateEntry
      && dslope_h1 > 1.5
      && zscore < g.z3050)
-      return { route: "BUY-[28-50]-CONT-RESUME", side: "BUY", modeOverride: "relaxed" };
+      return { route: "BUY-[28-50]-CONT-RESUME", side: "BUY" };
 
     // BUY [50-72] CONT-RESUME — bloqué si EARLY
     if (signalType !== "EARLY"
@@ -633,7 +633,7 @@ const TopOpportunities_V8R = (() => {
      && !isLateEntry
      && dslope_h1 > 1.5
      && zscore < g.z5070)
-      return { route: "BUY-[50-72]-CONT-RESUME", side: "BUY", modeOverride: "soft" };
+      return { route: "BUY-[50-72]-CONT-RESUME", side: "BUY" };
 
     // ── ROUTES NORMALES ──────────────────────────────────────────────────────
 
@@ -692,7 +692,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.zRev)
-      return { route: "SELL-[72-100]-EXHAUSTION", side: "SELL", modeOverride: "relaxed" };
+      return { route: "SELL-[72-100]-EXHAUSTION", side: "SELL" };
 
     // SELL [50-72] EXHAUSTION
     if (rsi >= 50 && rsi < 72
@@ -700,7 +700,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.z3050)
-      return { route: "SELL-[50-72]-EXHAUSTION", side: "SELL", modeOverride: "normal" };
+      return { route: "SELL-[50-72]-EXHAUSTION", side: "SELL" };
 
     // SELL [28-50] EXHAUSTION
     if (rsi >= 28 && rsi < 50
@@ -708,7 +708,7 @@ const TopOpportunities_V8R = (() => {
      && slope_h1_s0 !== null && slope_h1_s0 > 0.5
      && dslope_h1 < -1.5
      && zscore > -g.z5070)
-      return { route: "SELL-[28-50]-EXHAUSTION", side: "SELL", modeOverride: "strict" };
+      return { route: "SELL-[28-50]-EXHAUSTION", side: "SELL" };
 
     // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
     // Reprise continuation baissière H1 — dslope_h1 seul suffit,
@@ -720,7 +720,7 @@ const TopOpportunities_V8R = (() => {
      && !isLateEntry
      && dslope_h1 < -1.5
      && zscore > -g.z3050)
-      return { route: "SELL-[50-72]-CONT-RESUME", side: "SELL", modeOverride: "relaxed" };
+      return { route: "SELL-[50-72]-CONT-RESUME", side: "SELL" };
 
     // SELL [28-50] CONT-RESUME — bloqué si EARLY
     if (signalType !== "EARLY"
@@ -728,7 +728,7 @@ const TopOpportunities_V8R = (() => {
      && !isLateEntry
      && dslope_h1 < -1.5
      && zscore > -g.z5070)
-      return { route: "SELL-[28-50]-CONT-RESUME", side: "SELL", modeOverride: "soft" };
+      return { route: "SELL-[28-50]-CONT-RESUME", side: "SELL" };
 
     // ── ROUTES NORMALES ──────────────────────────────────────────────────────
 
@@ -867,7 +867,6 @@ const TopOpportunities_V8R = (() => {
       const _dslope_h1_live   = (_slope_h1_s0 !== null && _slope_h1 !== null)
         ? _slope_h1_s0 - _slope_h1
         : null;
-      if (_dslope_h1_live !== null && Math.abs(_dslope_h1_live) >= antiSpikeH1S0) continue;
 
       const args = [
         num(row?.rsi_h1_s0),
@@ -920,11 +919,13 @@ const TopOpportunities_V8R = (() => {
             && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
           console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → BUY ${buyRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
         }
-        const buyMode = buyRes.mode ?? computeMode(
-          buyRes.type, "BUY", intradayLevel, slopeH4Level, dslopeH4, dslopeH4Thr);
+        // Mode 'spike' preserve (resolve3D fallback). Sinon : nouveau gate.
+        const buyMode = (buyRes.mode === 'spike')
+          ? 'spike'
+          : computeModeV2('BUY', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
         match = matchBuyRoute(...args, gBuy, buyRes.type, lateEntryThr);
-        if (match) { signalType = buyRes.type; signalMode = match.modeOverride ?? buyMode; }
+        if (match) { signalType = buyRes.type; signalMode = buyMode; }
       }
 
       if (!match) {
@@ -937,11 +938,12 @@ const TopOpportunities_V8R = (() => {
               && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
             console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → SELL ${sellRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
           }
-          const sellMode = sellRes.mode ?? computeMode(
-            sellRes.type, "SELL", intradayLevel, slopeH4Level, dslopeH4, dslopeH4Thr);
+          const sellMode = (sellRes.mode === 'spike')
+            ? 'spike'
+            : computeModeV2('SELL', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
           match = matchSellRoute(...args, gSell, sellRes.type, lateEntryThr);
-          if (match) { signalType = sellRes.type; signalMode = match.modeOverride ?? sellMode; }
+          if (match) { signalType = sellRes.type; signalMode = sellMode; }
         }
       }
 
@@ -965,7 +967,7 @@ const TopOpportunities_V8R = (() => {
           continue;
         }
         const prevMode = signalMode;
-        signalMode = combineMode(signalMode, h1Result.mode);
+        // (Phase B-2b) H1 alignment ne touche plus au mode
         if (h1Result.extreme) {
           h1Counters.extreme_resolved++;
           if (TOP_CFG.verbose) {
@@ -1133,13 +1135,12 @@ const TopOpportunities_V8R = (() => {
         const _dslopeH4Thr   = _slopeCfg.dslopeH4Thr ?? 0.3;
         const _antiSpike   = num(_slopeCfg?.antiSpikeH1S0) ?? 8;
 
-        // Anti-spike mirror of evaluate(): only dslope_h1_live
+        // Anti-spike H1 retire (Phase B-2b) — compteur conserve pour funnel
         const _slope_h1_s0_dbg = num(row?.slope_h1_s0);
         const _slope_h1_dbg    = num(row?.slope_h1);
         const _dslope_h1_dbg   = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
           ? _slope_h1_s0_dbg - _slope_h1_dbg
           : null;
-        if (_dslope_h1_dbg !== null && Math.abs(_dslope_h1_dbg) >= _antiSpike) continue;
         cAntiSpike++;
 
         const intra         = num(row?.intraday_change);
@@ -1168,7 +1169,14 @@ const TopOpportunities_V8R = (() => {
 
         const activeRes   = buyRes ?? sellRes;
         const activeSide  = buyRes ? "BUY" : "SELL";
-        const activeMode  = activeRes.mode ?? computeMode(activeRes.type, activeSide, intradayLevel, slopeH4Level, _dsh4, _dslopeH4Thr);
+        // Calcul alignement D1 pour le gate
+        const _dbg_alignmentD1 = getAlignmentD1(
+          getSlopeD1Zone(_dbg_slope_d1),
+          getSlopeD1Zone(_dbg_sd1s0)
+        );
+        const activeMode = (activeRes.mode === 'spike')
+          ? 'spike'
+          : computeModeV2(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1, _slope_h1_dbg, _slope_h1_s0_dbg, sym);
         if (activeMode !== "spike" && !accelContextGate(activeSide, _dslope_h1_dbg)) continue;
         cAccelGate++;
 

@@ -28,8 +28,8 @@ const AccountRisk = (() => {
     let state = "SAFE";
 
     if (marginLevel !== null) {
-      if (marginLevel < 400) state = "DANGER";
-      else if (marginLevel < 800) state = "WARNING";
+      if (marginLevel < 200) state = "DANGER";
+      else if (marginLevel < 400) state = "WARNING";
     }
 
     // ----------------------------

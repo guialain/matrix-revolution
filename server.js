@@ -859,22 +859,29 @@ app.post("/api/signals/publish", (req, res) => {
   const existingValid = signalsStore[key].validOpportunities;
   const existingWait  = signalsStore[key].waitOpportunities;
 
-  // Preserve original emittedAt — don't reset on re-publish
-  const fresh = validOpportunities.map(op => {
-    const prev = existingValid.find(e => e.symbol === op.symbol && e.side === op.side);
-    return {
-      ...op,
-      emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
-    };
-  }).filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
+  // Merge existing + incoming, dedupe by symbol+side (incoming wins),
+  // preserve original emittedAt, keep fresh (<30s).
+  // Rationale: useRobotCore publish is throttled per-symbol (15s), so each
+  // POST contains only 1-2 new signals. Replacing the store would evict
+  // signals whose TTL hasn't expired.
+  function mergeAndFilter(existing, incoming) {
+    const map = new Map();
+    for (const op of existing ?? []) {
+      map.set(`${op.symbol}_${op.side}`, op);
+    }
+    for (const op of incoming ?? []) {
+      const k = `${op.symbol}_${op.side}`;
+      const prev = map.get(k);
+      map.set(k, {
+        ...op,
+        emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
+      });
+    }
+    return [...map.values()].filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
+  }
 
-  const freshWait = waitOpportunities.map(op => {
-    const prev = existingWait.find(e => e.symbol === op.symbol && e.side === op.side);
-    return {
-      ...op,
-      emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
-    };
-  }).filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
+  const fresh     = mergeAndFilter(existingValid, validOpportunities);
+  const freshWait = mergeAndFilter(existingWait,  waitOpportunities);
 
   signalsStore[key].validOpportunities = fresh;
   signalsStore[key].waitOpportunities = freshWait;

@@ -36,6 +36,7 @@ import {
 } from "../../../../utils/marketLevels.js";
 import { getDrsiConfig } from "../config/DrsiConfig.js";
 import { getLateEntryThreshold, getVolatilityRegime } from "../config/VolatilityConfig.js";
+import { resolveH1Alignment, combineMode } from "./H1Alignment.js";
 import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
@@ -697,6 +698,12 @@ const TopOpportunities_V8R = (() => {
 
     let opps = [];
 
+    // Compteurs H1 alignment (étape 1 : zones alignées)
+    const h1Counters = {
+      aligned_up: 0, aligned_down: 0, aligned_flat: 0,
+      deferred: 0, blocked_side_mismatch: 0,
+    };
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
@@ -823,6 +830,25 @@ const TopOpportunities_V8R = (() => {
       }
 
       if (!match) continue;
+
+      // --- H1 alignment layer (étape 1 : zones alignées seulement) ---
+      const h1Result = resolveH1Alignment(_slope_h1, _slope_h1_s0, symbol);
+      if (h1Result && !h1Result.skip && !h1Result.deferred) {
+        if (h1Result.side !== match.side) {
+          h1Counters.blocked_side_mismatch++;
+          continue;
+        }
+        const prevMode = signalMode;
+        signalMode = combineMode(signalMode, h1Result.mode);
+        h1Counters[`aligned_${h1Result.side === 'BUY' ? 'up' : 'down'}`]++;
+        if (TOP_CFG.verbose) {
+          console.log(`[H1_ALIGN] ${symbol} zone_s1=${h1Result.zone_s1} zone_s0=${h1Result.zone_s0} → ${h1Result.side} ${h1Result.mode} | combined mode: ${prevMode} → ${signalMode}`);
+        }
+      } else if (h1Result?.skip) {
+        h1Counters.aligned_flat++;
+      } else if (h1Result?.deferred) {
+        h1Counters.deferred++;
+      }
 
       if (TOP_CFG.verbose) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
@@ -1056,6 +1082,7 @@ const TopOpportunities_V8R = (() => {
       }
 
       console.info("TOPOPP V8R", { total_rows: rows.length, signals: opps.length });
+      console.log("H1 alignment breakdown:", h1Counters);
 
       console.table({
         "0 — total rows":         { count: cTotal,        pct: "100%" },

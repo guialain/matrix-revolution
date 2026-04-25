@@ -595,21 +595,7 @@ const TopOpportunities_V8R = (() => {
      && zscore < g.z3050)
       return { route: "BUY-[28-50]-EXHAUSTION", side: "BUY" };
 
-    // BUY [50-72] EXHAUSTION
-    if (rsi >= 50 && rsi < 72
-     && slope_h1_s0 !== null && slope_h1_s0 < -0.5
-     && dslope_h1 > 1.5
-     && zscore < g.z5070)
-      return { route: "BUY-[50-72]-EXHAUSTION", side: "BUY" };
-
     // ── CONT ─────────────────────────────────────────────────────────────────
-
-    // BUY [28-50] CONT
-    if (rsi >= 28 && rsi < 50
-     && zscore < g.z3050
-     && dslope_h1 > g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike)
-      return { route: "BUY-[28-50]-CONT", side: "BUY" };
 
     // BUY [50-72] CONT
     if (rsi >= 50 && rsi < 72
@@ -648,21 +634,7 @@ const TopOpportunities_V8R = (() => {
      && zscore > -g.z3050)
       return { route: "SELL-[50-72]-EXHAUSTION", side: "SELL" };
 
-    // SELL [28-50] EXHAUSTION
-    if (rsi >= 28 && rsi < 50
-     && slope_h1_s0 !== null && slope_h1_s0 > 0.5
-     && dslope_h1 < -1.5
-     && zscore > -g.z5070)
-      return { route: "SELL-[28-50]-EXHAUSTION", side: "SELL" };
-
     // ── CONT ─────────────────────────────────────────────────────────────────
-
-    // SELL [50-72] CONT
-    if (rsi >= 50 && rsi < 72
-     && zscore > -g.z3050
-     && dslope_h1 < -g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike)
-      return { route: "SELL-[50-72]-CONT", side: "SELL" };
 
     // SELL [28-50] CONT
     if (rsi >= 28 && rsi < 50
@@ -681,14 +653,10 @@ const TopOpportunities_V8R = (() => {
     // EXHAUSTION
     "BUY-[0-28]-EXHAUSTION":    "EXTREME_LOW",
     "BUY-[28-50]-EXHAUSTION":   "LOW_MID",
-    "BUY-[50-72]-EXHAUSTION":   "MID_HIGH",
-    "SELL-[72-100]-EXHAUSTION": "EXTREME_HIGH",
     "SELL-[50-72]-EXHAUSTION":  "MID_HIGH",
-    "SELL-[28-50]-EXHAUSTION":  "LOW_MID",
+    "SELL-[72-100]-EXHAUSTION": "EXTREME_HIGH",
     // CONT
-    "BUY-[28-50]-CONT":         "LOW_MID",
     "BUY-[50-72]-CONT":         "MID_HIGH",
-    "SELL-[50-72]-CONT":        "MID_HIGH",
     "SELL-[28-50]-CONT":        "LOW_MID",
   };
 

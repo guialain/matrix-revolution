@@ -34,7 +34,6 @@ import {
   getSlopeD1Zone,
   getAlignmentD1,
 } from "../../../../utils/marketLevels.js";
-import { resolveH1Alignment } from "./H1Alignment.js";
 import { scoreExhaustionBuy, scoreExhaustionSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
@@ -485,13 +484,6 @@ const TopOpportunities_V8R = (() => {
 
     let opps = [];
 
-    // Compteurs H1 alignment (étape 1 aligned + étape 2a extrêmes)
-    const h1Counters = {
-      aligned_up: 0, aligned_down: 0, aligned_flat: 0,
-      deferred: 0, blocked_side_mismatch: 0,
-      extreme_resolved: 0, extreme_blocked: 0,
-    };
-
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
@@ -654,42 +646,6 @@ const TopOpportunities_V8R = (() => {
 
       if (TOP_CFG.verbose) {
         console.log(`[ROUTE] ${symbol} side=${selected.side} type=${signalType} route=${selected.route} mode=${signalMode}`);
-      }
-
-      // --- H1 alignment layer (aligned + extrêmes) ---
-      const h1Result = resolveH1Alignment(_slope_h1, _slope_h1_s0, selected.side, symbol);
-
-      // Cellule extrême bloquée pour ce side → kill
-      if (h1Result?.block) {
-        h1Counters.extreme_blocked++;
-        if (TOP_CFG.verbose) {
-          console.log(`[H1_EXTREME_BLOCK] ${symbol} ${h1Result.zone_s1}×${h1Result.zone_s0} side=${selected.side}`);
-        }
-        continue;
-      }
-
-      if (h1Result && !h1Result.skip && !h1Result.deferred) {
-        if (h1Result.side !== selected.side) {
-          h1Counters.blocked_side_mismatch++;
-          continue;
-        }
-        const prevMode = signalMode;
-        // (Phase B-2b) H1 alignment ne touche plus au mode
-        if (h1Result.extreme) {
-          h1Counters.extreme_resolved++;
-          if (TOP_CFG.verbose) {
-            console.log(`[H1_EXTREME] ${symbol} ${h1Result.zone_s1}×${h1Result.zone_s0} → ${h1Result.side} ${h1Result.mode} | combined mode: ${prevMode} → ${signalMode}`);
-          }
-        } else {
-          h1Counters[`aligned_${h1Result.side === 'BUY' ? 'up' : 'down'}`]++;
-          if (TOP_CFG.verbose) {
-            console.log(`[H1_ALIGN] ${symbol} zone_s1=${h1Result.zone_s1} zone_s0=${h1Result.zone_s0} → ${h1Result.side} ${h1Result.mode} | combined mode: ${prevMode} → ${signalMode}`);
-          }
-        }
-      } else if (h1Result?.skip) {
-        h1Counters.aligned_flat++;
-      } else if (h1Result?.deferred) {
-        h1Counters.deferred++;
       }
 
       // Etape 8 : validation des conditions techniques sur la route selectionnee
@@ -911,7 +867,6 @@ const TopOpportunities_V8R = (() => {
       }
 
       console.info("TOPOPP V8R", { total_rows: rows.length, signals: opps.length });
-      console.log("H1 alignment breakdown:", h1Counters);
 
       console.table({
         "0 — total rows":         { count: cTotal,        pct: "100%" },

@@ -1,6 +1,6 @@
 // ============================================================================
 // ScoringEngine.js — NEO MATRIX Scoring
-// Reversal BUY/SELL + Continuation BUY/SELL
+// Exhaustion BUY/SELL + Continuation BUY/SELL
 // Composantes : RSI, BBZ, Slope, DSlope, Volatility, Intraday
 // ============================================================================
 
@@ -48,12 +48,12 @@ function scoreSlope(symbol, slope_h1, dslope_h1) {
 }
 
 // ============================================================================
-// COMPOSANTE — INTRADAY REVERSAL (±20)
+// COMPOSANTE — INTRADAY EXHAUSTION (±20)
 // Zone normale  (ratio 0.0 → 0.6) : pénalité forte  (-20 → -10)
 // Zone limite   (ratio 0.6 → 1.0) : pénalité faible (-10 → 0)
 // Zone excès    (ratio > 1.0)     : score positif   (0 → +20)
 // ============================================================================
-function scoreIntradayReversal(symbol, intraday_change, side) {
+function scoreIntradayExhaustion(symbol, intraday_change, side) {
   const sMax  = getStrongMax(symbol);
   const dir   = side === 'BUY' ? -1 : 1; // BUY veut baisse, SELL veut hausse
   const ratio = (intraday_change * dir) / sMax;
@@ -91,11 +91,11 @@ function scoreIntradayContinuation(symbol, intraday_change, side) {
 }
 
 // ============================================================================
-// REVERSAL BUY
+// EXHAUSTION BUY
 // RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±20)
 // Max théorique : +100  |  Min théorique : −53
 // ============================================================================
-export function scoreReversalBuy(row) {
+export function scoreExhaustionBuy(row) {
   const {
     symbol, rsi_h1_previouslow3, zscore_h1,
     slope_h1, dslope_h1,
@@ -121,7 +121,7 @@ export function scoreReversalBuy(row) {
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
 
   // INTRADAY
-  const intradayScore = scoreIntradayReversal(symbol, intraday_change, 'BUY');
+  const intradayScore = scoreIntradayExhaustion(symbol, intraday_change, 'BUY');
 
   const total = rsiScore + zscoreScore + slopeScore + dslopeScore + volatilityScore + intradayScore;
 
@@ -132,10 +132,10 @@ export function scoreReversalBuy(row) {
 }
 
 // ============================================================================
-// REVERSAL SELL
+// EXHAUSTION SELL
 // RSI(0-30) + BBZ(0-15) + Slope(±20) + DSlope(±10) + Vol(−3/+7) + Intraday(±20)
 // ============================================================================
-export function scoreReversalSell(row) {
+export function scoreExhaustionSell(row) {
   const {
     symbol, rsi_h1_previoushigh3, zscore_h1,
     slope_h1, dslope_h1,
@@ -161,7 +161,7 @@ export function scoreReversalSell(row) {
   const volatilityScore = scoreVolatility(symbol, atr_m15, close);
 
   // INTRADAY
-  const intradayScore = scoreIntradayReversal(symbol, intraday_change, 'SELL');
+  const intradayScore = scoreIntradayExhaustion(symbol, intraday_change, 'SELL');
 
   const total = rsiScore + zscoreScore + slopeScore + dslopeScore + volatilityScore + intradayScore;
 

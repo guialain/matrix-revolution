@@ -4,7 +4,7 @@
 // RESOLVE = D1 alignment + IC (intradayChange) + slopeH1Level + dslopeH1 → TYPE
 // (PHASE A : H4 substitue par H1, redondances a dedupliquer en Phase B)
 //
-// REVERSAL = trade CONTRE l'IC (pas un retournement de marché)
+// EXHAUSTION = trade CONTRE l'IC (pas un retournement de marché)
 //   IC baissier + H4 haussier = pullback dans uptrend H4 → REV BUY
 //   IC haussier + H4 baissier = rally dans downtrend H4  → REV SELL
 //   IC haussier + H4 haussier = trend aligné             → CONT BUY
@@ -36,7 +36,7 @@ import {
   DSLOPE_D1_ANTI_SPIKE,
 } from "../../../../utils/marketLevels.js";
 import { resolveH1Alignment } from "./H1Alignment.js";
-import { scoreReversalBuy, scoreReversalSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
+import { scoreExhaustionBuy, scoreExhaustionSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
 
@@ -82,7 +82,7 @@ const TopOpportunities_V8R = (() => {
     // Side SELL = contra-D1, autorisé uniquement si dslope_d1_s0 < -1.5
     if (side === 'SELL') {
       if (dslope_d1_s0 !== null && dslope_d1_s0 < -1.5) {
-        return { side: 'SELL', mode: 'strict', type: 'REVERSAL' };
+        return { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
       }
       return null;
     }
@@ -104,7 +104,7 @@ const TopOpportunities_V8R = (() => {
     // Side BUY = contra-D1, autorisé uniquement si dslope_d1_s0 > +1.5
     if (side === 'BUY') {
       if (dslope_d1_s0 !== null && dslope_d1_s0 > 1.5) {
-        return { side: 'BUY', mode: 'strict', type: 'REVERSAL' };
+        return { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
       }
       return null;
     }
@@ -128,10 +128,10 @@ const TopOpportunities_V8R = (() => {
   function resolveInversionUp(icGroup, slope_d1_s0) {
     switch (icGroup) {
       case 'IC_UP':
-        return { side: 'BUY', mode: 'normal', type: 'REVERSAL' };
+        return { side: 'BUY', mode: 'normal', type: 'EXHAUSTION' };
       case 'IC_NEUTRE':
         return (slope_d1_s0 !== null && slope_d1_s0 >= 2.20)
-          ? { side: 'BUY', mode: 'strict', type: 'REVERSAL' }
+          ? { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' }
           : null;
       default:
         return null; // IC_SPIKE_UP / IC_DOWN / IC_SPIKE_DOWN
@@ -141,10 +141,10 @@ const TopOpportunities_V8R = (() => {
   function resolveInversionDown(icGroup, slope_d1_s0) {
     switch (icGroup) {
       case 'IC_DOWN':
-        return { side: 'SELL', mode: 'normal', type: 'REVERSAL' };
+        return { side: 'SELL', mode: 'normal', type: 'EXHAUSTION' };
       case 'IC_NEUTRE':
         return (slope_d1_s0 !== null && slope_d1_s0 <= -2.20)
-          ? { side: 'SELL', mode: 'strict', type: 'REVERSAL' }
+          ? { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' }
           : null;
       default:
         return null;
@@ -162,15 +162,15 @@ const TopOpportunities_V8R = (() => {
     const s1Strong  = zone_s1 === 'up_strong';
     switch (icGroup) {
       case 'IC_DOWN':
-        return s1Extreme ? null : { side: 'SELL', mode: 'strict', type: 'REVERSAL' };
+        return s1Extreme ? null : { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
       case 'IC_UP':
         return s1Extreme
           ? { side: 'BUY', mode: 'normal', type: 'EARLY' }
           : { side: 'BUY', mode: 'strict', type: 'EARLY' };
       case 'IC_SPIKE_UP':
         return (s1Extreme || s1Strong)
-          ? { side: 'BUY', mode: 'normal', type: 'REVERSAL' }
-          : { side: 'BUY', mode: 'strict', type: 'REVERSAL' };
+          ? { side: 'BUY', mode: 'normal', type: 'EXHAUSTION' }
+          : { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
       case 'IC_NEUTRE': {
         // SELL EARLY strict si H4 bearish + H1 s0 dans zone down_*
         if (side !== 'SELL') return null;
@@ -189,15 +189,15 @@ const TopOpportunities_V8R = (() => {
     const s1Strong  = zone_s1 === 'down_strong';
     switch (icGroup) {
       case 'IC_UP':
-        return s1Extreme ? null : { side: 'BUY', mode: 'strict', type: 'REVERSAL' };
+        return s1Extreme ? null : { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
       case 'IC_DOWN':
         return s1Extreme
           ? { side: 'SELL', mode: 'normal', type: 'EARLY' }
           : { side: 'SELL', mode: 'strict', type: 'EARLY' };
       case 'IC_SPIKE_DOWN':
         return (s1Extreme || s1Strong)
-          ? { side: 'SELL', mode: 'normal', type: 'REVERSAL' }
-          : { side: 'SELL', mode: 'strict', type: 'REVERSAL' };
+          ? { side: 'SELL', mode: 'normal', type: 'EXHAUSTION' }
+          : { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
       case 'IC_NEUTRE': {
         // BUY EARLY strict si H4 bullish + H1 s0 dans zone up_*
         if (side !== 'BUY') return null;
@@ -282,20 +282,20 @@ const TopOpportunities_V8R = (() => {
       if (intradayLevel === "NEUTRE")
         return (dslopeH4 !== null && dslopeH4 >= 2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
       if (intradayLevel === "SPIKE_DOWN")
-        return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: DEFAULT_MODE } : null;
+        return h4Up && dh4OkBuy ? { type: "EXHAUSTION", mode: DEFAULT_MODE } : null;
       if (!h4Up) return null;
       if (isUpIC)   return dh4OkBuy ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
-      if (isDownIC) return dh4OkBuy ? { type: "REVERSAL",     mode: DEFAULT_MODE } : null;
+      if (isDownIC) return dh4OkBuy ? { type: "EXHAUSTION",     mode: DEFAULT_MODE } : null;
       return null;
     }
     if (side === 'SELL') {
       if (intradayLevel === "NEUTRE")
         return (dslopeH4 !== null && dslopeH4 <= -2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
       if (intradayLevel === "SPIKE_UP")
-        return h4Down && dh4OkSell ? { type: "REVERSAL", mode: DEFAULT_MODE } : null;
+        return h4Down && dh4OkSell ? { type: "EXHAUSTION", mode: DEFAULT_MODE } : null;
       if (!h4Down) return null;
       if (isDownIC) return dh4OkSell ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
-      if (isUpIC)   return dh4OkSell ? { type: "REVERSAL",     mode: DEFAULT_MODE } : null;
+      if (isUpIC)   return dh4OkSell ? { type: "EXHAUSTION",     mode: DEFAULT_MODE } : null;
       return null;
     }
     return null;
@@ -314,8 +314,8 @@ const TopOpportunities_V8R = (() => {
       : (dslopeH4 !== null && dslopeH4 <= -thr);
 
     const icStrong = side === "BUY"
-      ? (type === "REVERSAL" ? STRONG_DOWN_LEVELS.includes(intradayLevel) : STRONG_UP_LEVELS.includes(intradayLevel))
-      : (type === "REVERSAL" ? STRONG_UP_LEVELS.includes(intradayLevel)   : STRONG_DOWN_LEVELS.includes(intradayLevel));
+      ? (type === "EXHAUSTION" ? STRONG_DOWN_LEVELS.includes(intradayLevel) : STRONG_UP_LEVELS.includes(intradayLevel))
+      : (type === "EXHAUSTION" ? STRONG_UP_LEVELS.includes(intradayLevel)   : STRONG_DOWN_LEVELS.includes(intradayLevel));
 
     const h4Strong = side === "BUY"
       ? (slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP")
@@ -334,7 +334,7 @@ const TopOpportunities_V8R = (() => {
   // antiSpike             = seuil |dslope_h1| max par asset (slopeCfg.antiSpikeH1S0)
   // ============================================================================
   function buildGates(side, mode, type, antiSpike) {
-    const isRev = (type === "REVERSAL");
+    const isRev = (type === "EXHAUSTION");
 
     if (type === "EARLY") {
       return {
@@ -536,9 +536,9 @@ const TopOpportunities_V8R = (() => {
   // Output : Array<{ route, side, type }>
   //   route : nom de la route
   //   side  : 'BUY' ou 'SELL'
-  //   type  : 'CONTINUATION' ou 'REVERSAL'
+  //   type  : 'CONTINUATION' ou 'EXHAUSTION'
   //
-  // Note : les EXHAUSTION sont type='REVERSAL' (pari sur retournement),
+  // Note : les EXHAUSTION sont type='EXHAUSTION' (pari sur retournement),
   //        les CONT sont type='CONTINUATION' (pari sur poursuite).
   // ============================================================================
 
@@ -552,7 +552,7 @@ const TopOpportunities_V8R = (() => {
     if (rsi < 28) {
       if (zscore < -2) {
         return [
-          { route: "BUY-[0-28]-EXHAUSTION", side: "BUY", type: "REVERSAL" }
+          { route: "BUY-[0-28]-EXHAUSTION", side: "BUY", type: "EXHAUSTION" }
         ];
       }
       return [];
@@ -563,7 +563,7 @@ const TopOpportunities_V8R = (() => {
       if (zscore < -0.5) {
         return [
           { route: "SELL-[28-50]-CONT",        side: "SELL", type: "CONTINUATION" },
-          { route: "BUY-[28-50]-EXHAUSTION",   side: "BUY",  type: "REVERSAL" },
+          { route: "BUY-[28-50]-EXHAUSTION",   side: "BUY",  type: "EXHAUSTION" },
         ];
       }
       return [];
@@ -574,7 +574,7 @@ const TopOpportunities_V8R = (() => {
       if (zscore > 0.5) {
         return [
           { route: "BUY-[50-72]-CONT",         side: "BUY",  type: "CONTINUATION" },
-          { route: "SELL-[50-72]-EXHAUSTION",  side: "SELL", type: "REVERSAL" },
+          { route: "SELL-[50-72]-EXHAUSTION",  side: "SELL", type: "EXHAUSTION" },
         ];
       }
       return [];
@@ -584,7 +584,7 @@ const TopOpportunities_V8R = (() => {
     if (rsi >= 72) {
       if (zscore > 2) {
         return [
-          { route: "SELL-[72-100]-EXHAUSTION", side: "SELL", type: "REVERSAL" }
+          { route: "SELL-[72-100]-EXHAUSTION", side: "SELL", type: "EXHAUSTION" }
         ];
       }
       return [];
@@ -1010,7 +1010,7 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
+      if (signalType === "EXHAUSTION" && riskCfg.exhaustionEnabled === false) continue;
 
       const scoreRow = {
         symbol,
@@ -1029,8 +1029,8 @@ const TopOpportunities_V8R = (() => {
       };
 
       let scored;
-      if      (signalType === "REVERSAL"     && match.side === "BUY")  scored = scoreReversalBuy(scoreRow);
-      else if (signalType === "REVERSAL"     && match.side === "SELL") scored = scoreReversalSell(scoreRow);
+      if      (signalType === "EXHAUSTION"     && match.side === "BUY")  scored = scoreExhaustionBuy(scoreRow);
+      else if (signalType === "EXHAUSTION"     && match.side === "SELL") scored = scoreExhaustionSell(scoreRow);
       else if (signalType === "CONTINUATION" && match.side === "BUY")  scored = scoreContinuationBuy(scoreRow);
       else if (signalType === "CONTINUATION" && match.side === "SELL") scored = scoreContinuationSell(scoreRow);
       else scored = { total: signalType === "EARLY" ? 70 : 50, breakdown: {} };
@@ -1122,7 +1122,7 @@ const TopOpportunities_V8R = (() => {
     // DEBUG PIPELINE
     // ============================================================================
     if (TOP_CFG.debug) {
-      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
+      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cExhaustionKill = 0, cScore = 0, cFinal = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -1181,10 +1181,10 @@ const TopOpportunities_V8R = (() => {
         const activeSide = _dbg_selected.side;
         const activeType = _dbg_selected.type;
         const activeMode = computeModeV3(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1);
-        if (activeType === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
-        cReversalKill++;
+        if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
+        cExhaustionKill++;
 
-        const score = activeType === "REVERSAL" ? 80
+        const score = activeType === "EXHAUSTION" ? 80
                     : Math.max(0, Math.round(
                         Math.abs(num(row?.slope_h1) ?? 0) * 50 +
                         Math.abs((num(row?.rsi_h1) ?? 50) - 50) * 2
@@ -1223,8 +1223,8 @@ const TopOpportunities_V8R = (() => {
         "0 — total rows":         { count: cTotal,        pct: "100%" },
         "1 — after anti-spike":   { count: cAntiSpike,    pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
         "2 — after resolve3D":    { count: cResolve,      pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "3 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cResolve)*100).toFixed(1)+"%" },
-        "4 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
+        "3 — after exhaustionKill": { count: cExhaustionKill, pct: ((cExhaustionKill/cResolve)*100).toFixed(1)+"%" },
+        "4 — after scoreMin":     { count: cScore,        pct: ((cScore/cExhaustionKill)*100).toFixed(1)+"%" },
         "5 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });
     }

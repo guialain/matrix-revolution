@@ -514,18 +514,6 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // GATE ACCÉLÉRATION — cohérence directionnelle dslope_h1_live
-  // Seuil signe : la métrique doit aller dans le sens du trade
-  // (Phase B-1 : doublon dslopeH4 retiré, params type/intradayLevel supprimés)
-  // ============================================================================
-  function accelContextGate(side, dslope_h1_live) {
-    if (dslope_h1_live === null) return true;
-    if (side === "BUY"  && dslope_h1_live < 0) return false;
-    if (side === "SELL" && dslope_h1_live > 0) return false;
-    return true;
-  }
-
-  // ============================================================================
   // SPACING / DEDUPE
   // ============================================================================
   function minutesBetween(tsA, tsB) {
@@ -643,6 +631,128 @@ const TopOpportunities_V8R = (() => {
      && Math.abs(dslope_h1) < g.antiSpike)
       return { route: "SELL-[28-50]-CONT", side: "SELL" };
 
+    return null;
+  }
+
+  // ============================================================================
+  // matchRoute V2 — generateur de candidats RSI x zscore
+  //
+  // Nouvelle architecture : matchRoute propose 0, 1 ou 2 candidats selon
+  // la combinaison RSI x zscore. La validation finale (D1 + IC) sera faite
+  // par selectRoute (B-7b).
+  //
+  // Inputs :
+  //   rsi_h1_s0    : RSI H1 actuel
+  //   zscore_h1_s0 : zscore H1 actuel
+  //
+  // Output : Array<{ route, side, type }>
+  //   route : nom de la route
+  //   side  : 'BUY' ou 'SELL'
+  //   type  : 'CONTINUATION' ou 'REVERSAL'
+  //
+  // Note : les EXHAUSTION sont type='REVERSAL' (pari sur retournement),
+  //        les CONT sont type='CONTINUATION' (pari sur poursuite).
+  // ============================================================================
+
+  function matchRoute(rsi_h1_s0, zscore_h1_s0) {
+    if (rsi_h1_s0 === null || zscore_h1_s0 === null) return [];
+
+    const rsi    = rsi_h1_s0;
+    const zscore = zscore_h1_s0;
+
+    // Zone 0-28 : extreme oversold
+    if (rsi < 28) {
+      if (zscore < -2) {
+        return [
+          { route: "BUY-[0-28]-EXHAUSTION", side: "BUY", type: "REVERSAL" }
+        ];
+      }
+      return [];
+    }
+
+    // Zone 28-50 : low-mid
+    if (rsi >= 28 && rsi < 50) {
+      if (zscore < -0.5) {
+        return [
+          { route: "SELL-[28-50]-CONT",        side: "SELL", type: "CONTINUATION" },
+          { route: "BUY-[28-50]-EXHAUSTION",   side: "BUY",  type: "REVERSAL" },
+        ];
+      }
+      return [];
+    }
+
+    // Zone 50-72 : mid-high
+    if (rsi >= 50 && rsi < 72) {
+      if (zscore > 0.5) {
+        return [
+          { route: "BUY-[50-72]-CONT",         side: "BUY",  type: "CONTINUATION" },
+          { route: "SELL-[50-72]-EXHAUSTION",  side: "SELL", type: "REVERSAL" },
+        ];
+      }
+      return [];
+    }
+
+    // Zone 72-100 : extreme overbought
+    if (rsi >= 72) {
+      if (zscore > 2) {
+        return [
+          { route: "SELL-[72-100]-EXHAUSTION", side: "SELL", type: "REVERSAL" }
+        ];
+      }
+      return [];
+    }
+
+    return [];
+  }
+
+  // ============================================================================
+  // selectRoute — gate D1 alignment + IC
+  //
+  // Prend les candidats de matchRoute V2 et tranche selon le contexte D1+IC.
+  // Renvoie le premier candidat qui passe le gate, ou null si aucun.
+  //
+  // Inputs :
+  //   candidates    : Array<{ route, side, type }> de matchRoute V2
+  //   slope_d1_s1   : slope D1 historique
+  //   slope_d1_s0   : slope D1 actuelle
+  //   intradayLevel : niveau IC classifie
+  //
+  // Output : { route, side, type } ou null
+  //
+  // Logique :
+  //   1. Calcule l'alignement D1 (s1 + s0)
+  //   2. Pour chaque candidat dans l'ordre :
+  //      - D1 alignment doit autoriser le side
+  //      - IC ne doit pas etre contre le trend
+  //      - Premier candidat valide est retourne
+  //   3. Aucun candidat valide → null
+  // ============================================================================
+
+  const D1_ALIGNMENTS_BUY  = new Set(['aligned_up', 'transition_up', 'inversion_up', 'fade_up']);
+  const D1_ALIGNMENTS_SELL = new Set(['aligned_down', 'transition_down', 'inversion_down', 'fade_down']);
+  const IC_BEARISH_BLOCK_BUY  = new Set(['SOFT_DOWN', 'STRONG_DOWN', 'EXPLOSIVE_DOWN', 'SPIKE_DOWN']);
+  const IC_BULLISH_BLOCK_SELL = new Set(['SOFT_UP', 'STRONG_UP', 'EXPLOSIVE_UP', 'SPIKE_UP']);
+
+  function selectRoute(candidates, slope_d1_s1, slope_d1_s0, intradayLevel) {
+    if (!candidates || candidates.length === 0) return null;
+
+    const zone_s1 = getSlopeD1Zone(slope_d1_s1);
+    const zone_s0 = getSlopeD1Zone(slope_d1_s0);
+    const alignment = getAlignmentD1(zone_s1, zone_s0);
+    if (alignment === null) return null;
+
+    for (const c of candidates) {
+      if (c.side === 'BUY') {
+        if (!D1_ALIGNMENTS_BUY.has(alignment)) continue;
+        if (IC_BEARISH_BLOCK_BUY.has(intradayLevel)) continue;
+        return c;
+      }
+      if (c.side === 'SELL') {
+        if (!D1_ALIGNMENTS_SELL.has(alignment)) continue;
+        if (IC_BULLISH_BLOCK_SELL.has(intradayLevel)) continue;
+        return c;
+      }
+    }
     return null;
   }
 
@@ -898,8 +1008,6 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      if (signalMode !== "spike" && !accelContextGate(match.side, _dslope_h1_live)) continue;
-
       if (signalType === "REVERSAL" && riskCfg.reversalEnabled === false) continue;
 
       const scoreRow = {
@@ -1012,7 +1120,7 @@ const TopOpportunities_V8R = (() => {
     // DEBUG PIPELINE
     // ============================================================================
     if (TOP_CFG.debug) {
-      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cAccelGate = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
+      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cReversalKill = 0, cScore = 0, cFinal = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -1074,9 +1182,6 @@ const TopOpportunities_V8R = (() => {
         const activeMode = (activeRes.mode === 'spike')
           ? 'spike'
           : computeModeV2(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1, _slope_h1_dbg, _slope_h1_s0_dbg, sym);
-        if (activeMode !== "spike" && !accelContextGate(activeSide, _dslope_h1_dbg)) continue;
-        cAccelGate++;
-
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
         cReversalKill++;
 
@@ -1120,10 +1225,9 @@ const TopOpportunities_V8R = (() => {
         "0 — total rows":         { count: cTotal,        pct: "100%" },
         "1 — after anti-spike":   { count: cAntiSpike,    pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
         "2 — after resolve3D":    { count: cResolve,      pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "3 — after accelGate":    { count: cAccelGate,    pct: ((cAccelGate/cResolve)*100).toFixed(1)+"%" },
-        "4 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cAccelGate)*100).toFixed(1)+"%" },
-        "5 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
-        "6 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
+        "3 — after reversalKill": { count: cReversalKill, pct: ((cReversalKill/cResolve)*100).toFixed(1)+"%" },
+        "4 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
+        "5 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });
 
       const resolveBreakdown = {

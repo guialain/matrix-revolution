@@ -282,7 +282,7 @@ const TopOpportunities_V8R = (() => {
       if (intradayLevel === "NEUTRE")
         return (dslopeH4 !== null && dslopeH4 >= 2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
       if (intradayLevel === "SPIKE_DOWN")
-        return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: "spike" } : null;
+        return h4Up && dh4OkBuy ? { type: "REVERSAL", mode: DEFAULT_MODE } : null;
       if (!h4Up) return null;
       if (isUpIC)   return dh4OkBuy ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
       if (isDownIC) return dh4OkBuy ? { type: "REVERSAL",     mode: DEFAULT_MODE } : null;
@@ -292,7 +292,7 @@ const TopOpportunities_V8R = (() => {
       if (intradayLevel === "NEUTRE")
         return (dslopeH4 !== null && dslopeH4 <= -2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
       if (intradayLevel === "SPIKE_UP")
-        return h4Down && dh4OkSell ? { type: "REVERSAL", mode: "spike" } : null;
+        return h4Down && dh4OkSell ? { type: "REVERSAL", mode: DEFAULT_MODE } : null;
       if (!h4Down) return null;
       if (isDownIC) return dh4OkSell ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
       if (isUpIC)   return dh4OkSell ? { type: "REVERSAL",     mode: DEFAULT_MODE } : null;
@@ -444,15 +444,6 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0.3, dslopeRev: 0.1, zRev: 99,
         dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
-        antiSpike,
-      };
-    }
-
-    if (mode === "spike") {
-      return {
-        dslopeMin: 0, dslopeRev: 0, zRev: 99,
-        dslopeThr: 0,
-        z3050: 99, z5070: 99,
         antiSpike,
       };
     }
@@ -757,6 +748,30 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
+  // detectSpikeH1 — pre-filtre spike sur slope_h1_s0
+  //
+  // Detecte un mouvement H1 extreme (|slope_h1_s0| >= 8) et indique sa
+  // direction. Le seuil 8 est hardcoded pour l'instant (ajustable plus tard).
+  //
+  // Inputs :
+  //   slope_h1_s0 : niveau H1 actuel
+  //
+  // Output : { isSpike: bool, direction: 'up'|'down'|null }
+  //
+  // Usage : un spike haussier kill les BUY (autorise SELL pour fade),
+  //         un spike baissier kill les SELL (autorise BUY pour fade).
+  // ============================================================================
+
+  const SPIKE_H1_THRESHOLD = 8;
+
+  function detectSpikeH1(slope_h1_s0) {
+    if (slope_h1_s0 === null) return { isSpike: false, direction: null };
+    if (slope_h1_s0 >=  SPIKE_H1_THRESHOLD) return { isSpike: true, direction: 'up' };
+    if (slope_h1_s0 <= -SPIKE_H1_THRESHOLD) return { isSpike: true, direction: 'down' };
+    return { isSpike: false, direction: null };
+  }
+
+  // ============================================================================
   // ROUTE => SIGNAL PHASE
   // ============================================================================
   const ROUTE_PHASE = {
@@ -881,6 +896,25 @@ const TopOpportunities_V8R = (() => {
       // Avance le timing d'entrée d'une bougie H1
       const _slope_h1_s0      = num(row?.slope_h1_s0);
       const _slope_h1         = num(row?.slope_h1);
+
+      // Pre-filtre spike H1 — emit payload WAIT a l'UI si spike detecte
+      const _spikeH1 = detectSpikeH1(_slope_h1_s0);
+      if (_spikeH1.isSpike) {
+        opps.push({
+          type:            'WAIT',
+          waitReason:      'spike',
+          symbol,
+          timestamp:       row?.timestamp,
+          slope_h1_s0:     _slope_h1_s0,
+          spike_direction: _spikeH1.direction,
+          blocked_side:    _spikeH1.direction === 'up' ? 'BUY' : 'SELL',
+        });
+      }
+
+      // Skip side correspondant au sens du spike (l'autre side reste autorise pour fade)
+      const _skipBuy  = _spikeH1.isSpike && _spikeH1.direction === 'up';
+      const _skipSell = _spikeH1.isSpike && _spikeH1.direction === 'down';
+
       const _dslope_h1_live   = (_slope_h1_s0 !== null && _slope_h1 !== null)
         ? _slope_h1_s0 - _slope_h1
         : null;
@@ -918,7 +952,9 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      const buyRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol);
+      const buyRes = !_skipBuy
+        ? resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol)
+        : null;
       if (buyRes) {
         if (TOP_CFG.verbose && buyRes.fadeNeutreOk) {
           console.log(`[FADE_NEUTRE_OK] ${symbol} ${_alignmentD1} IC_NEUTRE H4=${slopeH4Level} H1_s0=${buyRes.h1_s0_zone} → BUY EARLY strict`);
@@ -927,17 +963,16 @@ const TopOpportunities_V8R = (() => {
             && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
           console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → BUY ${buyRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
         }
-        // Mode 'spike' preserve (resolve3D fallback). Sinon : nouveau gate.
-        const buyMode = (buyRes.mode === 'spike')
-          ? 'spike'
-          : computeModeV2('BUY', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
+        const buyMode = computeModeV2('BUY', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
         const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
         match = matchBuyRoute(...args, gBuy, buyRes.type);
         if (match) { signalType = buyRes.type; signalMode = buyMode; }
       }
 
       if (!match) {
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol);
+        const sellRes = !_skipSell
+          ? resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol)
+          : null;
         if (sellRes) {
           if (TOP_CFG.verbose && sellRes.fadeNeutreOk) {
             console.log(`[FADE_NEUTRE_OK] ${symbol} ${_alignmentD1} IC_NEUTRE H4=${slopeH4Level} H1_s0=${sellRes.h1_s0_zone} → SELL EARLY strict`);
@@ -946,9 +981,7 @@ const TopOpportunities_V8R = (() => {
               && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
             console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → SELL ${sellRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
           }
-          const sellMode = (sellRes.mode === 'spike')
-            ? 'spike'
-            : computeModeV2('SELL', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
+          const sellMode = computeModeV2('SELL', intradayLevel, _slope_d1, _sd1s0, _alignmentD1, _slope_h1, _slope_h1_s0, symbol);
           const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
           match = matchSellRoute(...args, gSell, sellRes.type);
           if (match) { signalType = sellRes.type; signalMode = sellMode; }
@@ -995,14 +1028,8 @@ const TopOpportunities_V8R = (() => {
 
       if (TOP_CFG.verbose) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
-        if (signalMode === "spike" && (d1State === "D1_FADING_UP" || d1State === "D1_FADING_DOWN"))
-          console.log(`[D1_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike forcé par D1`);
         if (d1State === "D1_EMERGING_DOWN" || d1State === "D1_EMERGING_UP")
           console.log(`[D1_EMERGING] ${symbol} d1State=${d1State} → signalType=${signalType} signalMode=${signalMode}`);
-        if (signalMode === "spike" && (d1State === "D1_STRONG_UP" || d1State === "D1_STRONG_DOWN"))
-          console.log(`[D1_STRONG_SPIKE] ${symbol} d1State=${d1State} → REVERSAL spike contra D1_STRONG`);
-        if (signalMode !== "spike" && (d1State === "D1_STRONG_UP" || d1State === "D1_STRONG_DOWN"))
-          console.log(`[D1_STRONG_CONT] ${symbol} d1State=${d1State} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} → unchanged strict`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }
@@ -1179,9 +1206,7 @@ const TopOpportunities_V8R = (() => {
           getSlopeD1Zone(_dbg_slope_d1),
           getSlopeD1Zone(_dbg_sd1s0)
         );
-        const activeMode = (activeRes.mode === 'spike')
-          ? 'spike'
-          : computeModeV2(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1, _slope_h1_dbg, _slope_h1_s0_dbg, sym);
+        const activeMode = computeModeV2(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1, _slope_h1_dbg, _slope_h1_s0_dbg, sym);
         if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
         cReversalKill++;
 

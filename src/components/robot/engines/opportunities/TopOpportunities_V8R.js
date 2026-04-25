@@ -658,6 +658,8 @@ const TopOpportunities_V8R = (() => {
     // CONT
     "BUY-[50-72]-CONT":         "MID_HIGH",
     "SELL-[28-50]-CONT":        "LOW_MID",
+    // WAIT
+    "WAIT": "WAIT",
   };
 
   // ============================================================================
@@ -704,6 +706,36 @@ const TopOpportunities_V8R = (() => {
       // Gate ATR — filtre volatilité extrême (> 4x cap)
       const atrH1 = num(row?.atr_h1);
       if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
+
+      // ============================================================================
+      // ZONE GRISE ZSCORE — emit WAIT signal informatif
+      // Rows ou |zscore_h1_s0| sous 0.5 (ou null) ne sont pas tradables.
+      // On emet un WAIT pour informer le consommateur aval (UI/debug).
+      // ============================================================================
+      const _zscore_h1_s0_check = num(row?.zscore_h1_s0);
+      const isGreyZone = (_zscore_h1_s0_check === null) ||
+                         (_zscore_h1_s0_check > -0.5 && _zscore_h1_s0_check < 0.5);
+
+      if (isGreyZone) {
+        opps.push({
+          type:        null,
+          mode:        null,
+          regime:      "WAIT",
+          route:       "WAIT",
+          signalPhase: "WAIT",
+          engine:      "V8R",
+          index:       i,
+          timestamp:   row?.timestamp,
+          symbol,
+          side:        null,
+          signalType:  null,
+          score:       0,
+          breakdown:   {},
+          isWait:      true,
+          zscore_h1_s0: _zscore_h1_s0_check,
+        });
+        continue;
+      }
 
       const intra = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);
@@ -987,6 +1019,12 @@ const TopOpportunities_V8R = (() => {
         const sym = row?.symbol;
         if (!sym) continue;
         cTotal++;
+
+        // Skip WAIT pour le funnel (ils bypassent la pipeline classique)
+        const _zscore_dbg = num(row?.zscore_h1_s0);
+        const _isGreyDbg = (_zscore_dbg === null) ||
+                           (_zscore_dbg > -0.5 && _zscore_dbg < 0.5);
+        if (_isGreyDbg) continue;
 
         const _riskCfg     = getRiskConfig(sym);
         const _intCfg      = INTRADAY_CONFIG[sym] ?? INTRADAY_CONFIG.default;

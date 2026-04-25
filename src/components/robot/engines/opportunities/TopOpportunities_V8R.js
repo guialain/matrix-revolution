@@ -26,14 +26,13 @@
 
 import { getRiskConfig } from "../config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
-import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
+import { getSlopeConfig } from "../config/SlopeConfig.js";
 import {
   getIntradayLevel,
   getSlopeLevel,
   getD1State,
   getSlopeD1Zone,
   getAlignmentD1,
-  DSLOPE_D1_ANTI_SPIKE,
 } from "../../../../utils/marketLevels.js";
 import { resolveH1Alignment } from "./H1Alignment.js";
 import { scoreExhaustionBuy, scoreExhaustionSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
@@ -56,277 +55,6 @@ import { resolveMarket } from "../trading/AssetEligibility.js";
 const TopOpportunities_V8R = (() => {
 
   const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
-
-  // ============================================================================
-  // D1 FRAMEWORK V2 — classifiers + alignement + résolveurs
-  // Remplace les anciennes matrices D1_BUY_MATRIX/D1_SELL_MATRIX et les gates
-  // _gate:"buy"/"sell" par une architecture 3 couches :
-  //   1. getSlopeD1Zone(s1, s0) → zones symétriques (down_extreme → up_extreme)
-  //   2. getAlignmentD1(s1, s0) → 9 classes (aligned/transition/fade/inversion)
-  //   3. 9 résolveurs par classe + fallback H4 legacy pour aligned_flat
-  // Anti-spike |dslope_d1| ≥ 5 appliqué en amont.
-  // ============================================================================
-
-  function resolveAlignedUp(dslope_d1_live, dslope_d1_s0, side) {
-    if (dslope_d1_live === null) return null;
-
-    // Side BUY = CONTINUATION aligné D1 (comportement existant)
-    if (side === 'BUY') {
-      if (dslope_d1_live <= -5.00) return null;
-      if (dslope_d1_live >= +1.50) return { side: 'BUY', mode: 'relaxed', type: 'CONTINUATION' };
-      if (dslope_d1_live >= -0.50) return { side: 'BUY', mode: 'normal',  type: 'CONTINUATION' };
-      if (dslope_d1_live >= -1.50) return { side: 'BUY', mode: 'soft',    type: 'CONTINUATION' };
-      return { side: 'BUY', mode: 'strict', type: 'CONTINUATION' };
-    }
-
-    // Side SELL = contra-D1, autorisé uniquement si dslope_d1_s0 < -1.5
-    if (side === 'SELL') {
-      if (dslope_d1_s0 !== null && dslope_d1_s0 < -1.5) {
-        return { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
-      }
-      return null;
-    }
-    return null;
-  }
-
-  function resolveAlignedDown(dslope_d1_live, dslope_d1_s0, side) {
-    if (dslope_d1_live === null) return null;
-
-    // Side SELL = CONTINUATION aligné D1 (comportement existant)
-    if (side === 'SELL') {
-      if (dslope_d1_live >= +5.00) return null;
-      if (dslope_d1_live <= -1.50) return { side: 'SELL', mode: 'relaxed', type: 'CONTINUATION' };
-      if (dslope_d1_live <= +0.50) return { side: 'SELL', mode: 'normal',  type: 'CONTINUATION' };
-      if (dslope_d1_live <= +1.50) return { side: 'SELL', mode: 'soft',    type: 'CONTINUATION' };
-      return { side: 'SELL', mode: 'strict', type: 'CONTINUATION' };
-    }
-
-    // Side BUY = contra-D1, autorisé uniquement si dslope_d1_s0 > +1.5
-    if (side === 'BUY') {
-      if (dslope_d1_s0 !== null && dslope_d1_s0 > 1.5) {
-        return { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
-      }
-      return null;
-    }
-    return null;
-  }
-
-  function resolveTransitionUp(dslope_d1) {
-    if (dslope_d1 === null) return null;
-    if (dslope_d1 >= +1.50) return { side: 'BUY', mode: 'normal', type: 'EARLY' };
-    if (dslope_d1 >= +0.50) return { side: 'BUY', mode: 'strict', type: 'EARLY' };
-    return null;
-  }
-
-  function resolveTransitionDown(dslope_d1) {
-    if (dslope_d1 === null) return null;
-    if (dslope_d1 <= -1.50) return { side: 'SELL', mode: 'normal', type: 'EARLY' };
-    if (dslope_d1 <= -0.50) return { side: 'SELL', mode: 'strict', type: 'EARLY' };
-    return null;
-  }
-
-  function resolveInversionUp(icGroup, slope_d1_s0) {
-    switch (icGroup) {
-      case 'IC_UP':
-        return { side: 'BUY', mode: 'normal', type: 'EXHAUSTION' };
-      case 'IC_NEUTRE':
-        return (slope_d1_s0 !== null && slope_d1_s0 >= 2.20)
-          ? { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' }
-          : null;
-      default:
-        return null; // IC_SPIKE_UP / IC_DOWN / IC_SPIKE_DOWN
-    }
-  }
-
-  function resolveInversionDown(icGroup, slope_d1_s0) {
-    switch (icGroup) {
-      case 'IC_DOWN':
-        return { side: 'SELL', mode: 'normal', type: 'EXHAUSTION' };
-      case 'IC_NEUTRE':
-        return (slope_d1_s0 !== null && slope_d1_s0 <= -2.20)
-          ? { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' }
-          : null;
-      default:
-        return null;
-    }
-  }
-
-  // Sets réutilisés par resolveFadeUp/Down pour la confirmation IC_NEUTRE
-  const H4_BULLISH    = new Set(['SOFT_UP', 'STRONG_UP', 'EXPLOSIVE_UP']);
-  const H4_BEARISH    = new Set(['SOFT_DOWN', 'STRONG_DOWN', 'EXPLOSIVE_DOWN']);
-  const H1_UP_ZONES   = new Set(['up_weak', 'up_strong', 'up_extreme']);
-  const H1_DOWN_ZONES = new Set(['down_weak', 'down_strong', 'down_extreme']);
-
-  function resolveFadeUp(icGroup, zone_s1, slopeH4Level, slope_h1_s0, symbol, side) {
-    const s1Extreme = zone_s1 === 'up_extreme';
-    const s1Strong  = zone_s1 === 'up_strong';
-    switch (icGroup) {
-      case 'IC_DOWN':
-        return s1Extreme ? null : { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
-      case 'IC_UP':
-        return s1Extreme
-          ? { side: 'BUY', mode: 'normal', type: 'EARLY' }
-          : { side: 'BUY', mode: 'strict', type: 'EARLY' };
-      case 'IC_SPIKE_UP':
-        return (s1Extreme || s1Strong)
-          ? { side: 'BUY', mode: 'normal', type: 'EXHAUSTION' }
-          : { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
-      case 'IC_NEUTRE': {
-        // SELL EARLY strict si H4 bearish + H1 s0 dans zone down_*
-        if (side !== 'SELL') return null;
-        if (!H4_BEARISH.has(slopeH4Level)) return null;
-        const zone_h1_s0 = getSlopeClass(slope_h1_s0, symbol);
-        if (!H1_DOWN_ZONES.has(zone_h1_s0)) return null;
-        return { side: 'SELL', mode: 'strict', type: 'EARLY', fadeNeutreOk: true, h1_s0_zone: zone_h1_s0 };
-      }
-      default:
-        return null; // IC_SPIKE_DOWN
-    }
-  }
-
-  function resolveFadeDown(icGroup, zone_s1, slopeH4Level, slope_h1_s0, symbol, side) {
-    const s1Extreme = zone_s1 === 'down_extreme';
-    const s1Strong  = zone_s1 === 'down_strong';
-    switch (icGroup) {
-      case 'IC_UP':
-        return s1Extreme ? null : { side: 'BUY', mode: 'strict', type: 'EXHAUSTION' };
-      case 'IC_DOWN':
-        return s1Extreme
-          ? { side: 'SELL', mode: 'normal', type: 'EARLY' }
-          : { side: 'SELL', mode: 'strict', type: 'EARLY' };
-      case 'IC_SPIKE_DOWN':
-        return (s1Extreme || s1Strong)
-          ? { side: 'SELL', mode: 'normal', type: 'EXHAUSTION' }
-          : { side: 'SELL', mode: 'strict', type: 'EXHAUSTION' };
-      case 'IC_NEUTRE': {
-        // BUY EARLY strict si H4 bullish + H1 s0 dans zone up_*
-        if (side !== 'BUY') return null;
-        if (!H4_BULLISH.has(slopeH4Level)) return null;
-        const zone_h1_s0 = getSlopeClass(slope_h1_s0, symbol);
-        if (!H1_UP_ZONES.has(zone_h1_s0)) return null;
-        return { side: 'BUY', mode: 'strict', type: 'EARLY', fadeNeutreOk: true, h1_s0_zone: zone_h1_s0 };
-      }
-      default:
-        return null; // IC_SPIKE_UP
-    }
-  }
-
-  function computeIcGroup(intradayLevel) {
-    if (intradayLevel === "SPIKE_UP")                                                                           return "IC_SPIKE_UP";
-    if (intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP")   return "IC_UP";
-    if (intradayLevel === "NEUTRE")                                                                             return "IC_NEUTRE";
-    if (intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN") return "IC_DOWN";
-    return "IC_SPIKE_DOWN";
-  }
-
-  // ============================================================================
-  // resolve3D V2 — dispatcher framework D1 + fallback H4 (aligned_flat)
-  //   Input  : (intradayLevel, slopeH4Level, dslopeH4, side, thr,
-  //             slope_d1_s1, slope_d1_s0, dslope_d1_live)
-  //   Output : { type, mode } ou null (block)
-  // ============================================================================
-  function resolve3D(intradayLevel, slopeH4Level, dslopeH4, side, thr = 1.0,
-                    slope_d1_s1 = null, slope_d1_s0 = null, dslope_d1_live = null,
-                    dslope_d1_s0 = null, slope_h1_s0 = null, symbol = null) {
-
-    // Anti-spike dslope_d1 global (anti-FOMO)
-    if (dslope_d1_live !== null) {
-      if (side === 'BUY'  && dslope_d1_live >=  DSLOPE_D1_ANTI_SPIKE) return null;
-      if (side === 'SELL' && dslope_d1_live <= -DSLOPE_D1_ANTI_SPIKE) return null;
-    }
-
-    // Classification D1 : zones s1/s0 + alignement
-    const zone_s1   = getSlopeD1Zone(slope_d1_s1);
-    const zone_s0   = getSlopeD1Zone(slope_d1_s0);
-    const alignment = getAlignmentD1(zone_s1, zone_s0);
-    if (alignment === null) return null;
-
-    const icGroup = computeIcGroup(intradayLevel);
-
-    // Dispatcher : résolveur selon classe d'alignement
-    let d1Resolved = null;
-    switch (alignment) {
-      case 'aligned_up':      d1Resolved = resolveAlignedUp(dslope_d1_live, dslope_d1_s0, side); break;
-      case 'aligned_down':    d1Resolved = resolveAlignedDown(dslope_d1_live, dslope_d1_s0, side); break;
-      case 'transition_up':   d1Resolved = resolveTransitionUp(dslope_d1_live); break;
-      case 'transition_down': d1Resolved = resolveTransitionDown(dslope_d1_live); break;
-      case 'inversion_up':    d1Resolved = resolveInversionUp(icGroup, slope_d1_s0); break;
-      case 'inversion_down':  d1Resolved = resolveInversionDown(icGroup, slope_d1_s0); break;
-      case 'fade_up':         d1Resolved = resolveFadeUp(icGroup, zone_s1, slopeH4Level, slope_h1_s0, symbol, side); break;
-      case 'fade_down':       d1Resolved = resolveFadeDown(icGroup, zone_s1, slopeH4Level, slope_h1_s0, symbol, side); break;
-      case 'aligned_flat':    break; // null → fallback H4 legacy ci-dessous
-    }
-
-    // Side mismatch → block
-    if (d1Resolved !== null && d1Resolved.side !== side) return null;
-    // Non-flat + null résolveur → block
-    if (d1Resolved === null && alignment !== 'aligned_flat') return null;
-
-    // D1 a résolu → retour direct
-    if (d1Resolved !== null) {
-      return { type: d1Resolved.type, mode: d1Resolved.mode };
-    }
-
-    // aligned_flat : fallback H4 legacy (mode 'normal')
-    const h4Up   = slopeH4Level === "SOFT_UP"   || slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP";
-    const h4Down = slopeH4Level === "SOFT_DOWN" || slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN";
-    const dh4Up   = dslopeH4 !== null && dslopeH4 >=  thr;
-    const dh4Down = dslopeH4 !== null && dslopeH4 <= -thr;
-    const dh4OkBuy  = dh4Up   || (!dh4Up && !dh4Down);
-    const dh4OkSell = dh4Down || (!dh4Up && !dh4Down);
-    const isUpIC   = intradayLevel === "SOFT_UP"   || intradayLevel === "STRONG_UP"   || intradayLevel === "EXPLOSIVE_UP";
-    const isDownIC = intradayLevel === "SOFT_DOWN" || intradayLevel === "STRONG_DOWN" || intradayLevel === "EXPLOSIVE_DOWN";
-    const DEFAULT_MODE = 'normal';
-
-    if (side === 'BUY') {
-      if (intradayLevel === "NEUTRE")
-        return (dslopeH4 !== null && dslopeH4 >= 2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
-      if (intradayLevel === "SPIKE_DOWN")
-        return h4Up && dh4OkBuy ? { type: "EXHAUSTION", mode: DEFAULT_MODE } : null;
-      if (!h4Up) return null;
-      if (isUpIC)   return dh4OkBuy ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
-      if (isDownIC) return dh4OkBuy ? { type: "EXHAUSTION",     mode: DEFAULT_MODE } : null;
-      return null;
-    }
-    if (side === 'SELL') {
-      if (intradayLevel === "NEUTRE")
-        return (dslopeH4 !== null && dslopeH4 <= -2.0) ? { type: "EARLY", mode: DEFAULT_MODE } : null;
-      if (intradayLevel === "SPIKE_UP")
-        return h4Down && dh4OkSell ? { type: "EXHAUSTION", mode: DEFAULT_MODE } : null;
-      if (!h4Down) return null;
-      if (isDownIC) return dh4OkSell ? { type: "CONTINUATION", mode: DEFAULT_MODE } : null;
-      if (isUpIC)   return dh4OkSell ? { type: "EXHAUSTION",     mode: DEFAULT_MODE } : null;
-      return null;
-    }
-    return null;
-  }
-
-  // ============================================================================
-  // MODE — qualité du setup (IC × slopeH4 × dslopeH4)
-  //   conf=3 → relaxed | conf=2 → soft | conf=1 → normal | conf=0 → strict
-  // ============================================================================
-  const STRONG_UP_LEVELS   = ["STRONG_UP","EXPLOSIVE_UP","SPIKE_UP"];
-  const STRONG_DOWN_LEVELS = ["STRONG_DOWN","EXPLOSIVE_DOWN","SPIKE_DOWN"];
-
-  function computeMode(type, side, intradayLevel, slopeH4Level, dslopeH4, thr) {
-    const dh4Confirm = side === "BUY"
-      ? (dslopeH4 !== null && dslopeH4 >= thr)
-      : (dslopeH4 !== null && dslopeH4 <= -thr);
-
-    const icStrong = side === "BUY"
-      ? (type === "EXHAUSTION" ? STRONG_DOWN_LEVELS.includes(intradayLevel) : STRONG_UP_LEVELS.includes(intradayLevel))
-      : (type === "EXHAUSTION" ? STRONG_UP_LEVELS.includes(intradayLevel)   : STRONG_DOWN_LEVELS.includes(intradayLevel));
-
-    const h4Strong = side === "BUY"
-      ? (slopeH4Level === "STRONG_UP"   || slopeH4Level === "EXPLOSIVE_UP")
-      : (slopeH4Level === "STRONG_DOWN" || slopeH4Level === "EXPLOSIVE_DOWN");
-
-    const conf = [icStrong, h4Strong, dh4Confirm].filter(Boolean).length;
-    if (conf === 3) return "relaxed";
-    if (conf === 2) return "soft";
-    if (conf >= 1)  return "normal";
-    return "strict";
-  }
 
   // ============================================================================
   // GATE PRESETS — spike > relaxed > soft > normal > strict
@@ -805,7 +533,6 @@ const TopOpportunities_V8R = (() => {
       const riskCfg  = getRiskConfig(symbol);
       const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
       const slopeCfg = getSlopeConfig(symbol);
-      const dslopeH4Thr     = slopeCfg.dslopeH4Thr ?? 0.3;
       const antiSpikeH1S0 = num(slopeCfg?.antiSpikeH1S0) ?? 8;
       const atrH1Cap      = num(riskCfg?.atrH1Cap);
 
@@ -1139,7 +866,6 @@ const TopOpportunities_V8R = (() => {
         const _riskCfg     = getRiskConfig(sym);
         const _intCfg      = INTRADAY_CONFIG[sym] ?? INTRADAY_CONFIG.default;
         const _slopeCfg    = getSlopeConfig(sym);
-        const _dslopeH4Thr   = _slopeCfg.dslopeH4Thr ?? 0.3;
         const _antiSpike   = num(_slopeCfg?.antiSpikeH1S0) ?? 8;
 
         // Anti-spike H1 retire (Phase B-2b) — compteur conserve pour funnel
@@ -1152,21 +878,9 @@ const TopOpportunities_V8R = (() => {
 
         const intra         = num(row?.intraday_change);
         const intradayLevel = getIntradayLevel(intra, _intCfg);
-        const slope_h1_raw_for_level_dbg = num(row?.slope_h1_s0) !== null
-          ? num(row.slope_h1_s0) : num(row?.slope_h1);
-        const slopeH4Level  = getSlopeLevel(slope_h1_raw_for_level_dbg, sym);
-        const _ds0 = num(row?.slope_h1_s0);
-        const _ds1 = num(row?.slope_h1);
-        const _dsh4 = (_ds0 !== null && _ds1 !== null) ? _ds0 - _ds1 : null;
 
         const _dbg_sd1s0    = num(row?.slope_d1_s0);
         const _dbg_slope_d1 = num(row?.slope_d1);
-        const _dbg_dslope_d1 = (_dbg_sd1s0 !== null && _dbg_slope_d1 !== null)
-          ? _dbg_sd1s0 - _dbg_slope_d1
-          : null;
-        const _dbg_dslope_d1_s0 = num(row?.dslope_d1_s0);
-        const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1 !== null)
-          ? getD1State(_dbg_sd1s0, _dbg_dslope_d1) : "D1_FLAT";
 
         // Calcul alignement D1 pour le gate
         const _dbg_alignmentD1 = getAlignmentD1(

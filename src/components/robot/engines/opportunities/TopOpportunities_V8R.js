@@ -935,58 +935,42 @@ const TopOpportunities_V8R = (() => {
         }
       }
 
-      const buyRes = !_skipBuy
-        ? resolve3D(intradayLevel, slopeH4Level, dslopeH4, "BUY", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol)
-        : null;
-      if (buyRes) {
-        if (TOP_CFG.verbose && buyRes.fadeNeutreOk) {
-          console.log(`[FADE_NEUTRE_OK] ${symbol} ${_alignmentD1} IC_NEUTRE H4=${slopeH4Level} H1_s0=${buyRes.h1_s0_zone} → BUY EARLY strict`);
-        }
-        if (TOP_CFG.verbose && buyRes.type === 'REVERSAL'
-            && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
-          console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → BUY ${buyRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
-        }
-        const buyMode = computeModeV3('BUY', intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
-        const gBuy = buildGates("BUY", buyMode, buyRes.type, antiSpikeH1S0);
-        match = matchBuyRoute(...args, gBuy, buyRes.type);
-        if (match) { signalType = buyRes.type; signalMode = buyMode; }
-      }
+      // Etape 3 : matchRoute V2 — candidats RSI x zscore
+      const allCandidates = matchRoute(num(row?.rsi_h1_s0), num(row?.zscore_h1_s0));
 
-      if (!match) {
-        const sellRes = !_skipSell
-          ? resolve3D(intradayLevel, slopeH4Level, dslopeH4, "SELL", 1.0, _slope_d1, _sd1s0, _dslope_d1_live, _dslope_d1_s0, _slope_h1_s0, symbol)
-          : null;
-        if (sellRes) {
-          if (TOP_CFG.verbose && sellRes.fadeNeutreOk) {
-            console.log(`[FADE_NEUTRE_OK] ${symbol} ${_alignmentD1} IC_NEUTRE H4=${slopeH4Level} H1_s0=${sellRes.h1_s0_zone} → SELL EARLY strict`);
-          }
-          if (TOP_CFG.verbose && sellRes.type === 'REVERSAL'
-              && (_alignmentD1 === 'aligned_up' || _alignmentD1 === 'aligned_down')) {
-            console.log(`[D1_CONTRA] ${symbol} alignment=${_alignmentD1} → SELL ${sellRes.mode} REVERSAL (dslope_s0=${_dslope_d1_s0?.toFixed(2)})`);
-          }
-          const sellMode = computeModeV3('SELL', intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
-          const gSell = buildGates("SELL", sellMode, sellRes.type, antiSpikeH1S0);
-          match = matchSellRoute(...args, gSell, sellRes.type);
-          if (match) { signalType = sellRes.type; signalMode = sellMode; }
-        }
-      }
+      // Etape 4 : filtrage selon skipBuy / skipSell (du pre-filtre detectSpike)
+      const candidates = allCandidates.filter(c => {
+        if (c.side === 'BUY'  && _skipBuy)  return false;
+        if (c.side === 'SELL' && _skipSell) return false;
+        return true;
+      });
 
-      if (!match) continue;
+      // Etape 5 : selectRoute — choisit selon D1 + IC
+      const selected = selectRoute(candidates, _slope_d1, _sd1s0, intradayLevel);
+      if (!selected) continue;
+
+      // Etape 6 : computeModeV3 (D1 + IC, sans H1)
+      signalMode = computeModeV3(selected.side, intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
+      signalType = selected.type;
+
+      if (TOP_CFG.verbose) {
+        console.log(`[ROUTE] ${symbol} side=${selected.side} type=${signalType} route=${selected.route} mode=${signalMode}`);
+      }
 
       // --- H1 alignment layer (aligned + extrêmes) ---
-      const h1Result = resolveH1Alignment(_slope_h1, _slope_h1_s0, match.side, symbol);
+      const h1Result = resolveH1Alignment(_slope_h1, _slope_h1_s0, selected.side, symbol);
 
       // Cellule extrême bloquée pour ce side → kill
       if (h1Result?.block) {
         h1Counters.extreme_blocked++;
         if (TOP_CFG.verbose) {
-          console.log(`[H1_EXTREME_BLOCK] ${symbol} ${h1Result.zone_s1}×${h1Result.zone_s0} side=${match.side}`);
+          console.log(`[H1_EXTREME_BLOCK] ${symbol} ${h1Result.zone_s1}×${h1Result.zone_s0} side=${selected.side}`);
         }
         continue;
       }
 
       if (h1Result && !h1Result.skip && !h1Result.deferred) {
-        if (h1Result.side !== match.side) {
+        if (h1Result.side !== selected.side) {
           h1Counters.blocked_side_mismatch++;
           continue;
         }
@@ -1008,6 +992,14 @@ const TopOpportunities_V8R = (() => {
       } else if (h1Result?.deferred) {
         h1Counters.deferred++;
       }
+
+      // Etape 8 : validation timing technique sur le side selectionne
+      const g = buildGates(selected.side, signalMode, selected.type, antiSpikeH1S0);
+      match = selected.side === 'BUY'
+        ? matchBuyRoute(num(row?.rsi_h1_s0), _dslope_h1_live, num(row?.zscore_h1_s0), _slope_h1_s0, g, selected.type)
+        : matchSellRoute(num(row?.rsi_h1_s0), _dslope_h1_live, num(row?.zscore_h1_s0), _slope_h1_s0, g, selected.type);
+
+      if (!match) continue;
 
       if (TOP_CFG.verbose) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
@@ -1176,25 +1168,23 @@ const TopOpportunities_V8R = (() => {
         const _dbg_d1State = (_dbg_sd1s0 !== null && _dbg_dslope_d1 !== null)
           ? getD1State(_dbg_sd1s0, _dbg_dslope_d1) : "D1_FLAT";
 
-        const _dbg_slope_h1_s0 = _slope_h1_s0_dbg;
-        const buyRes  = resolve3D(intradayLevel, slopeH4Level, _dsh4, "BUY",  1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0, _dbg_slope_h1_s0, sym);
-        const sellRes = resolve3D(intradayLevel, slopeH4Level, _dsh4, "SELL", 1.0, _dbg_slope_d1, _dbg_sd1s0, _dbg_dslope_d1, _dbg_dslope_d1_s0, _dbg_slope_h1_s0, sym);
-        if (!buyRes && !sellRes) continue;
-        cResolve++;
-
-        const activeRes   = buyRes ?? sellRes;
-        const activeSide  = buyRes ? "BUY" : "SELL";
         // Calcul alignement D1 pour le gate
         const _dbg_alignmentD1 = getAlignmentD1(
           getSlopeD1Zone(_dbg_slope_d1),
           getSlopeD1Zone(_dbg_sd1s0)
         );
+        const _dbg_candidates = matchRoute(num(row?.rsi_h1_s0), num(row?.zscore_h1_s0));
+        const _dbg_selected = selectRoute(_dbg_candidates, _dbg_slope_d1, _dbg_sd1s0, intradayLevel);
+        if (!_dbg_selected) continue;
+        cResolve++;
+
+        const activeSide = _dbg_selected.side;
+        const activeType = _dbg_selected.type;
         const activeMode = computeModeV3(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1);
-        if (activeRes.type === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
+        if (activeType === "REVERSAL" && _riskCfg.reversalEnabled === false) continue;
         cReversalKill++;
 
-        const score = activeRes.type === "REVERSAL" ? 80
-                    : activeRes.type === "EARLY"    ? 70
+        const score = activeType === "REVERSAL" ? 80
                     : Math.max(0, Math.round(
                         Math.abs(num(row?.slope_h1) ?? 0) * 50 +
                         Math.abs((num(row?.rsi_h1) ?? 50) - 50) * 2
@@ -1208,17 +1198,17 @@ const TopOpportunities_V8R = (() => {
           num(row?.zscore_h1_s0),
           _slope_h1_s0_dbg,
         ];
-        const g = buildGates(activeSide, activeMode, activeRes.type, _antiSpike);
+        const g = buildGates(activeSide, activeMode, activeType, _antiSpike);
         const routeMatch = activeSide === "BUY"
-          ? matchBuyRoute(..._dbg_args, g)
-          : matchSellRoute(..._dbg_args, g);
+          ? matchBuyRoute(..._dbg_args, g, activeType)
+          : matchSellRoute(..._dbg_args, g, activeType);
 
         if (!routeMatch) {
           if (TOP_CFG.verbose) {
             const rsi      = num(row?.rsi_h1_s0);
             const zscore   = num(row?.zscore_h1_s0);
             const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
-            console.log(`[g7 FAIL] mode=${activeMode} type=${activeRes.type} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
+            console.log(`[g7 FAIL] mode=${activeMode} type=${activeType} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
           }
           continue;
         }
@@ -1237,34 +1227,6 @@ const TopOpportunities_V8R = (() => {
         "4 — after scoreMin":     { count: cScore,        pct: ((cScore/cReversalKill)*100).toFixed(1)+"%" },
         "5 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });
-
-      const resolveBreakdown = {
-        CONTINUATION_BUY: 0, CONTINUATION_SELL: 0,
-        REVERSAL_BUY: 0,     REVERSAL_SELL: 0,
-        EARLY_BUY: 0,        EARLY_SELL: 0,
-      };
-      for (const row of rows) {
-        const _sym  = row?.symbol;
-        const _ic   = INTRADAY_CONFIG[_sym] ?? INTRADAY_CONFIG.default;
-        const _sc   = getSlopeConfig(_sym);
-        const _thr  = _sc.dslopeH4Thr ?? 0.3;
-        const intra = num(row?.intraday_change);
-        const il  = getIntradayLevel(intra, _ic);
-        const sh4  = getSlopeLevel(num(row?.slope_h1_s0) ?? num(row?.slope_h1), _sym);
-        const _s0  = num(row?.slope_h1_s0), _s1 = num(row?.slope_h1);
-        const dsh4 = (_s0 !== null && _s1 !== null) ? _s0 - _s1 : null;
-        const _bk_sd1     = num(row?.slope_d1_s0);
-        const _bk_sl_d1   = num(row?.slope_d1);
-        const _bk_dsd1    = (_bk_sd1 !== null && _bk_sl_d1 !== null) ? _bk_sd1 - _bk_sl_d1 : null;
-        const _bk_dsd1_s0 = num(row?.dslope_d1_s0);
-        const _bk_d1      = (_bk_sd1 !== null && _bk_dsd1 !== null) ? getD1State(_bk_sd1, _bk_dsd1) : "D1_FLAT";
-        const _bk_sh1s0 = num(row?.slope_h1_s0);
-        const br  = resolve3D(il, sh4, dsh4, "BUY",  1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1, _bk_dsd1_s0, _bk_sh1s0, _sym);
-        const sr  = resolve3D(il, sh4, dsh4, "SELL", 1.0, _bk_sl_d1, _bk_sd1, _bk_dsd1, _bk_dsd1_s0, _bk_sh1s0, _sym);
-        if (br) resolveBreakdown[`${br.type}_BUY`]  = (resolveBreakdown[`${br.type}_BUY`]  ?? 0) + 1;
-        if (sr) resolveBreakdown[`${sr.type}_SELL`] = (resolveBreakdown[`${sr.type}_SELL`] ?? 0) + 1;
-      }
-      console.log("resolve3D breakdown:", resolveBreakdown);
     }
 
     return opps;

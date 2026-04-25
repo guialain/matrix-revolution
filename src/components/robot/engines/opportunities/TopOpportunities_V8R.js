@@ -444,8 +444,6 @@ const TopOpportunities_V8R = (() => {
         dslopeMin: 0.3, dslopeRev: 0.1, zRev: 99,
         dslopeThr: 0.3,
         z3050: 1.8, z5070: 1.8,
-        slopeH1Min:  0.5,   // slope_h1_s0 dans le sens du trade
-        dslopeH1Min: 0.3,   // dslope_h1 confirme accélération H1
         antiSpike,
       };
     }
@@ -579,10 +577,6 @@ const TopOpportunities_V8R = (() => {
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
 
-    // EARLY : slope_h1_s0 + dslope_h1 requis
-    const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 >  g.slopeH1Min);
-    const dslopeOk = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1   >  g.dslopeH1Min);
-
     // ── EXHAUSTION (priorité haute) ──────────────────────────────────────────
     // Tendance baissière installée (slope_h1_s0 < -0.5) qui s'épuise
     // (dslope_h1 > 1.5 = forte accélération en sens inverse)
@@ -608,49 +602,21 @@ const TopOpportunities_V8R = (() => {
      && zscore < g.z5070)
       return { route: "BUY-[50-72]-EXHAUSTION", side: "BUY" };
 
-    // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
-    // Reprise continuation H1 dans le sens du trade — dslope_h1 seul suffit,
-    // pas de contrainte slope_h1_s0.
+    // ── CONT ─────────────────────────────────────────────────────────────────
 
-    // BUY [28-50] CONT-RESUME — bloqué si EARLY (pas de tendance établie à reprendre)
-    if (signalType !== "EARLY"
-     && rsi >= 28 && rsi < 50
-     && dslope_h1 > 1.5
-     && zscore < g.z3050)
-      return { route: "BUY-[28-50]-CONT-RESUME", side: "BUY" };
-
-    // BUY [50-72] CONT-RESUME — bloqué si EARLY
-    if (signalType !== "EARLY"
-     && rsi >= 50 && rsi < 72
-     && dslope_h1 > 1.5
-     && zscore < g.z5070)
-      return { route: "BUY-[50-72]-CONT-RESUME", side: "BUY" };
-
-    // ── ROUTES NORMALES ──────────────────────────────────────────────────────
-
-    // BUY [0-28] — extreme oversold
-    if (rsi < 28
-     && dslope_h1 > g.dslopeMin
-     && dslope_h1 > g.dslopeRev
-     && zscore < g.zRev
-     && slopeOk && dslopeOk)
-      return { route: "BUY-[0-28]", side: "BUY" };
-
-    // BUY [28-50] — low-mid zone
+    // BUY [28-50] CONT
     if (rsi >= 28 && rsi < 50
      && zscore < g.z3050
      && dslope_h1 > g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike
-     && slopeOk && dslopeOk)
-      return { route: "BUY-[28-50]", side: "BUY" };
+     && Math.abs(dslope_h1) < g.antiSpike)
+      return { route: "BUY-[28-50]-CONT", side: "BUY" };
 
-    // BUY [50-72] — mid-high zone
+    // BUY [50-72] CONT
     if (rsi >= 50 && rsi < 72
      && zscore < g.z5070
      && dslope_h1 > g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike
-     && slopeOk && dslopeOk)
-      return { route: "BUY-[50-72]", side: "BUY" };
+     && Math.abs(dslope_h1) < g.antiSpike)
+      return { route: "BUY-[50-72]-CONT", side: "BUY" };
 
     return null;
   }
@@ -663,10 +629,6 @@ const TopOpportunities_V8R = (() => {
 
     const rsi    = rsi_h1_s0;
     const zscore = zscore_h1_s0;
-
-    // EARLY : slope_h1_s0 + dslope_h1 requis
-    const slopeOk  = g.slopeH1Min  == null || (slope_h1_s0 !== null && slope_h1_s0 < -g.slopeH1Min);
-    const dslopeOk = g.dslopeH1Min == null || (dslope_h1   !== null && dslope_h1   < -g.dslopeH1Min);
 
     // ── EXHAUSTION (priorité haute) ──────────────────────────────────────────
     // Tendance haussière installée (slope_h1_s0 > 0.5) qui s'épuise
@@ -693,49 +655,21 @@ const TopOpportunities_V8R = (() => {
      && zscore > -g.z5070)
       return { route: "SELL-[28-50]-EXHAUSTION", side: "SELL" };
 
-    // ── CONT-RESUME (après EXHAUSTION, avant routes normales) ────────────────
-    // Reprise continuation baissière H1 — dslope_h1 seul suffit,
-    // pas de contrainte slope_h1_s0.
+    // ── CONT ─────────────────────────────────────────────────────────────────
 
-    // SELL [50-72] CONT-RESUME — bloqué si EARLY (pas de tendance établie à reprendre)
-    if (signalType !== "EARLY"
-     && rsi >= 50 && rsi < 72
-     && dslope_h1 < -1.5
-     && zscore > -g.z3050)
-      return { route: "SELL-[50-72]-CONT-RESUME", side: "SELL" };
-
-    // SELL [28-50] CONT-RESUME — bloqué si EARLY
-    if (signalType !== "EARLY"
-     && rsi >= 28 && rsi < 50
-     && dslope_h1 < -1.5
-     && zscore > -g.z5070)
-      return { route: "SELL-[28-50]-CONT-RESUME", side: "SELL" };
-
-    // ── ROUTES NORMALES ──────────────────────────────────────────────────────
-
-    // SELL [72-100] — extreme overbought
-    if (rsi >= 72
-     && dslope_h1 < -g.dslopeMin
-     && dslope_h1 < -g.dslopeRev
-     && zscore > -g.zRev
-     && slopeOk && dslopeOk)
-      return { route: "SELL-[72-100]", side: "SELL" };
-
-    // SELL [50-72] — mid-high zone
+    // SELL [50-72] CONT
     if (rsi >= 50 && rsi < 72
      && zscore > -g.z3050
      && dslope_h1 < -g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike
-     && slopeOk && dslopeOk)
-      return { route: "SELL-[50-72]", side: "SELL" };
+     && Math.abs(dslope_h1) < g.antiSpike)
+      return { route: "SELL-[50-72]-CONT", side: "SELL" };
 
-    // SELL [28-50] — low-mid zone
+    // SELL [28-50] CONT
     if (rsi >= 28 && rsi < 50
      && zscore > -g.z5070
      && dslope_h1 < -g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike
-     && slopeOk && dslopeOk)
-      return { route: "SELL-[28-50]", side: "SELL" };
+     && Math.abs(dslope_h1) < g.antiSpike)
+      return { route: "SELL-[28-50]-CONT", side: "SELL" };
 
     return null;
   }
@@ -744,12 +678,6 @@ const TopOpportunities_V8R = (() => {
   // ROUTE => SIGNAL PHASE
   // ============================================================================
   const ROUTE_PHASE = {
-    "BUY-[0-28]":    "EXTREME_LOW",
-    "BUY-[28-50]":   "LOW_MID",
-    "BUY-[50-72]":   "MID_HIGH",
-    "SELL-[72-100]": "EXTREME_HIGH",
-    "SELL-[50-72]":  "MID_HIGH",
-    "SELL-[28-50]":  "LOW_MID",
     // EXHAUSTION
     "BUY-[0-28]-EXHAUSTION":    "EXTREME_LOW",
     "BUY-[28-50]-EXHAUSTION":   "LOW_MID",
@@ -757,11 +685,11 @@ const TopOpportunities_V8R = (() => {
     "SELL-[72-100]-EXHAUSTION": "EXTREME_HIGH",
     "SELL-[50-72]-EXHAUSTION":  "MID_HIGH",
     "SELL-[28-50]-EXHAUSTION":  "LOW_MID",
-    // CONT-RESUME
-    "BUY-[28-50]-CONT-RESUME":  "LOW_MID",
-    "BUY-[50-72]-CONT-RESUME":  "MID_HIGH",
-    "SELL-[50-72]-CONT-RESUME": "MID_HIGH",
-    "SELL-[28-50]-CONT-RESUME": "LOW_MID",
+    // CONT
+    "BUY-[28-50]-CONT":         "LOW_MID",
+    "BUY-[50-72]-CONT":         "MID_HIGH",
+    "SELL-[50-72]-CONT":        "MID_HIGH",
+    "SELL-[28-50]-CONT":        "LOW_MID",
   };
 
   // ============================================================================
@@ -968,9 +896,6 @@ const TopOpportunities_V8R = (() => {
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
         }
-        if (match.route?.includes("CONT-RESUME")) {
-          console.log(`[CONT-RESUME] ${symbol} route=${match.route} mode=${signalMode} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)} zscore_h1_s0=${num(row?.zscore_h1_s0)?.toFixed(2)}`);
-        }
       }
 
       if (signalMode !== "spike" && !accelContextGate(match.side, _dslope_h1_live)) continue;
@@ -1071,7 +996,6 @@ const TopOpportunities_V8R = (() => {
         close:           num(row?.close),
         intraday_change: intra,
         exhaustion:      match.route?.includes("EXHAUSTION")   ?? false,
-        contResume:      match.route?.includes("CONT-RESUME")  ?? false,
         range_ratio_h1,
       });
     }

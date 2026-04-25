@@ -57,76 +57,55 @@ const TopOpportunities_V8R = (() => {
   const num = v => (Number.isFinite(Number(v)) ? Number(v) : null);
 
   // ============================================================================
-  // GATE PRESETS — spike > relaxed > soft > normal > strict
-  // dslopeMin / dslopeRev = seuils sur dslope_h1 (variation slope H1)
-  // antiSpike             = seuil |dslope_h1| max par asset (slopeCfg.antiSpikeH1S0)
+  // getH1Conditions — seuils techniques H1 selon mode × type × side
+  //
+  // Inputs :
+  //   side : 'BUY' ou 'SELL'
+  //   mode : 'strict' | 'normal' | 'soft' | 'relaxed'
+  //   type : 'CONTINUATION' ou 'EXHAUSTION'
+  //
+  // Output : objet avec 8 champs (valeurs null si non applicables)
+  //   h1_s0_min, h1_s0_max               : zones cibles slope_h1_s0
+  //   h1_dslope_min, h1_dslope_max       : bornes dslope_h1
+  //   h1_dslope_min_v_shape,
+  //   h1_dslope_max_v_shape              : bornes V-shape (CONT seulement)
+  //   zscoreCap, zscoreFloor             : bornes zscore_h1_s0
   // ============================================================================
-  function buildGates(side, mode, type, antiSpike) {
-    const isRev = (type === "EXHAUSTION");
-
-    if (type === "EARLY") {
-      return {
-        dslopeMin: 0.3, dslopeRev: 0.1, zRev: 99,
-        dslopeThr: 0.3,
-        z3050: 1.8, z5070: 1.8,
-        antiSpike,
-      };
+  function getH1Conditions(side, mode, type) {
+    // CONT BUY (h1_s0 doit etre haut, dslope positif requis, V-shape autorise)
+    if (type === 'CONTINUATION' && side === 'BUY') {
+      if (mode === 'strict')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: 1.5,  h1_dslope_max: 3.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 5,  zscoreCap: 1.5,  zscoreFloor: null };
+      if (mode === 'normal')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: 0.5,  h1_dslope_max: 3.5,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 6,  zscoreCap: 1.75, zscoreFloor: null };
+      if (mode === 'soft')    return { h1_s0_min: 'flat',      h1_s0_max: null, h1_dslope_min: -1.0, h1_dslope_max: 4.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 8,  zscoreCap: 2.0,  zscoreFloor: null };
+      if (mode === 'relaxed') return { h1_s0_min: 'down_weak', h1_s0_max: null, h1_dslope_min: -1.5, h1_dslope_max: 5.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 10, zscoreCap: 2.5,  zscoreFloor: null };
     }
 
-    if (mode === "relaxed") {
-      return isRev ? {
-        dslopeMin: 0, dslopeRev: 0, zRev: 99,
-        dslopeThr: 0,
-        z3050: 99, z5070: 99,
-        antiSpike,
-      } : {
-        dslopeMin: 0, dslopeRev: 0, zRev: 99,
-        dslopeThr: 0,
-        z3050: 2.3, z5070: 2.3,
-        antiSpike,
-      };
+    // CONT SELL (miroir CONT BUY)
+    if (type === 'CONTINUATION' && side === 'SELL') {
+      if (mode === 'strict')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -3.0, h1_dslope_max: -1.5, h1_dslope_min_v_shape: -5,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.5 };
+      if (mode === 'normal')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -3.5, h1_dslope_max: -0.5, h1_dslope_min_v_shape: -6,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.75 };
+      if (mode === 'soft')    return { h1_s0_min: null, h1_s0_max: 'flat',      h1_dslope_min: -4.0, h1_dslope_max: 1.0,  h1_dslope_min_v_shape: -8,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.0 };
+      if (mode === 'relaxed') return { h1_s0_min: null, h1_s0_max: 'up_weak',   h1_dslope_min: -5.0, h1_dslope_max: 1.5,  h1_dslope_min_v_shape: -10, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.5 };
     }
 
-    if (mode === "soft") {
-      return isRev ? {
-        dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
-        dslopeThr: 0.2,
-        z3050: 99, z5070: 99,
-        antiSpike,
-      } : {
-        dslopeMin: 0.2, dslopeRev: 0.1, zRev: 99,
-        dslopeThr: 0.2,
-        z3050: 1.8, z5070: 1.8,
-        antiSpike,
-      };
+    // EXH BUY (h1_s0 doit etre bas, dslope deja en remontee, anti-spike retournement)
+    if (type === 'EXHAUSTION' && side === 'BUY') {
+      if (mode === 'strict')  return { h1_s0_min: null, h1_s0_max: 'down_strong', h1_dslope_min: 1.5,  h1_dslope_max: 5,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.5 };
+      if (mode === 'normal')  return { h1_s0_min: null, h1_s0_max: 'down_weak',   h1_dslope_min: 1.0,  h1_dslope_max: 6,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.0 };
+      if (mode === 'soft')    return { h1_s0_min: null, h1_s0_max: 'flat',        h1_dslope_min: 0.5,  h1_dslope_max: 8,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.75 };
+      if (mode === 'relaxed') return { h1_s0_min: null, h1_s0_max: 'up_weak',     h1_dslope_min: -0.5, h1_dslope_max: 10, h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.5 };
     }
 
-    if (mode === "normal") {
-      return isRev ? {
-        dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
-        dslopeThr: 0.3,
-        z3050: 99, z5070: 99,
-        antiSpike,
-      } : {
-        dslopeMin: 0.3, dslopeRev: 0.2, zRev: 99,
-        dslopeThr: 0.3,
-        z3050: 1.8, z5070: 1.8,
-        antiSpike,
-      };
+    // EXH SELL (miroir EXH BUY)
+    if (type === 'EXHAUSTION' && side === 'SELL') {
+      if (mode === 'strict')  return { h1_s0_min: 'up_strong', h1_s0_max: null, h1_dslope_min: -5,  h1_dslope_max: -1.5, h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: 2.5,  zscoreFloor: null };
+      if (mode === 'normal')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: -6,  h1_dslope_max: -1.0, h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: 2.0,  zscoreFloor: null };
+      if (mode === 'soft')    return { h1_s0_min: 'flat',      h1_s0_max: null, h1_dslope_min: -8,  h1_dslope_max: -0.5, h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: 1.75, zscoreFloor: null };
+      if (mode === 'relaxed') return { h1_s0_min: 'down_weak', h1_s0_max: null, h1_dslope_min: -10, h1_dslope_max: 0.5,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: 1.5,  zscoreFloor: null };
     }
 
-    // STRICT
-    return isRev ? {
-      dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
-      dslopeThr: 0.5,
-      z3050: 99, z5070: 99,
-      antiSpike,
-    } : {
-      dslopeMin: 0.5, dslopeRev: 0.3, zRev: 99,
-      dslopeThr: 0.5,
-      z3050: 1.6, z5070: 1.6,
-      antiSpike,
-    };
+    // Safety net : combinaison invalide
+    return { h1_s0_min: null, h1_s0_max: null, h1_dslope_min: null, h1_dslope_max: null, h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: null };
   }
 
   // ============================================================================
@@ -170,84 +149,77 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // NIVEAU 2 — BUY ROUTES
-  // dslope_h1   = momentum live H1
-  // slope_h1_s0 = orientation H1 courante (EXHAUSTION + EARLY)
-  // g.antiSpike = seuil |dslope_h1| max pour zones [28-72]
+  // checkConditions — verifie que les conditions techniques H1 + zscore
+  // passent pour la route deja selectionnee par selectRoute.
+  //
+  // Inputs :
+  //   slope_h1        : slope H1 historique (s1)
+  //   slope_h1_s0     : slope H1 actuel (s0)
+  //   dslope_h1       : variation H1 (s0 - s1)
+  //   zscore_h1_s0    : zscore H1 actuel
+  //   conditions      : objet retourne par getH1Conditions
+  //   side            : 'BUY' ou 'SELL'
+  //   symbol          : pour la classification (getSlopeLevel)
+  //
+  // Output : true si toutes les conditions passent, false sinon.
   // ============================================================================
-  function matchBuyRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g, signalType) {
-    if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
 
-    const rsi    = rsi_h1_s0;
-    const zscore = zscore_h1_s0;
+  const ZONE_RANK = {
+    'down_extreme': -3,
+    'down_strong':  -2,
+    'down_weak':    -1,
+    'flat':          0,
+    'up_weak':       1,
+    'up_strong':     2,
+    'up_extreme':    3,
+  };
 
-    // ── EXHAUSTION (priorité haute) ──────────────────────────────────────────
-    // Tendance baissière installée (slope_h1_s0 < -0.5) qui s'épuise
-    // (dslope_h1 > 1.5 = forte accélération en sens inverse)
+  function checkConditions(slope_h1, slope_h1_s0, dslope_h1, zscore_h1_s0, conditions, side, symbol) {
+    // Validations preliminaires : valeurs presentes
+    if (slope_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return false;
 
-    // BUY [0-28] EXHAUSTION
-    if (rsi < 28
-     && slope_h1_s0 !== null && slope_h1_s0 < -0.5
-     && dslope_h1 > 1.5
-     && zscore < g.zRev)
-      return { route: "BUY-[0-28]-EXHAUSTION", side: "BUY" };
+    // Etape 1 : zone slope_h1_s0
+    const zone_s0 = getSlopeLevel(slope_h1_s0, symbol);
+    const zone_s0_rank = ZONE_RANK[zone_s0];
+    if (zone_s0_rank === undefined) return false;
 
-    // BUY [28-50] EXHAUSTION
-    if (rsi >= 28 && rsi < 50
-     && slope_h1_s0 !== null && slope_h1_s0 < -0.5
-     && dslope_h1 > 1.5
-     && zscore < g.z3050)
-      return { route: "BUY-[28-50]-EXHAUSTION", side: "BUY" };
+    if (conditions.h1_s0_min !== null) {
+      const min_rank = ZONE_RANK[conditions.h1_s0_min];
+      if (zone_s0_rank < min_rank) return false;
+    }
+    if (conditions.h1_s0_max !== null) {
+      const max_rank = ZONE_RANK[conditions.h1_s0_max];
+      if (zone_s0_rank > max_rank) return false;
+    }
 
-    // ── CONT ─────────────────────────────────────────────────────────────────
+    // Etape 2 : dslope_h1 selon V-shape ou cas normal
+    const isVShape = (side === 'BUY'  && slope_h1 !== null && slope_h1 < 0)
+                  || (side === 'SELL' && slope_h1 !== null && slope_h1 > 0);
 
-    // BUY [50-72] CONT
-    if (rsi >= 50 && rsi < 72
-     && zscore < g.z5070
-     && dslope_h1 > g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike)
-      return { route: "BUY-[50-72]-CONT", side: "BUY" };
+    if (isVShape) {
+      if (side === 'BUY') {
+        const cap = conditions.h1_dslope_max_v_shape !== null
+          ? conditions.h1_dslope_max_v_shape
+          : conditions.h1_dslope_max;
+        if (cap !== null && dslope_h1 > cap) return false;
+        if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) return false;
+      } else {
+        const floor = conditions.h1_dslope_min_v_shape !== null
+          ? conditions.h1_dslope_min_v_shape
+          : conditions.h1_dslope_min;
+        if (floor !== null && dslope_h1 < floor) return false;
+        if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) return false;
+      }
+    } else {
+      if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) return false;
+      if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) return false;
+    }
 
-    return null;
-  }
+    // Etape 3 : zscore_h1_s0
+    if (conditions.zscoreCap !== null && zscore_h1_s0 > conditions.zscoreCap) return false;
+    if (conditions.zscoreFloor !== null && zscore_h1_s0 < conditions.zscoreFloor) return false;
 
-  // ============================================================================
-  // SELL ROUTES (miroir)
-  // ============================================================================
-  function matchSellRoute(rsi_h1_s0, dslope_h1, zscore_h1_s0, slope_h1_s0, g, signalType) {
-    if (rsi_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return null;
-
-    const rsi    = rsi_h1_s0;
-    const zscore = zscore_h1_s0;
-
-    // ── EXHAUSTION (priorité haute) ──────────────────────────────────────────
-    // Tendance haussière installée (slope_h1_s0 > 0.5) qui s'épuise
-    // (dslope_h1 < -1.5 = forte accélération en sens inverse)
-
-    // SELL [72-100] EXHAUSTION
-    if (rsi >= 72
-     && slope_h1_s0 !== null && slope_h1_s0 > 0.5
-     && dslope_h1 < -1.5
-     && zscore > -g.zRev)
-      return { route: "SELL-[72-100]-EXHAUSTION", side: "SELL" };
-
-    // SELL [50-72] EXHAUSTION
-    if (rsi >= 50 && rsi < 72
-     && slope_h1_s0 !== null && slope_h1_s0 > 0.5
-     && dslope_h1 < -1.5
-     && zscore > -g.z3050)
-      return { route: "SELL-[50-72]-EXHAUSTION", side: "SELL" };
-
-    // ── CONT ─────────────────────────────────────────────────────────────────
-
-    // SELL [28-50] CONT
-    if (rsi >= 28 && rsi < 50
-     && zscore > -g.z5070
-     && dslope_h1 < -g.dslopeThr
-     && Math.abs(dslope_h1) < g.antiSpike)
-      return { route: "SELL-[28-50]-CONT", side: "SELL" };
-
-    return null;
+    return true;
   }
 
   // ============================================================================
@@ -408,7 +380,7 @@ const TopOpportunities_V8R = (() => {
   }
 
   // ============================================================================
-  // computeModeV3 — calcul du mode base sur D1 alignment + IC
+  // getMode — calcul du mode base sur D1 alignment + IC
   //
   // Architecture : cascade de cas explicites par (D1 alignment x IC level).
   // Plus de table H1, plus de default fourre-tout.
@@ -430,7 +402,7 @@ const TopOpportunities_V8R = (() => {
   const IC_BULLISH_LEVELS = { 'EXPLOSIVE_UP': 'EXPLOSIVE', 'STRONG_UP': 'STRONG', 'SOFT_UP': 'SOFT' };
   const IC_BEARISH_LEVELS = { 'EXPLOSIVE_DOWN': 'EXPLOSIVE', 'STRONG_DOWN': 'STRONG', 'SOFT_DOWN': 'SOFT' };
 
-  function computeModeV3(side, intradayLevel, slope_d1_s1, slope_d1_s0, alignment) {
+  function getMode(side, intradayLevel, slope_d1_s1, slope_d1_s0, alignment) {
     // R1 : IC NEUTRE -> strict
     if (intradayLevel === 'NEUTRE') return 'strict';
 
@@ -508,7 +480,7 @@ const TopOpportunities_V8R = (() => {
       maxSignals:              num(opts?.maxSignals) ?? Infinity,
       scoreMin: num(opts?.scoreMin) ?? 0,
       debug:   Boolean(opts?.debug),   // funnel agrégé (console.info + table + breakdown)
-      verbose: Boolean(opts?.verbose), // logs par row ([D1], [EXHAUSTION], [g7 FAIL], …)
+      verbose: Boolean(opts?.verbose), // logs par row ([D1], [EXHAUSTION], [CHECK FAIL], …)
     };
 
     let opps = [];
@@ -676,8 +648,8 @@ const TopOpportunities_V8R = (() => {
       const selected = selectRoute(candidates, _slope_d1, _sd1s0, intradayLevel);
       if (!selected) continue;
 
-      // Etape 6 : computeModeV3 (D1 + IC, sans H1)
-      signalMode = computeModeV3(selected.side, intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
+      // Etape 6 : getMode (D1 + IC, sans H1)
+      signalMode = getMode(selected.side, intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
       signalType = selected.type;
 
       if (TOP_CFG.verbose) {
@@ -720,13 +692,22 @@ const TopOpportunities_V8R = (() => {
         h1Counters.deferred++;
       }
 
-      // Etape 8 : validation timing technique sur le side selectionne
-      const g = buildGates(selected.side, signalMode, selected.type, antiSpikeH1S0);
-      match = selected.side === 'BUY'
-        ? matchBuyRoute(num(row?.rsi_h1_s0), _dslope_h1_live, num(row?.zscore_h1_s0), _slope_h1_s0, g, selected.type)
-        : matchSellRoute(num(row?.rsi_h1_s0), _dslope_h1_live, num(row?.zscore_h1_s0), _slope_h1_s0, g, selected.type);
+      // Etape 8 : validation des conditions techniques sur la route selectionnee
+      const conditions = getH1Conditions(selected.side, signalMode, selected.type);
+      const conditionsOk = checkConditions(
+        _slope_h1,
+        _slope_h1_s0,
+        _dslope_h1_live,
+        num(row?.zscore_h1_s0),
+        conditions,
+        selected.side,
+        symbol
+      );
 
-      if (!match) continue;
+      if (!conditionsOk) continue;
+
+      // La route est deja determinee par selectRoute, on cree match a partir de selected
+      match = { route: selected.route, side: selected.side };
 
       if (TOP_CFG.verbose) {
         console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
@@ -894,7 +875,7 @@ const TopOpportunities_V8R = (() => {
 
         const activeSide = _dbg_selected.side;
         const activeType = _dbg_selected.type;
-        const activeMode = computeModeV3(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1);
+        const activeMode = getMode(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1);
         if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
         cExhaustionKill++;
 
@@ -906,23 +887,22 @@ const TopOpportunities_V8R = (() => {
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;
 
-        const _dbg_args = [
-          num(row?.rsi_h1_s0),
+        const conditions = getH1Conditions(activeSide, activeMode, activeType);
+        const conditionsOk = checkConditions(
+          _slope_h1_dbg,
+          _slope_h1_s0_dbg,
           _dslope_h1_dbg,
           num(row?.zscore_h1_s0),
-          _slope_h1_s0_dbg,
-        ];
-        const g = buildGates(activeSide, activeMode, activeType, _antiSpike);
-        const routeMatch = activeSide === "BUY"
-          ? matchBuyRoute(..._dbg_args, g, activeType)
-          : matchSellRoute(..._dbg_args, g, activeType);
+          conditions,
+          activeSide,
+          sym
+        );
 
-        if (!routeMatch) {
+        if (!conditionsOk) {
           if (TOP_CFG.verbose) {
-            const rsi      = num(row?.rsi_h1_s0);
-            const zscore   = num(row?.zscore_h1_s0);
-            const zone     = rsi < 28 ? "0-28" : rsi < 50 ? "28-50" : rsi < 72 ? "50-72" : "72+";
-            console.log(`[g7 FAIL] mode=${activeMode} type=${activeType} side=${activeSide} zone=${zone} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} dslope_h1_live=${_dslope_h1_dbg?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
+            const rsi    = num(row?.rsi_h1_s0);
+            const zscore = num(row?.zscore_h1_s0);
+            console.log(`[CHECK FAIL] mode=${activeMode} type=${activeType} side=${activeSide} | rsi=${rsi?.toFixed(1)} z=${zscore?.toFixed(2)} slope_h1=${_slope_h1_dbg?.toFixed(2)} slope_h1_s0=${_slope_h1_s0_dbg?.toFixed(2)} dslope_h1=${_dslope_h1_dbg?.toFixed(2)}`);
           }
           continue;
         }

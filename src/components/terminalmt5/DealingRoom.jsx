@@ -84,29 +84,25 @@ const normalizePrice = (price) => {
 
  const computeSLTP = (selectedSide) => {
 
-  if (!hasQuote || !selectedSide || !atr_h1) return null;
+  if (!hasQuote || !selectedSide) return null;
 
   const cfg = getRiskConfig(mt5Symbol);
 
-  const atrCap = Number(cfg.atrH1Cap);
-  const atrCapped = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atr_h1, atrCap) : atr_h1;
-
-  // TP : ATR-based (logique inchangee SL-2)
-  const tpDistance = atrCapped * cfg.tpAtr;
-
   const entry = selectedSide === "BUY" ? ask : bid;
 
-  // Phase SL-2 : SL en zscore (sigma_h1 based)
-  // Formule : prix_SL = middle_h1 + zscore_SL * sigma_h1
+  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based)
+  // Formule : prix = middle_h1 + zscore_target * sigma_h1
   //          zscore_SL = entry_zscore +/- 1.5 selon side
+  //          zscore_TP = entry_zscore +/- 0.5 selon side (ratio 1:3 avec SL)
   const SL_DELTA_ZSCORE = 1.5;
+  const TP_DELTA_ZSCORE = 0.5;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(draftDeal?.zscore_h1_s0);
   const middle_h1    = _num(draftDeal?.middle_h1);
   const sigma_h1     = _num(draftDeal?.sigma_h1);
 
   if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
-    console.warn('[SL] Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL calculation');
+    console.warn('[SLTP] Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL/TP calculation');
     return null;
   }
 
@@ -115,12 +111,10 @@ const normalizePrice = (price) => {
     : entry_zscore + SL_DELTA_ZSCORE;
   let slValue = middle_h1 + zscore_SL * sigma_h1;
 
-  let tpValue;
-  if (selectedSide === "BUY") {
-    tpValue = entry + tpDistance;
-  } else {
-    tpValue = entry - tpDistance;
-  }
+  const zscore_TP = (selectedSide === "BUY")
+    ? entry_zscore + TP_DELTA_ZSCORE
+    : entry_zscore - TP_DELTA_ZSCORE;
+  let tpValue = middle_h1 + zscore_TP * sigma_h1;
 
 
 

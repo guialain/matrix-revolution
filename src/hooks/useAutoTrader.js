@@ -154,43 +154,35 @@ function computeSLTP(op, cfg, snapshot) {
       ? (liveAsk > 0 ? liveAsk : Number(op.close))
       : (liveBid > 0 ? liveBid : Number(op.close));
 
-  const atrRaw = Number(op.atr_h1);
   if (!Number.isFinite(price) || price <= 0) return null;
-  if (!Number.isFinite(atrRaw) || atrRaw <= 0) return null;
 
-  const atrCap = Number(cfg.atrH1Cap);
-  const atr = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atrRaw, atrCap) : atrRaw;
-
-  // TP : ATR-based (logique inchangee SL-2)
-  const tpDist = atr * cfg.tpAtr;
-
-  // Phase SL-2 : SL en zscore (sigma_h1 based)
-  // Formule : prix_SL = middle_h1 + zscore_SL * sigma_h1
+  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based)
+  // Formule : prix = middle_h1 + zscore_target * sigma_h1
   //          zscore_SL = entry_zscore +/- 1.5 selon side
+  //          zscore_TP = entry_zscore +/- 0.5 selon side (ratio 1:3 avec SL)
   const SL_DELTA_ZSCORE = 1.5;
+  const TP_DELTA_ZSCORE = 0.5;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(op?.zscore_h1_s0);
   const middle_h1    = _num(op?.middle_h1);
   const sigma_h1     = _num(op?.sigma_h1);
 
   if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
-    console.warn(`[AUTO-TRADER] [SL] ${op.symbol}: Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL`);
+    console.warn(`[AUTO-TRADER] [SLTP] ${op.symbol}: Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL/TP`);
     return null;
   }
 
   const zscore_SL = (op.side === "BUY")
     ? entry_zscore - SL_DELTA_ZSCORE
     : entry_zscore + SL_DELTA_ZSCORE;
-
   let sl = middle_h1 + zscore_SL * sigma_h1;
   const slDist = Math.abs(price - sl);
 
-  let tp;
-  if (op.side === "BUY") {
-    tp = price + tpDist;
-  } else {
-    tp = price - tpDist;
-  }
+  const zscore_TP = (op.side === "BUY")
+    ? entry_zscore + TP_DELTA_ZSCORE
+    : entry_zscore - TP_DELTA_ZSCORE;
+  let tp = middle_h1 + zscore_TP * sigma_h1;
+  const tpDist = Math.abs(tp - price);
 
   // Enforce broker stopsLevel (minimum distance from entry)
   const stopsLevel = Number(cfg.stopsLevel);
@@ -215,7 +207,7 @@ function computeSLTP(op, cfg, snapshot) {
   const scanDigits = Number.isInteger(Number(scanRow?.digits)) ? Number(scanRow.digits) : null;
   const digits  = scanDigits !== null ? scanDigits
                 : tick > 0 ? Math.max(0, Math.ceil(-Math.log10(tick)))
-                : Math.max(0, Math.ceil(-Math.log10(atr)) + 2);
+                : 5; // fallback safe default (FX-like)
 
   if (tick > 0) {
     sl = Number((Math.round(sl / tick) * tick).toFixed(digits));

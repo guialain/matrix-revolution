@@ -110,6 +110,8 @@ const RobotCore = {
       slope_h1_s0: row.slope_h1_s0  ?? null,
       drsi_h1_s0:  row.drsi_h1_s0   ?? null,
       zscore_h1_s0:row.zscore_h1_s0 ?? null,
+      middle_h1:   row.middle_h1    ?? null,
+      sigma_h1:    row.sigma_h1     ?? null,
       // M15
       atr_m15:     row.atr_m15      ?? null,
       rsi_m15:     row.rsi_m15      ?? null,

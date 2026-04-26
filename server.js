@@ -596,6 +596,8 @@ app.get("/api/mt5data", (req, res) => {
           slope_h1_s0:     num(r.slope_h1_s0),
           drsi_h1_s0:      num(r.drsi_h1_s0),
           zscore_h1_s0:    num(r.zscore_h1_s0),
+          middle_h1:       num(r.middle_h1),
+          sigma_h1:        num(r.sigma_h1),
           atr_h1:          num(r.atr_h1),
           rsi_h1_previouslow3:  num(r.rsi_h1_previouslow3),
           rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),

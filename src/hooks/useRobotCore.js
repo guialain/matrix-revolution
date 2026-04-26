@@ -75,16 +75,6 @@ function logSignal(opp, verdict) {
 const EMPTY = {
   finalDecision: "WAIT",
 
-  structureSignal: "Neutral",
-  structureAlign:  "Unknown",
-
-  dominantSignal: "Neutral",
-  dominantAlign:  "Unknown",
-
-  timingSignal: "Neutral",
-  timingAlign:  "Unknown",
-
-  noiseLevel: null,
   macroRegime: null,
 
   topOpportunities: null,
@@ -235,16 +225,6 @@ export default function useRobotCore(snapshot) {
     return {
       finalDecision: allowed ? "VALID" : "WAIT",
 
-      structureSignal: asset.structure?.signal    ?? "Neutral",
-      structureAlign:  asset.structure?.alignment ?? "Unknown",
-
-      dominantSignal: asset.dominant?.signal    ?? "Neutral",
-      dominantAlign:  asset.dominant?.alignment ?? "Unknown",
-
-      timingSignal: asset.timing?.signal    ?? "Neutral",
-      timingAlign:  asset.timing?.alignment ?? "Unknown",
-
-      noiseLevel: asset.noise?.confidence ?? null,
       macroRegime: macro.regime ?? null,
 
       topOpportunities: neo.topOpportunities ?? null,

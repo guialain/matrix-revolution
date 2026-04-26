@@ -905,7 +905,9 @@ const SIGNALS_LOG_COLUMNS = [
   "rsi_m5_s0", "zscore_m5",
   "middle_h1", "sigma_h1",
 ];
-const SIGNALS_LOG_HEADER = SIGNALS_LOG_COLUMNS.join(",") + "\n";
+// Separateur ; aligne avec les autres CSV du projet (Excel FR compatible)
+const SIGNALS_LOG_SEP = ";";
+const SIGNALS_LOG_HEADER = SIGNALS_LOG_COLUMNS.join(SIGNALS_LOG_SEP) + "\n";
 
 function ensureSignalsLogFile() {
   const dir = path.dirname(SIGNALS_LOG_PATH);
@@ -918,11 +920,11 @@ function toCsvLine(obj, columns) {
     const v = obj[col];
     if (v === null || v === undefined) return "";
     const s = String(v);
-    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    if (s.includes(SIGNALS_LOG_SEP) || s.includes('"') || s.includes("\n")) {
       return '"' + s.replace(/"/g, '""') + '"';
     }
     return s;
-  }).join(",") + "\n";
+  }).join(SIGNALS_LOG_SEP) + "\n";
 }
 
 app.post("/api/log_signal", (req, res) => {

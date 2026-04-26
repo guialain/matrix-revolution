@@ -5,3 +5,11 @@ build/
 dist/
 *.csv
 src/data/*.json
+
+# Runtime artefacts (regeneres a chaque execution)
+mt.json
+server.log
+sig.json
+
+# Config Claude Code locale (perso)
+.claude/settings.local.json

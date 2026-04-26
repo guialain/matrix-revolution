@@ -37,10 +37,13 @@ const [activePreset, setActivePreset] = useState(null);
   const account = data?.account ?? null;
   const openPositions = data?.openPositions ?? [];
 
+  const atr_h1_mw = Number(
+    data?.marketWatch?.find(r => r.symbol === asset?.symbol)?.atr_h1
+  );
   const atr_h1 = Number.isFinite(draftDeal?.atr_h1) && draftDeal.atr_h1 > 0
     ? draftDeal.atr_h1
-    : Number.isFinite(data?.indicators?.atr?.H1)
-      ? data.indicators.atr.H1
+    : Number.isFinite(atr_h1_mw) && atr_h1_mw > 0
+      ? atr_h1_mw
       : null;
 
   const bid = Number.isFinite(asset?.bid) ? asset.bid : null;

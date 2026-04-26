@@ -10,11 +10,6 @@
 import TopOpportunities_V8R from "./engines/opportunities/TopOpportunities_V8R";
 import AssetBrain       from "./engines/asset/AssetBrain";
 
-// ================= CONFIDENCE / SCORING =================
-import AnalysisScore       from "./engines/confidence/AnalysisScore";
-import AnalysisConfidence  from "./engines/confidence/AnalysisConfidence";
-import OpportunityRanking  from "./engines/confidence/OpportunityRanking";
-
 // ================= DECISION (NEO) =======================
 import AssetEligibility from "./engines/trading/AssetEligibility";
 
@@ -131,16 +126,6 @@ const RobotCore = {
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 
-    // --- 1.3 Scoring / confiance / ranking (NEO informatif)
-    const score      = AnalysisScore.evaluate(asset, detected);
-    const confidence = AnalysisConfidence.evaluate(score);
-
-    const ranking = OpportunityRanking.evaluate({
-      market: detected,
-      asset,
-      score
-    });
-
     // ======================================================================
     // PHASE 1.5 — ELIGIBILITY & VOLATILITY (TRINITY DIAGNOSTIC)
     // ======================================================================
@@ -217,9 +202,6 @@ const RobotCore = {
     // --- Exposition complète côté NEO (UI)
     const neo = {
       asset,
-      score,
-      confidence,
-      ranking,
 
       topOpportunities: {
         ...detected,

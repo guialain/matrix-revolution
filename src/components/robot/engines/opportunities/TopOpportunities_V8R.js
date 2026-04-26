@@ -871,12 +871,12 @@ const TopOpportunities_V8R = (() => {
       console.info("TOPOPP V8R", { total_rows: rows.length, signals: opps.length });
 
       console.table({
-        "0 — total rows":         { count: cTotal,        pct: "100%" },
-        "1 — after anti-spike":   { count: cAntiSpike,    pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
-        "2 — after resolve3D":    { count: cResolve,      pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "3 — after exhaustionKill": { count: cExhaustionKill, pct: ((cExhaustionKill/cResolve)*100).toFixed(1)+"%" },
-        "4 — after scoreMin":     { count: cScore,        pct: ((cScore/cExhaustionKill)*100).toFixed(1)+"%" },
-        "5 — after matchRoute":   { count: cFinal,        pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
+        "0 — total rows":             { count: cTotal,          pct: "100%" },
+        "1 — non-grey rows":          { count: cAntiSpike,      pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
+        "2 — after selectRoute":      { count: cResolve,        pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
+        "3 — after exhaustionKill":   { count: cExhaustionKill, pct: ((cExhaustionKill/cResolve)*100).toFixed(1)+"%" },
+        "4 — after scoreMin":         { count: cScore,          pct: ((cScore/cExhaustionKill)*100).toFixed(1)+"%" },
+        "5 — after checkConditions":  { count: cFinal,          pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
       });
     }
 

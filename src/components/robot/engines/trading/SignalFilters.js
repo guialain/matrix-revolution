@@ -70,7 +70,13 @@ const SignalFilters = (() => {
     const now = new Date();
     const day = now.getUTCDay();
     const hourDec = now.getUTCHours() + now.getUTCMinutes() / 60;
-    return (day === 6 || day === 0) || (day === 5 && hourDec >= TIMING_CONFIG.weekendFridayHour);
+    // Vendredi >= weekendFridayHour (22h UTC)
+    if (day === 5 && hourDec >= TIMING_CONFIG.weekendFridayHour) return true;
+    // Samedi : toute la journee
+    if (day === 6) return true;
+    // Dimanche < weekendSundayEndHour (23h UTC)
+    if (day === 0 && hourDec < TIMING_CONFIG.weekendSundayEndHour) return true;
+    return false;
   }
 
   // =========================================================

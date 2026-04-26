@@ -76,7 +76,7 @@ const OWNER_EMAIL = "guialain777@gmail.com";
 // AGENTS CACHE (multi-user: keyed by token)
 // ============================================================================
 
-const AGENTS_CACHE = {};   // { token: { account, asset, indicators, macro, scan, openpositions, closedtrades, lastUpdate } }
+const AGENTS_CACHE = {};   // { token: { account, asset, macro, scan, openpositions, closedtrades, lastUpdate } }
 const AGENTS_QUEUE = {};   // { token: [ { action, payload } ] }
 
 // ============================================================================
@@ -90,7 +90,6 @@ const MT5_DIR =
 const FILES = {
   account:       "neo_account.csv",
   asset:         "neo_asset.csv",
-  indicators:    "neo_indicators.csv",
   macro:         "neo_macro.csv",
   scan:          "neo_market_scan.csv",
   openpositions: "neo_openpositions.csv",
@@ -104,7 +103,6 @@ const FILES = {
 const CACHE = {
   account:      null,
   asset:        null,
-  indicators:   null,
   macro:        null,
   scan:         [],
   openpositions:[],
@@ -200,7 +198,6 @@ function updateCache() {
 
   const accountRaw     = readLastRowCSV(path.join(MT5_DIR, FILES.account));
   const assetRaw       = readLastRowCSV(path.join(MT5_DIR, FILES.asset));
-  const indiRaw        = readLastRowCSV(path.join(MT5_DIR, FILES.indicators));
   const macroRaw       = readLastRowCSV(path.join(MT5_DIR, FILES.macro));
   const scanRaw        = readAllRowsCSV(path.join(MT5_DIR, FILES.scan));
   const openPosRaw     = readAllRowsCSV(path.join(MT5_DIR, FILES.openpositions));
@@ -208,7 +205,6 @@ function updateCache() {
 
   CACHE.account       = accountRaw;
   CACHE.asset         = assetRaw;
-  CACHE.indicators    = indiRaw;
   CACHE.macro         = macroRaw;
 
   // Scan: only update when timestamp changes (~5s refresh from EA)
@@ -322,12 +318,11 @@ app.post("/api/agent/push", (req, res) => {
     return res.status(401).json({ error: "INVALID_TOKEN" });
   }
 
-  const { account, asset, indicators, macro, scan, openpositions, closedtrades } = req.body ?? {};
+  const { account, asset, macro, scan, openpositions, closedtrades } = req.body ?? {};
 
   AGENTS_CACHE[token] = {
     account:       account ?? null,
     asset:         asset ?? null,
-    indicators:    indicators ?? null,
     macro:         macro ?? null,
     scan:          scan ?? [],
     openpositions: openpositions ?? [],

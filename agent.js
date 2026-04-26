@@ -30,7 +30,6 @@ const API_ORDERS = `${server}/api/agent/orders?token=${token}`;
 const FILES = {
   account:       "neo_account.csv",
   asset:         "neo_asset.csv",
-  indicators:    "neo_indicators.csv",
   macro:         "neo_macro.csv",
   scan:          "neo_market_scan.csv",
   openpositions: "neo_openpositions.csv",
@@ -93,7 +92,6 @@ function readAllData() {
   return {
     account:       readLastRowCSV(path.join(mt5_dir, FILES.account)),
     asset:         readLastRowCSV(path.join(mt5_dir, FILES.asset)),
-    indicators:    readLastRowCSV(path.join(mt5_dir, FILES.indicators)),
     macro:         readLastRowCSV(path.join(mt5_dir, FILES.macro)),
     scan:          lastScan,
     openpositions: readAllRowsCSV(path.join(mt5_dir, FILES.openpositions)),

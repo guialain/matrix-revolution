@@ -18,6 +18,58 @@ const API_BASE = window.location.hostname === "localhost"
 const PUBLISH_COOLDOWN_MS = 15_000;
 
 // ---------------------------------------------------------------------------
+// SIGNAL LOGGER — dedup en memoire par signal_id (symbol_side_emittedAt)
+// Fire-and-forget POST vers /api/log_signal pour CSV signals_log.csv
+// ---------------------------------------------------------------------------
+const loggedSignalIds = new Set();
+
+function buildSignalId(opp) {
+  return `${opp.symbol}_${opp.side}_${opp.emittedAt}`;
+}
+
+function buildSignalLogPayload(opp, verdict) {
+  return {
+    signal_id:       buildSignalId(opp),
+    emittedAt:       opp.emittedAt,
+    loggedAt:        Date.now(),
+    verdict,                                  // "VALID" ou "WAIT"
+    wait_reason:     opp.wait_reason || "",
+    symbol:          opp.symbol,
+    side:            opp.side,
+    mode:            opp.mode,
+    route:           opp.route,
+    score:           opp.score,
+    entry_zscore_h1: opp.zscore_h1_s0 ?? opp.entry_zscore_h1 ?? null,
+    intraday_class:  opp.intradayLevel ?? opp.intraday_class ?? null,
+    d1_state:        opp.d1State ?? opp.d1_state ?? null,
+    slope_h1_s0:     opp.slope_h1_s0,
+    dslope_h1:       opp.dslope_h1,
+    slope_m5_s0:     opp.slope_m5_s0,
+    slope_m5:        opp.slope_m5,
+    dslope_m5:       opp.dslope_m5,
+    is_vshape_m5:    opp.is_vshape_m5,
+    rsi_m5_s0:       opp.rsi_m5_s0,
+    zscore_m5:       opp.zscore_m5,
+    middle_h1:       opp.middle_h1,
+    sigma_h1:        opp.sigma_h1,
+  };
+}
+
+function logSignal(opp, verdict) {
+  if (!opp?.symbol || !opp?.side || !opp?.emittedAt) return;
+  const id = buildSignalId(opp);
+  if (loggedSignalIds.has(id)) return;
+  loggedSignalIds.add(id);
+  const payload = buildSignalLogPayload(opp, verdict);
+  fetch(`${API_BASE}/api/log_signal`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  }).catch(() => {});
+}
+
+// ---------------------------------------------------------------------------
 // ÉTAT PAR DÉFAUT (SAFE UI)
 // ---------------------------------------------------------------------------
 const EMPTY = {
@@ -111,6 +163,10 @@ export default function useRobotCore(snapshot) {
       credentials: "include",
       body: JSON.stringify({ validOpportunities: throttledValid, waitOpportunities: wait }),
     }).catch(() => {});
+
+    // Logger CSV — dedup en memoire (signal_id), fire-and-forget
+    valid.forEach(op => logSignal(op, "VALID"));
+    wait.forEach(op  => logSignal(op, "WAIT"));
   }, [coreResult]);
 
   // Merge: core analysis + server signals

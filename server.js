@@ -892,6 +892,50 @@ app.post("/api/signals/publish", (req, res) => {
   res.json({ ok: true, valid: fresh.length, wait: freshWait.length });
 });
 
+// ============================================================================
+// LOGGER /api/log_signal — append CSV signals_log.csv pour analyse WR empirique
+// ============================================================================
+const SIGNALS_LOG_PATH = path.join(path.resolve(), "logs", "signals_log.csv");
+const SIGNALS_LOG_COLUMNS = [
+  "signal_id", "emittedAt", "loggedAt", "verdict", "wait_reason",
+  "symbol", "side", "mode", "route", "score",
+  "entry_zscore_h1", "intraday_class", "d1_state",
+  "slope_h1_s0", "dslope_h1",
+  "slope_m5_s0", "slope_m5", "dslope_m5", "is_vshape_m5",
+  "rsi_m5_s0", "zscore_m5",
+  "middle_h1", "sigma_h1",
+];
+const SIGNALS_LOG_HEADER = SIGNALS_LOG_COLUMNS.join(",") + "\n";
+
+function ensureSignalsLogFile() {
+  const dir = path.dirname(SIGNALS_LOG_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(SIGNALS_LOG_PATH)) fs.writeFileSync(SIGNALS_LOG_PATH, SIGNALS_LOG_HEADER);
+}
+
+function toCsvLine(obj, columns) {
+  return columns.map(col => {
+    const v = obj[col];
+    if (v === null || v === undefined) return "";
+    const s = String(v);
+    if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }).join(",") + "\n";
+}
+
+app.post("/api/log_signal", (req, res) => {
+  try {
+    ensureSignalsLogFile();
+    fs.appendFileSync(SIGNALS_LOG_PATH, toCsvLine(req.body || {}, SIGNALS_LOG_COLUMNS));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[log_signal] error:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // GET /api/signals — returns current signal store for user (TTL 30s)
 // ============================================================================
 // NEWS — RSS proxy (Reuters)

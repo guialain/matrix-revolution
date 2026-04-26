@@ -678,7 +678,6 @@ const TopOpportunities_V8R = (() => {
 
       const scoreRow = {
         symbol,
-        type: signalType, side: match.side,
         slope_h1:             num(row?.slope_h1),
         dslope_h1:            _dslope_h1_live,
         zscore_h1:            num(row?.zscore_h1),
@@ -695,7 +694,7 @@ const TopOpportunities_V8R = (() => {
       else if (signalType === "EXHAUSTION"     && match.side === "SELL") scored = scoreExhaustionSell(scoreRow);
       else if (signalType === "CONTINUATION" && match.side === "BUY")  scored = scoreContinuationBuy(scoreRow);
       else if (signalType === "CONTINUATION" && match.side === "SELL") scored = scoreContinuationSell(scoreRow);
-      else scored = { total: signalType === "EARLY" ? 70 : 50, breakdown: {} };
+      else scored = { total: 50, breakdown: {} };
 
       const score     = Math.round(scored.total ?? 0);
       const breakdown = scored.breakdown ?? {};
@@ -836,7 +835,6 @@ const TopOpportunities_V8R = (() => {
         // Score debug = miroir exact de la prod (ScoreEngine.scoreXxx)
         const _dbg_scoreRow = {
           symbol: sym,
-          type: activeType, side: activeSide,
           slope_h1:             num(row?.slope_h1),
           dslope_h1:            _dslope_h1_dbg,
           zscore_h1:            num(row?.zscore_h1),

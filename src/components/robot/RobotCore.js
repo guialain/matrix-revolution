@@ -283,45 +283,10 @@ const RobotCore = {
     };
 
     // ======================================================================
-    // FINAL (FLATTENED CORE FOR UI)
+    // FINAL — useRobotCore consomme uniquement neo + trinity
     // ======================================================================
 
-    return {
-      // --- keep structured blocks (debug / future)
-      neo,
-      trinity,
-
-      // --- UI expected fields (flat)
-      finalDecision: allowed ? "VALID" : "WAIT",
-
-      // === ASSET (AssetBrain) ===
-      structureSignal: asset?.structureSignal ?? null,
-      structureAlign:  asset?.structureAlign ?? null,
-
-      dominantSignal:  asset?.dominantSignal ?? null,
-      dominantAlign:   asset?.dominantAlign ?? null,
-
-      timingSignal:    asset?.timingSignal ?? null,
-      timingAlign:     asset?.timingAlign ?? null,
-
-      noiseLevel:      asset?.noiseLevel ?? null,
-      macroRegime:     asset?.macroRegime ?? null,
-
-      // === NEO outputs ===
-      topOpportunities: neo.topOpportunities,
-
-      // === TRINITY outputs ===
-      accountRisk,
-      exposure,
-      portfolio,
-      closePositions,
-
-      allowed,
-
-      validOpportunities,
-      waitOpportunities,
-      blockedOpportunities
-    };
+    return { neo, trinity };
 
   }
 };

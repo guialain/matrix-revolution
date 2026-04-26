@@ -1,7 +1,6 @@
 // ============================================================================
 // NeomatrixMTAnalysis.jsx
 // Panel unifié : synthèse (Direction / Momentum / Noise) + détails par TF
-// Remplace ConvergenceMultiTF + IndicatorsMatrix dans MatrixAnalysis.
 // Source : snapshot.marketWatch.find(r => r.symbol === snapshot.asset.symbol)
 // ============================================================================
 

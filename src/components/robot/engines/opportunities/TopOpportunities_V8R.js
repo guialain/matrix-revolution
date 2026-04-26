@@ -749,6 +749,8 @@ const TopOpportunities_V8R = (() => {
         rsi_h1_s0:    num(row?.rsi_h1_s0),
         slope_h1_s0:  num(row?.slope_h1_s0),
         zscore_h1_s0: num(row?.zscore_h1_s0),
+        middle_h1:    num(row?.middle_h1),
+        sigma_h1:     num(row?.sigma_h1),
 
         // M15
         atr_m15:    num(row?.atr_m15),

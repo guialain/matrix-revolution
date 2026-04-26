@@ -20,11 +20,6 @@ import OpportunityRanking  from "./engines/confidence/OpportunityRanking";
 // ================= DECISION (NEO) =======================
 import AssetEligibility from "./engines/trading/AssetEligibility";
 
-// ================= PORTFOLIO / RISK =====================
-import AccountRisk          from "./engines/management/AccountRisk";
-import ExposureDistribution from "./engines/management/ExposureDistribution";
-import PortfolioManager     from "./engines/management/PortfolioManager";
-
 // ================= TRINITY FILTERS ======================
 
 import SignalFilters    from "./engines/trading/SignalFilters";
@@ -236,50 +231,29 @@ const RobotCore = {
     };
 
     // ======================================================================
-    // PHASE 2 — TRINITY (RÉALITÉ, TIMING, FILTRES)
+    // PHASE 2 — TRINITY (FILTRES TIMING M5)
     // ======================================================================
 
-    const accountRisk = AccountRisk.evaluate(snapshot.account);
-    const exposure    = ExposureDistribution.evaluate(snapshot.openPositions);
-
-    const portfolio = PortfolioManager.evaluate({
-      account:   snapshot.account,
-      positions: snapshot.openPositions,
-      market:    snapshot.asset
-    });
-
-    const closePositions = portfolio?.closePositions ?? [];
-
-    // --- Filtrage timing / structure (H1, M15, etc.)
     const filtered = SignalFilters.evaluate({
       opportunities: tradableMarket
     });
 
     const {
-      validOpportunities:   rawValid = [],
-      waitOpportunities:    rawWait  = [],
-      blockedOpportunities: rawBlocked = []
+      validOpportunities: rawValid = [],
+      waitOpportunities:  rawWait  = []
     } = filtered ?? {};
 
     // Stamp each opp with emittedAt only if not already set
     const stampEmittedAt = op => ({ ...op, emittedAt: op.emittedAt ?? Date.now() });
-    const validOpportunities   = rawValid.map(stampEmittedAt);
-    const waitOpportunities    = rawWait.map(stampEmittedAt);
-    const blockedOpportunities = rawBlocked.map(stampEmittedAt);
+    const validOpportunities = rawValid.map(stampEmittedAt);
+    const waitOpportunities  = rawWait.map(stampEmittedAt);
 
     const allowed = validOpportunities.length > 0;
 
     const trinity = {
-      accountRisk,
-      exposure,
-      portfolio,
-      closePositions,
-
       allowed,
-
       validOpportunities,
       waitOpportunities,
-      blockedOpportunities
     };
 
     // ======================================================================

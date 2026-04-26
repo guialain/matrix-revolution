@@ -18,8 +18,6 @@ import AnalysisConfidence  from "./engines/confidence/AnalysisConfidence";
 import OpportunityRanking  from "./engines/confidence/OpportunityRanking";
 
 // ================= DECISION (NEO) =======================
-import TradingBrain        from "./engines/decision/TradingBrain";
-import SignalExplanation   from "./engines/decision/SignalExplanation";
 import AssetEligibility from "./engines/trading/AssetEligibility";
 
 // ================= PORTFOLIO / RISK =====================
@@ -150,19 +148,6 @@ const RobotCore = {
       score
     });
 
-    const brain = TradingBrain.decide({
-      asset,
-      market: detected,
-      confidence,
-      ranking
-    });
-
-    const explanation = SignalExplanation.build({
-      asset,
-      market: detected,
-      brain
-    });
-
     // ======================================================================
     // PHASE 1.5 — ELIGIBILITY & VOLATILITY (TRINITY DIAGNOSTIC)
     // ======================================================================
@@ -229,12 +214,6 @@ const RobotCore = {
         }
       };
 
-      const finalScore = op.score + volBonus;
-
-      const reason = !eligibility?.eligible
-        ? "ELIGIBILITY"
-        : "OK";
-
       if (eligibility?.eligible) {
         tradableMarket.push(enriched);
       } else {
@@ -248,7 +227,6 @@ const RobotCore = {
       score,
       confidence,
       ranking,
-      explanation,
 
       topOpportunities: {
         ...detected,
@@ -279,15 +257,15 @@ const RobotCore = {
 
     const {
       validOpportunities:   rawValid = [],
-      waitOpportunities    = [],
-      blockedOpportunities = []
+      waitOpportunities:    rawWait  = [],
+      blockedOpportunities: rawBlocked = []
     } = filtered ?? {};
 
-    // Stamp each valid with emittedAt only if not already set
-    const validOpportunities = rawValid.map(op => ({
-      ...op,
-      emittedAt: op.emittedAt ?? Date.now()
-    }));
+    // Stamp each opp with emittedAt only if not already set
+    const stampEmittedAt = op => ({ ...op, emittedAt: op.emittedAt ?? Date.now() });
+    const validOpportunities   = rawValid.map(stampEmittedAt);
+    const waitOpportunities    = rawWait.map(stampEmittedAt);
+    const blockedOpportunities = rawBlocked.map(stampEmittedAt);
 
     const allowed = validOpportunities.length > 0;
 
@@ -298,7 +276,6 @@ const RobotCore = {
       closePositions,
 
       allowed,
-      blockers: [],
 
       validOpportunities,
       waitOpportunities,
@@ -340,7 +317,6 @@ const RobotCore = {
       closePositions,
 
       allowed,
-      blockers: trinity.blockers ?? [],
 
       validOpportunities,
       waitOpportunities,

@@ -30,7 +30,7 @@ const SignalFilters = (() => {
   //
   // relaxed : CONTINUATION dans le sens du trend fort
   // normal  : STANDARD / NEUTRE (défaut historique)
-  // strict  : REVERSAL contre le trend
+  // strict  : EXHAUSTION contre le trend
   // =========================================================
   const M5_THRESHOLDS = {
     relaxed: {
@@ -52,7 +52,7 @@ const SignalFilters = (() => {
     const level = String(opp?.intradayLevel ?? "").toUpperCase();
 
     const isCont = type === "CONTINUATION";
-    const isRev  = type === "REVERSAL";
+    const isExh  = type === "EXHAUSTION";
     const side   = opp?.side;
 
     const strongWithTrend =
@@ -64,7 +64,7 @@ const SignalFilters = (() => {
       (side === "SELL" && (level === "STRONG_UP"    || level === "EXPLOSIVE_UP"   || level === "UP"));
 
     if (isCont && strongWithTrend) return "relaxed";
-    if (isRev  && strongAgainst)   return "strict";
+    if (isExh  && strongAgainst)   return "strict";
     return "normal";
   }
 

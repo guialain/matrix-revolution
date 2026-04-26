@@ -18,18 +18,6 @@ import AssetEligibility from "./engines/trading/AssetEligibility";
 import SignalFilters    from "./engines/trading/SignalFilters";
 
 // ============================================================================
-// UTIL — VOLATILITY BONUS (TRINITY)
-// ============================================================================
-function volatilityBonus(volatilityLevel, side) {
-  switch (volatilityLevel) {
-    case "med":   return side === "BUY" ? +2 : -2;
-    case "high":  return side === "BUY" ? +5 : -5;
-    case "explo": return side === "BUY" ? +1 : -1;
-    default:      return 0;
-  }
-}
-
-// ============================================================================
 // CORE
 // ============================================================================
 const RobotCore = {
@@ -164,9 +152,6 @@ const RobotCore = {
       const volatilityRatio =
         eligibility?.context?.volatilityRatio ?? null;
 
-      // 🔑 BONUS VOLATILITÉ (TRINITY)
-      const volBonus = volatilityBonus(volatilityLevel, op.side);
-
       const enriched = {
         ...op,
 
@@ -176,20 +161,11 @@ const RobotCore = {
         rsi_m5:   rawRow?.rsi_m5   ?? null,
         slope_m5: rawRow?.slope_m5 ?? null,
 
-
         eligibility,
 
-        // état volatilité aplati
+        // état volatilité aplati (informatif)
         volatilityLevel,
         volatilityRatio,
-
-        // 🔑 SCORE FINAL TRINITY
-        score: op.score + volBonus,
-
-        scores: {
-          ...op.scores,
-          vol: volBonus
-        }
       };
 
       if (eligibility?.eligible) {

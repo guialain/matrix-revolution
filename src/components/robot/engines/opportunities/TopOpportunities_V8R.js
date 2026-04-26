@@ -788,7 +788,7 @@ const TopOpportunities_V8R = (() => {
     // DEBUG PIPELINE
     // ============================================================================
     if (TOP_CFG.debug) {
-      let cTotal = 0, cAntiSpike = 0, cResolve = 0, cExhaustionKill = 0, cScore = 0, cFinal = 0;
+      let cTotal = 0, cNonGrey = 0, cSelectRoute = 0, cExhaustionKill = 0, cScore = 0, cCheckConditions = 0;
 
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
@@ -813,7 +813,7 @@ const TopOpportunities_V8R = (() => {
         const _dslope_h1_dbg   = (_slope_h1_s0_dbg !== null && _slope_h1_dbg !== null)
           ? _slope_h1_s0_dbg - _slope_h1_dbg
           : null;
-        cAntiSpike++;
+        cNonGrey++;
 
         const intra         = num(row?.intraday_change);
         const intradayLevel = getIntradayLevel(intra, _intCfg);
@@ -829,7 +829,7 @@ const TopOpportunities_V8R = (() => {
         const _dbg_candidates = matchRoute(num(row?.rsi_h1_s0), num(row?.zscore_h1_s0));
         const _dbg_selected = selectRoute(_dbg_candidates, _dbg_slope_d1, _dbg_sd1s0, intradayLevel);
         if (!_dbg_selected) continue;
-        cResolve++;
+        cSelectRoute++;
 
         const activeSide = _dbg_selected.side;
         const activeType = _dbg_selected.type;
@@ -865,18 +865,18 @@ const TopOpportunities_V8R = (() => {
           continue;
         }
 
-        cFinal++;
+        cCheckConditions++;
       }
 
       console.info("TOPOPP V8R", { total_rows: rows.length, signals: opps.length });
 
       console.table({
         "0 — total rows":             { count: cTotal,          pct: "100%" },
-        "1 — non-grey rows":          { count: cAntiSpike,      pct: ((cAntiSpike/cTotal)*100).toFixed(1)+"%" },
-        "2 — after selectRoute":      { count: cResolve,        pct: ((cResolve/cAntiSpike)*100).toFixed(1)+"%" },
-        "3 — after exhaustionKill":   { count: cExhaustionKill, pct: ((cExhaustionKill/cResolve)*100).toFixed(1)+"%" },
+        "1 — non-grey rows":          { count: cNonGrey,      pct: ((cNonGrey/cTotal)*100).toFixed(1)+"%" },
+        "2 — after selectRoute":      { count: cSelectRoute,        pct: ((cSelectRoute/cNonGrey)*100).toFixed(1)+"%" },
+        "3 — after exhaustionKill":   { count: cExhaustionKill, pct: ((cExhaustionKill/cSelectRoute)*100).toFixed(1)+"%" },
         "4 — after scoreMin":         { count: cScore,          pct: ((cScore/cExhaustionKill)*100).toFixed(1)+"%" },
-        "5 — after checkConditions":  { count: cFinal,          pct: ((cFinal/cScore)*100).toFixed(1)+"%" },
+        "5 — after checkConditions":  { count: cCheckConditions,          pct: ((cCheckConditions/cScore)*100).toFixed(1)+"%" },
       });
     }
 

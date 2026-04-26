@@ -33,9 +33,8 @@ const RobotCore = {
 
     // --- 1.1 Analyse factuelle de l’actif
     const asset = AssetBrain.analyze({
-      asset:      snapshot.asset,
-      indicators: snapshot.indicators,
-      macro:      snapshot.macro
+      asset: snapshot.asset,
+      macro: snapshot.macro
     });
 
     // --- 1.2 Détection brute des opportunités (continuation + reversal)

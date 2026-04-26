@@ -24,7 +24,6 @@ export default function MatrixAnalysis() {
     openPositions: data.openPositions ?? [],
 
     asset: data.asset ?? null,
-    indicators: data.indicators ?? {},
     macro: data.macro ?? {},
 
     marketWatch: data.marketWatch ?? [],

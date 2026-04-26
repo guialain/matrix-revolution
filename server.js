@@ -311,26 +311,6 @@ function runTrailingStop() {
 // Trailing stop désactivé temporairement — réactiver en décommentant
 // setInterval(runTrailingStop, 1000);
 
-// ============================================================================
-// TIMEFRAME MAPPER
-// ============================================================================
-
-function mapTF(raw, key) {
-
-  if (!raw) return null;
-
-  return {
-    M1: num(raw[`${key}_m1`]),
-    M5: num(raw[`${key}_m5`]),
-    M15: num(raw[`${key}_m15`]),
-    M30: num(raw[`${key}_m30`]),
-    H1: num(raw[`${key}_h1`]),
-    H4: num(raw[`${key}_h4`]),
-    D1: num(raw[`${key}_d1`]),
-    W1: num(raw[`${key}_w1`]),
-    MN: num(raw[`${key}_mn`])
-  };
-}
 
 // ============================================================================
 // AGENT PUSH (remote user pushes CSV data)
@@ -450,7 +430,6 @@ app.get("/api/mt5data", (req, res) => {
 
     const accountRaw = cache.account;
     const assetRaw   = cache.asset;
-    const indiRaw    = cache.indicators;
     const macroRaw   = cache.macro;
     const openPosRaw = cache.openpositions ?? [];
 
@@ -535,15 +514,6 @@ app.get("/api/mt5data", (req, res) => {
         stops_level:  num(assetRaw.stops_level),
         ts:           assetRaw.ts,
         ms:           num(assetRaw.ms)
-      },
-
-      indicators: indiRaw && {
-        rsi:      mapTF(indiRaw, "rsi"),
-        rsiSlope: mapTF(indiRaw, "rsislope"),
-        atr:      mapTF(indiRaw, "atr"),
-        range:    mapTF(indiRaw, "range"),
-        high:     mapTF(indiRaw, "high"),
-        low:      mapTF(indiRaw, "low")
       },
 
       macro: macroRaw && {

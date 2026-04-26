@@ -161,15 +161,34 @@ function computeSLTP(op, cfg, snapshot) {
   const atrCap = Number(cfg.atrH1Cap);
   const atr = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atrRaw, atrCap) : atrRaw;
 
-  const slDist = atr * cfg.slAtr;
+  // TP : ATR-based (logique inchangee SL-2)
   const tpDist = atr * cfg.tpAtr;
 
-  let sl, tp;
+  // Phase SL-2 : SL en zscore (sigma_h1 based)
+  // Formule : prix_SL = middle_h1 + zscore_SL * sigma_h1
+  //          zscore_SL = entry_zscore +/- 1.5 selon side
+  const SL_DELTA_ZSCORE = 1.5;
+  const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
+  const entry_zscore = _num(op?.zscore_h1_s0);
+  const middle_h1    = _num(op?.middle_h1);
+  const sigma_h1     = _num(op?.sigma_h1);
+
+  if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
+    console.warn(`[AUTO-TRADER] [SL] ${op.symbol}: Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL`);
+    return null;
+  }
+
+  const zscore_SL = (op.side === "BUY")
+    ? entry_zscore - SL_DELTA_ZSCORE
+    : entry_zscore + SL_DELTA_ZSCORE;
+
+  let sl = middle_h1 + zscore_SL * sigma_h1;
+  const slDist = Math.abs(price - sl);
+
+  let tp;
   if (op.side === "BUY") {
-    sl = price - slDist;
     tp = price + tpDist;
   } else {
-    sl = price + slDist;
     tp = price - tpDist;
   }
 

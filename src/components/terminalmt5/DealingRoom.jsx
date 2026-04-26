@@ -91,18 +91,34 @@ const normalizePrice = (price) => {
   const atrCap = Number(cfg.atrH1Cap);
   const atrCapped = (Number.isFinite(atrCap) && atrCap > 0) ? Math.min(atr_h1, atrCap) : atr_h1;
 
-  const slDistance = atrCapped * cfg.slAtr;
+  // TP : ATR-based (logique inchangee SL-2)
   const tpDistance = atrCapped * cfg.tpAtr;
 
   const entry = selectedSide === "BUY" ? ask : bid;
 
-  let slValue, tpValue;
+  // Phase SL-2 : SL en zscore (sigma_h1 based)
+  // Formule : prix_SL = middle_h1 + zscore_SL * sigma_h1
+  //          zscore_SL = entry_zscore +/- 1.5 selon side
+  const SL_DELTA_ZSCORE = 1.5;
+  const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
+  const entry_zscore = _num(draftDeal?.zscore_h1_s0);
+  const middle_h1    = _num(draftDeal?.middle_h1);
+  const sigma_h1     = _num(draftDeal?.sigma_h1);
 
+  if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
+    console.warn('[SL] Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL calculation');
+    return null;
+  }
+
+  const zscore_SL = (selectedSide === "BUY")
+    ? entry_zscore - SL_DELTA_ZSCORE
+    : entry_zscore + SL_DELTA_ZSCORE;
+  let slValue = middle_h1 + zscore_SL * sigma_h1;
+
+  let tpValue;
   if (selectedSide === "BUY") {
-    slValue = entry - slDistance;
     tpValue = entry + tpDistance;
   } else {
-    slValue = entry + slDistance;
     tpValue = entry - tpDistance;
   }
 

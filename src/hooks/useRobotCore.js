@@ -92,7 +92,6 @@ const EMPTY = {
   allowed: false,
   validOpportunities: [],
   waitOpportunities: [],
-  closePositions: [],
 
   _raw: null
 };
@@ -228,17 +227,6 @@ export default function useRobotCore(snapshot) {
       }
     }
 
-    const closeOps = Array.isArray(trinity.closePositions)
-      ? trinity.closePositions.map(p => ({
-          symbol:     p.symbol,
-          side:       p.side,
-          urgency:    p.urgency,
-          reason:     p.reason,
-          pnl_atr_h1: p.pnl_atr_h1,
-          pnl_atr_h4: p.pnl_atr_h4
-        }))
-      : [];
-
     const allowed = finalValidOps.length > 0;
 
     // -----------------------------------------------------------------------
@@ -265,7 +253,6 @@ export default function useRobotCore(snapshot) {
       validOpportunities: finalValidOps,
       expiredOpportunities: expiredOps,
       waitOpportunities:  waitOps,
-      closePositions:     closeOps,
 
       _raw: { neo, trinity }
     };

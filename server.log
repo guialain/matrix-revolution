@@ -1,0 +1,11 @@
+◇ injected env (1) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+✅ users.json loaded — 4 users: [
+  'guialain777@gmail.com',
+  'guialain@yahoo.fr',
+  'mrducasangatte@gmail.com',
+  'koikoieric4@gmail.com'
+]
+⏳ Loading MT5 data...
+✅ MT5 cache ready (local polling active)
+✅ NEO MATRIX API running on http://localhost:3001
+🔥 Background polling active (1s)

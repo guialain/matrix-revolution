@@ -837,11 +837,31 @@ const TopOpportunities_V8R = (() => {
         if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
         cExhaustionKill++;
 
-        const score = activeType === "EXHAUSTION" ? 80
-                    : Math.max(0, Math.round(
-                        Math.abs(num(row?.slope_h1) ?? 0) * 50 +
-                        Math.abs((num(row?.rsi_h1) ?? 50) - 50) * 2
-                      ));
+        // Score debug = miroir exact de la prod (ScoreEngine.scoreXxx)
+        const _dbg_scoreRow = {
+          symbol: sym,
+          type: activeType, side: activeSide,
+          slope_h1:             num(row?.slope_h1),
+          dslope_h1:            _dslope_h1_dbg,
+          zscore_h1:            num(row?.zscore_h1),
+          rsi_h1:               num(row?.rsi_h1),
+          rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
+          rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
+          zscore_h1_min3:       num(row?.zscore_h1_min3),
+          zscore_h1_max3:       num(row?.zscore_h1_max3),
+          intraday_change:      intra,
+          atr_m15:              num(row?.atr_m15),
+          close:                num(row?.close),
+        };
+
+        let _dbg_scored;
+        if      (activeType === "EXHAUSTION"   && activeSide === "BUY")  _dbg_scored = scoreExhaustionBuy(_dbg_scoreRow);
+        else if (activeType === "EXHAUSTION"   && activeSide === "SELL") _dbg_scored = scoreExhaustionSell(_dbg_scoreRow);
+        else if (activeType === "CONTINUATION" && activeSide === "BUY")  _dbg_scored = scoreContinuationBuy(_dbg_scoreRow);
+        else if (activeType === "CONTINUATION" && activeSide === "SELL") _dbg_scored = scoreContinuationSell(_dbg_scoreRow);
+        else _dbg_scored = { total: 50, breakdown: {} };
+
+        const score = Math.round(_dbg_scored.total ?? 0);
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;
 

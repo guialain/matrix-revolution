@@ -34,7 +34,7 @@ import {
   getSlopeD1Zone,
   getAlignmentD1,
 } from "../../../../utils/marketLevels.js";
-import { scoreExhaustionBuy, scoreExhaustionSell, scoreContinuationBuy, scoreContinuationSell } from "./ScoreEngine.js";
+import { scoreOpportunity } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
 
@@ -678,24 +678,21 @@ const TopOpportunities_V8R = (() => {
 
       const scoreRow = {
         symbol,
-        slope_h1:             num(row?.slope_h1),
-        dslope_h1:            _dslope_h1_live,
-        zscore_h1:            num(row?.zscore_h1),
-        rsi_h1:               num(row?.rsi_h1),
-        rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
-        rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-        intraday_change:      intra,
-        atr_m15:              num(row?.atr_m15),
-        close:                num(row?.close),
+        type:           signalType,
+        side:           match.side,
+        rsi_h1:         num(row?.rsi_h1),
+        zscore_h1:      num(row?.zscore_h1),
+        slope_h1:       num(row?.slope_h1),
+        slope_h1_s0:    _slope_h1_s0,
+        dslope_h1:      _dslope_h1_live,
+        intraday_class: intradayLevel,
+        atr_m15:        num(row?.atr_m15),
+        close:          num(row?.close),
+        alignmentD1:    _alignmentD1,
+        mode:           signalMode,
       };
 
-      let scored;
-      if      (signalType === "EXHAUSTION"     && match.side === "BUY")  scored = scoreExhaustionBuy(scoreRow);
-      else if (signalType === "EXHAUSTION"     && match.side === "SELL") scored = scoreExhaustionSell(scoreRow);
-      else if (signalType === "CONTINUATION" && match.side === "BUY")  scored = scoreContinuationBuy(scoreRow);
-      else if (signalType === "CONTINUATION" && match.side === "SELL") scored = scoreContinuationSell(scoreRow);
-      else scored = { total: 50, breakdown: {} };
-
+      const scored = scoreOpportunity(scoreRow);
       const score     = Math.round(scored.total ?? 0);
       const breakdown = scored.breakdown ?? {};
 
@@ -832,27 +829,24 @@ const TopOpportunities_V8R = (() => {
         if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
         cExhaustionKill++;
 
-        // Score debug = miroir exact de la prod (ScoreEngine.scoreXxx)
+        // Score debug = miroir exact de la prod (ScoreEngine.scoreOpportunity)
         const _dbg_scoreRow = {
-          symbol: sym,
-          slope_h1:             num(row?.slope_h1),
-          dslope_h1:            _dslope_h1_dbg,
-          zscore_h1:            num(row?.zscore_h1),
-          rsi_h1:               num(row?.rsi_h1),
-          rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
-          rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-          intraday_change:      intra,
-          atr_m15:              num(row?.atr_m15),
-          close:                num(row?.close),
+          symbol:         sym,
+          type:           activeType,
+          side:           activeSide,
+          rsi_h1:         num(row?.rsi_h1),
+          zscore_h1:      num(row?.zscore_h1),
+          slope_h1:       num(row?.slope_h1),
+          slope_h1_s0:    _slope_h1_s0_dbg,
+          dslope_h1:      _dslope_h1_dbg,
+          intraday_class: intradayLevel,
+          atr_m15:        num(row?.atr_m15),
+          close:          num(row?.close),
+          alignmentD1:    _dbg_alignmentD1,
+          mode:           activeMode,
         };
 
-        let _dbg_scored;
-        if      (activeType === "EXHAUSTION"   && activeSide === "BUY")  _dbg_scored = scoreExhaustionBuy(_dbg_scoreRow);
-        else if (activeType === "EXHAUSTION"   && activeSide === "SELL") _dbg_scored = scoreExhaustionSell(_dbg_scoreRow);
-        else if (activeType === "CONTINUATION" && activeSide === "BUY")  _dbg_scored = scoreContinuationBuy(_dbg_scoreRow);
-        else if (activeType === "CONTINUATION" && activeSide === "SELL") _dbg_scored = scoreContinuationSell(_dbg_scoreRow);
-        else _dbg_scored = { total: 50, breakdown: {} };
-
+        const _dbg_scored = scoreOpportunity(_dbg_scoreRow);
         const score = Math.round(_dbg_scored.total ?? 0);
         if (score < TOP_CFG.scoreMin) continue;
         cScore++;

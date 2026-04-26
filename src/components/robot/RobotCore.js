@@ -77,8 +77,6 @@ const RobotCore = {
       atr_h1:      row.atr_h1       ?? null,
       rsi_h1_previouslow3:  row.rsi_h1_previouslow3  ?? null,
       rsi_h1_previoushigh3: row.rsi_h1_previoushigh3 ?? null,
-      zscore_h1_min3:       row.zscore_h1_min3       ?? null,
-      zscore_h1_max3:       row.zscore_h1_max3       ?? null,
       // H1 s0
       rsi_h1_s0:   row.rsi_h1_s0    ?? null,
       slope_h1_s0: row.slope_h1_s0  ?? null,

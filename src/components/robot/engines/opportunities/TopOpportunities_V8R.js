@@ -685,8 +685,6 @@ const TopOpportunities_V8R = (() => {
         rsi_h1:               num(row?.rsi_h1),
         rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
         rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-        zscore_h1_min3:       num(row?.zscore_h1_min3),
-        zscore_h1_max3:       num(row?.zscore_h1_max3),
         intraday_change:      intra,
         atr_m15:              num(row?.atr_m15),
         close:                num(row?.close),
@@ -742,8 +740,6 @@ const TopOpportunities_V8R = (() => {
         zscore_h1:      num(row?.zscore_h1),
         dz_h1:          num(row?.dz_h1),
         atr_h1:         num(row?.atr_h1),
-        zscore_h1_min3: num(row?.zscore_h1_min3),
-        zscore_h1_max3: num(row?.zscore_h1_max3),
 
         // H1 s0
         rsi_h1_s0:    num(row?.rsi_h1_s0),
@@ -847,8 +843,6 @@ const TopOpportunities_V8R = (() => {
           rsi_h1:               num(row?.rsi_h1),
           rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
           rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
-          zscore_h1_min3:       num(row?.zscore_h1_min3),
-          zscore_h1_max3:       num(row?.zscore_h1_max3),
           intraday_change:      intra,
           atr_m15:              num(row?.atr_m15),
           close:                num(row?.close),

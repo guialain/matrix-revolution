@@ -225,7 +225,7 @@ function scoreMode(mode) {
 export function scoreOpportunity(row) {
   const {
     type, side, symbol,
-    rsi_h1, zscore_h1,
+    rsi_h1, zscore_h1_s0,
     slope_h1, slope_h1_s0,
     dslope_h1,
     intraday_class,
@@ -234,7 +234,7 @@ export function scoreOpportunity(row) {
   } = row;
 
   const c1  = scoreRSI(rsi_h1, type, side);
-  const c2  = scoreZscore(zscore_h1, type);
+  const c2  = scoreZscore(zscore_h1_s0, type);
   const c3a = scoreSlopeZone(slope_h1,    symbol, type, side);
   const c3b = scoreSlopeZone(slope_h1_s0, symbol, type, side);
   const c4  = scoreSlopeZone(dslope_h1,   symbol, type, side);

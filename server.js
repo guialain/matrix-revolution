@@ -524,7 +524,7 @@ app.get("/api/mt5data", (req, res) => {
           symbol:          r.symbol,
           assetclass:      r.assetclass || null,
           price:           num(r.price),
-          close:           num(r.close),
+          close_m5_s1:     num(r.close_m5_s1),
           intraday_change: num(r.intraday_change),
           // D1
           rsi_d1:          num(r.rsi_d1),

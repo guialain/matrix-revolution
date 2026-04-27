@@ -229,7 +229,7 @@ export function scoreOpportunity(row) {
     slope_h1, slope_h1_s0,
     dslope_h1,
     intraday_class,
-    atr_m15, close,
+    atr_m15, close_m5_s1,
     alignmentD1, mode,
   } = row;
 
@@ -238,7 +238,7 @@ export function scoreOpportunity(row) {
   const c3a = scoreSlopeZone(slope_h1,    symbol, type, side);
   const c3b = scoreSlopeZone(slope_h1_s0, symbol, type, side);
   const c4  = scoreSlopeZone(dslope_h1,   symbol, type, side);
-  const c5  = scoreVolatilityRegime(symbol, atr_m15, close);
+  const c5  = scoreVolatilityRegime(symbol, atr_m15, close_m5_s1);
   const c6  = scoreIntraday(intraday_class, type, side);
   const c7  = scoreAlignment(alignmentD1, side);
   const c8  = scoreMode(mode);

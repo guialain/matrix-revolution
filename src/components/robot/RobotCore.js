@@ -43,7 +43,7 @@ const RobotCore = {
       assetclass:  row.assetclass   ?? null,
       timestamp:   row.timestamp    ?? null,
       price:       row.price        ?? null,
-      close:       row.close        ?? row.price ?? null,
+      close_m5_s1: row.close_m5_s1  ?? row.price ?? null,
       // D1
       rsi_d1:      row.rsi_d1      ?? null,
       slope_d1:    row.slope_d1    ?? null,

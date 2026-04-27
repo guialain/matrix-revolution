@@ -93,7 +93,7 @@ const SignalFilters = (() => {
   // VOLATILITY REGIME
   // =========================================================
   function getRegime(opp) {
-    return getVolatilityRegime(opp?.symbol, opp?.atr_m15, opp?.close);
+    return getVolatilityRegime(opp?.symbol, opp?.atr_m15, opp?.close_m5_s1);
   }
 
   function isBlockedVolatility(regime) {

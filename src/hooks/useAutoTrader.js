@@ -57,7 +57,7 @@ function computeEurPerLot(symbol, price, cfg) {
 }
 
 function computeLots(op, equity, cfg) {
-  const price = Number(op.close);
+  const price = Number(op.close_m5_s1);
   if (!Number.isFinite(price) || price <= 0) return null;
   if (!Number.isFinite(equity) || equity <= 0) return null;
 
@@ -146,13 +146,13 @@ function validateAllocation(symbol, lots, notional, equity, openPositions, cfg) 
 function computeSLTP(op, cfg, snapshot) {
   const scanRow = snapshot?.marketWatch?.find(r => r.symbol === op.symbol);
 
-  // Prix live broker (bid/ask) — fallback sur op.close si absent
+  // Prix live broker (bid/ask) — fallback sur op.close_m5_s1 si absent
   const liveAsk = Number(scanRow?.ask ?? 0);
   const liveBid = Number(scanRow?.bid ?? 0);
   const price =
     op.side === "BUY"
-      ? (liveAsk > 0 ? liveAsk : Number(op.close))
-      : (liveBid > 0 ? liveBid : Number(op.close));
+      ? (liveAsk > 0 ? liveAsk : Number(op.close_m5_s1))
+      : (liveBid > 0 ? liveBid : Number(op.close_m5_s1));
 
   if (!Number.isFinite(price) || price <= 0) return null;
 
@@ -357,7 +357,7 @@ export default function useAutoTrader(mode, robot, snapshot) {
       // ==================================================================
       // GUARD G9 — ValidateSize: price + atr valid
       // ==================================================================
-      const price = Number(op.close);
+      const price = Number(op.close_m5_s1);
       const atr   = Number(op.atr_h1);
       if (!Number.isFinite(price) || price <= 0) continue;
       if (!Number.isFinite(atr) || atr <= 0) continue;

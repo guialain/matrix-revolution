@@ -687,7 +687,7 @@ const TopOpportunities_V8R = (() => {
         dslope_h1:      _dslope_h1_live,
         intraday_class: intradayLevel,
         atr_m15:        num(row?.atr_m15),
-        close:          num(row?.close),
+        close_m5_s1:    num(row?.close_m5_s1),
         alignmentD1:    _alignmentD1,
         mode:           signalMode,
       };
@@ -761,7 +761,7 @@ const TopOpportunities_V8R = (() => {
         slope_m5_s0:  num(row?.slope_m5_s0),
         zscore_m5_s0: num(row?.zscore_m5_s0),
 
-        close:           num(row?.close),
+        close_m5_s1:     num(row?.close_m5_s1),
         intraday_change: intra,
         exhaustion:      match.route?.includes("EXHAUSTION")   ?? false,
         range_ratio_h1,
@@ -841,7 +841,7 @@ const TopOpportunities_V8R = (() => {
           dslope_h1:      _dslope_h1_dbg,
           intraday_class: intradayLevel,
           atr_m15:        num(row?.atr_m15),
-          close:          num(row?.close),
+          close_m5_s1:    num(row?.close_m5_s1),
           alignmentD1:    _dbg_alignmentD1,
           mode:           activeMode,
         };

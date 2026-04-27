@@ -26,7 +26,7 @@
 
 import { getRiskConfig } from "../config/RiskConfig.js";
 import { INTRADAY_CONFIG } from "../config/IntradayConfig.js";
-import { getSlopeConfig } from "../config/SlopeConfig.js";
+import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
 import {
   getIntradayLevel,
   getSlopeLevel,
@@ -182,7 +182,9 @@ const TopOpportunities_V8R = (() => {
     }
 
     // Etape 1 : zone slope_h1_s0
-    const zone_s0 = getSlopeLevel(slope_h1_s0, symbol);
+    // ZONE_RANK utilise les keys lowercase de getSlopeClass (up_weak, down_strong, etc.)
+    // getSlopeLevel retourne uppercase (SOFT_UP) — usage UI display uniquement.
+    const zone_s0 = getSlopeClass(slope_h1_s0, symbol);
     const zone_s0_rank = ZONE_RANK[zone_s0];
     if (zone_s0_rank === undefined) {
       funnel.inc('zoneUnknownFail');

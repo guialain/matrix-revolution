@@ -915,7 +915,12 @@ function toCsvLine(obj, columns) {
 app.post("/api/log_signal", (req, res) => {
   try {
     ensureSignalsLogFile();
-    fs.appendFileSync(SIGNALS_LOG_PATH, toCsvLine(req.body || {}, SIGNALS_LOG_COLUMNS));
+    // Normalisation timestamps : tolerer les anciens clients qui envoient ms epoch.
+    // Convertit en ISO 8601 pour homogeneite du CSV (Excel/pandas-friendly).
+    const body = { ...(req.body || {}) };
+    if (typeof body.emittedAt === "number") body.emittedAt = new Date(body.emittedAt).toISOString();
+    if (typeof body.loggedAt  === "number") body.loggedAt  = new Date(body.loggedAt).toISOString();
+    fs.appendFileSync(SIGNALS_LOG_PATH, toCsvLine(body, SIGNALS_LOG_COLUMNS));
     res.json({ ok: true });
   } catch (err) {
     console.error("[log_signal] error:", err);

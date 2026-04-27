@@ -176,12 +176,18 @@ const TopOpportunities_V8R = (() => {
 
   function checkConditions(slope_h1, slope_h1_s0, dslope_h1, zscore_h1_s0, conditions, side, symbol) {
     // Validations preliminaires : valeurs presentes
-    if (slope_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) return false;
+    if (slope_h1_s0 === null || dslope_h1 === null || zscore_h1_s0 === null) {
+      funnel.inc('nullGuardFail');
+      return false;
+    }
 
     // Etape 1 : zone slope_h1_s0
     const zone_s0 = getSlopeLevel(slope_h1_s0, symbol);
     const zone_s0_rank = ZONE_RANK[zone_s0];
-    if (zone_s0_rank === undefined) return false;
+    if (zone_s0_rank === undefined) {
+      funnel.inc('zoneUnknownFail');
+      return false;
+    }
 
     if (conditions.h1_s0_min !== null) {
       const min_rank = ZONE_RANK[conditions.h1_s0_min];

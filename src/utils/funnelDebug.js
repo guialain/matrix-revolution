@@ -12,6 +12,8 @@ const STAGES = [
   'marketWatchTotal',
   'matchRouteOut',
   'selectRouteOut',
+  'nullGuardFail',
+  'zoneUnknownFail',
   'slopeZoneFail',
   'dslopeFail',
   'zscoreCapFail',
@@ -51,13 +53,17 @@ export function inc(key, n = 1) {
 
 function buildRows() {
   const f = _f;
-  const slopeZoneIn  = f.selectRouteOut;
+  const nullGuardIn  = f.selectRouteOut;
+  const zoneUnkIn    = nullGuardIn - f.nullGuardFail;
+  const slopeZoneIn  = zoneUnkIn - f.zoneUnknownFail;
   const dslopeIn     = slopeZoneIn - f.slopeZoneFail;
   const zscoreCapIn  = dslopeIn - f.dslopeFail;
   return [
     { stage: 'marketWatch total',          in: f.marketWatchTotal,    out: f.marketWatchTotal },
     { stage: 'matchRoute (RSI×zscore)',    in: f.marketWatchTotal,    out: f.matchRouteOut },
     { stage: 'selectRoute (D1+IC)',        in: f.matchRouteOut,       out: f.selectRouteOut },
+    { stage: 'checkCond null guard',       in: nullGuardIn,           out: nullGuardIn - f.nullGuardFail },
+    { stage: 'checkCond zone unknown',     in: zoneUnkIn,             out: zoneUnkIn - f.zoneUnknownFail },
     { stage: 'checkCond slope_zone',       in: slopeZoneIn,           out: slopeZoneIn - f.slopeZoneFail },
     { stage: 'checkCond dslope_h1',        in: dslopeIn,              out: dslopeIn - f.dslopeFail },
     { stage: 'checkCond zscore_h1_s0',     in: zscoreCapIn,           out: f.checkConditionsOut },
@@ -75,7 +81,7 @@ function buildRows() {
 export function dump() {
   if (!enabled()) return;
   const f = _f;
-  const summary = `mw=${f.marketWatchTotal} match=${f.matchRouteOut} sel=${f.selectRouteOut} chk=${f.checkConditionsOut} v8r=${f.v8rEmitTrue} elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
+  const summary = `mw=${f.marketWatchTotal} match=${f.matchRouteOut} sel=${f.selectRouteOut} | null=${f.nullGuardFail} zUnk=${f.zoneUnknownFail} slz=${f.slopeZoneFail} ds=${f.dslopeFail} z=${f.zscoreCapFail} | chk=${f.checkConditionsOut} v8r=${f.v8rEmitTrue} elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
   // eslint-disable-next-line no-console
   console.log('%c[funnel]', 'background:#222;color:#bada55;padding:2px 6px;border-radius:3px;font-weight:bold', summary);
   // eslint-disable-next-line no-console

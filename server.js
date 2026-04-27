@@ -529,7 +529,11 @@ app.get("/api/mt5data", (req, res) => {
           // D1
           rsi_d1:          num(r.rsi_d1),
           slope_d1:        num(r.slope_d1),
-          dslope_d1:       num(r.dslope_d1),
+          dslope_d1_stale: num(r.dslope_d1),
+          dslope_d1_s0: (() => {
+            const a = num(r.slope_d1_s0), b = num(r.slope_d1);
+            return (a !== null && b !== null) ? a - b : null;
+          })(),
           drsi_d1:         num(r.drsi_d1),
           rsi_d1_s0:       num(r.rsi_d1_s0),
           slope_d1_s0:     num(r.slope_d1_s0),
@@ -542,7 +546,11 @@ app.get("/api/mt5data", (req, res) => {
           // H4
           rsi_h4:          num(r.rsi_h4),
           slope_h4:        num(r.slope_h4),
-          dslope_h4:       num(r.dslope_h4),
+          dslope_h4_stale: num(r.dslope_h4),
+          dslope_h4_s0: (() => {
+            const a = num(r.slope_h4_s0), b = num(r.slope_h4);
+            return (a !== null && b !== null) ? a - b : null;
+          })(),
           zscore_h4:       num(r.zscore_h4),
           dz_h4:           num(r.dz_h4),
           drsi_h4:         num(r.drsi_h4),
@@ -553,7 +561,11 @@ app.get("/api/mt5data", (req, res) => {
           // H1
           rsi_h1:          num(r.rsi_h1),
           slope_h1:        num(r.slope_h1),
-          dslope_h1:       num(r.dslope_h1),
+          dslope_h1_stale: num(r.dslope_h1),
+          dslope_h1_s0: (() => {
+            const a = num(r.slope_h1_s0), b = num(r.slope_h1);
+            return (a !== null && b !== null) ? a - b : null;
+          })(),
           zscore_h1:       num(r.zscore_h1),
           dz_h1:           num(r.dz_h1),
           drsi_h1:         num(r.drsi_h1),
@@ -573,7 +585,11 @@ app.get("/api/mt5data", (req, res) => {
           // M15
           rsi_m15:         num(r.rsi_m15),
           slope_m15:       num(r.slope_m15),
-          dslope_m15:      num(r.dslope_m15),
+          dslope_m15_stale: num(r.dslope_m15),
+          dslope_m15_s0: (() => {
+            const a = num(r.slope_m15_s0), b = num(r.slope_m15);
+            return (a !== null && b !== null) ? a - b : null;
+          })(),
           zscore_m15:      num(r.zscore_m15),
           drsi_m15:        num(r.drsi_m15),
           rsi_m15_s0:      num(r.rsi_m15_s0),
@@ -583,7 +599,11 @@ app.get("/api/mt5data", (req, res) => {
           // M5
           rsi_m5:          num(r.rsi_m5),
           slope_m5:        num(r.slope_m5),
-          dslope_m5:       num(r.dslope_m5),
+          dslope_m5_stale: num(r.dslope_m5),
+          dslope_m5_s0: (() => {
+            const a = num(r.slope_m5_s0), b = num(r.slope_m5);
+            return (a !== null && b !== null) ? a - b : null;
+          })(),
           zscore_m5:       num(r.zscore_m5),
           drsi_m5:         num(r.drsi_m5),
           rsi_m5_s0:       num(r.rsi_m5_s0),
@@ -865,8 +885,8 @@ const SIGNALS_LOG_COLUMNS = [
   "signal_id", "emittedAt", "loggedAt", "verdict", "wait_reason",
   "symbol", "side", "mode", "route", "score",
   "entry_zscore_h1", "intraday_class", "d1_state",
-  "slope_h1_s0", "dslope_h1",
-  "slope_m5_s0", "slope_m5", "dslope_m5", "is_vshape_m5",
+  "slope_h1_s0", "dslope_h1_s0",
+  "slope_m5_s0", "slope_m5", "dslope_m5_s0", "is_vshape_m5",
   "rsi_m5_s0", "zscore_m5",
   "middle_h1", "sigma_h1",
 ];
@@ -1086,10 +1106,10 @@ Exemples d'interprétation :
 
 ## ROUTE GUIDE (H1 bar patterns)
 - BUY-[28-50]       : reversal zone — rsi_h1_s0 28-50, zscore_h1_s0 ≤ -0.5
-- BUY-[50-72]       : continuation zone — rsi_h1_s0 50-72, dslope_h1 > 0.5
-- SELL-[50-72]      : continuation zone — rsi_h1_s0 50-72, dslope_h1 < -0.5
+- BUY-[50-72]       : continuation zone — rsi_h1_s0 50-72, dslope_h1_s0 > 0.5
+- SELL-[50-72]      : continuation zone — rsi_h1_s0 50-72, dslope_h1_s0 < -0.5
 - SELL-[28-50]      : reversal zone — rsi_h1_s0 28-50, zscore_h1_s0 ≥ 0.5
-- CONT-RESUME       : trend resuming after pause — dslope_h1 acceleration > 1.5
+- CONT-RESUME       : trend resuming after pause — dslope_h1_s0 acceleration > 1.5
 - EXHAUSTION=true   : counter-trend spike detected — higher reversal conviction
 
 ## SIGNAL QUALITY
@@ -1141,7 +1161,7 @@ app.post("/api/claude", async (req, res) => {
             `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
             ` score=${s.score ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"} mode=${s.mode ?? "—"}` +
             ` vol=${s.volatilityLevel ?? "—"} phase=${s.phase ?? "—"}` +
-            ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
+            ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1_s0)} z_s0=${f2(s.zscore_h1_s0)}` +
             ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
             ` tpAtr=${rc.tpAtr} slAtr=${rc.slAtr} TP=${tp} SL=${sl}` +
             ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)} m5Conf=${s.m5Confidence ?? "—"}` +
@@ -1156,7 +1176,7 @@ app.post("/api/claude", async (req, res) => {
           `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
           ` score=${s.score ?? "—"} wait=${s.waitState ?? "—"} route=${s.route ?? "—"} d1=${s.d1State ?? "—"}` +
           ` vol=${s.volatilityLevel ?? "—"}` +
-          ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1)} z_s0=${f2(s.zscore_h1_s0)}` +
+          ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1_s0)} z_s0=${f2(s.zscore_h1_s0)}` +
           ` rr=${f2(s.range_ratio_h1)}` +
           ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)}`
         ).join("\n")
@@ -1166,9 +1186,9 @@ app.post("/api/claude", async (req, res) => {
     const mdLines = mdFiltered.map(r =>
       `  ${(r.symbol ?? "").padEnd(12)} intra=${f2(r.intraday_change)}% IC_regime=${getIntradayRegime(r.intraday_change, r.symbol)}` +
       ` atr=${f2(r.atr_h1)}` +
-      ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1)}` +
-      ` | H4: rsi=${f1(r.rsi_h4)} sl=${f2(r.slope_h4)} sl_s0=${f2(r.slope_h4_s0)} dsl=${f2(r.dslope_h4)} z=${f2(r.zscore_h4)}` +
-      ` | H1: rsi=${f1(r.rsi_h1)} rsi_s0=${f1(r.rsi_h1_s0)} sl_s0=${f2(r.slope_h1_s0)} dsl=${f2(r.dslope_h1)} z=${f2(r.zscore_h1)} z_s0=${f2(r.zscore_h1_s0)} rr=${f2(r.range_ratio_h1)}` +
+      ` | D1: rsi=${f1(r.rsi_d1)} sl_s0=${f2(r.slope_d1_s0)} dsl=${f2(r.dslope_d1_s0)}` +
+      ` | H4: rsi=${f1(r.rsi_h4)} sl=${f2(r.slope_h4)} sl_s0=${f2(r.slope_h4_s0)} dsl=${f2(r.dslope_h4_s0)} z=${f2(r.zscore_h4)}` +
+      ` | H1: rsi=${f1(r.rsi_h1)} rsi_s0=${f1(r.rsi_h1_s0)} sl_s0=${f2(r.slope_h1_s0)} dsl=${f2(r.dslope_h1_s0)} z=${f2(r.zscore_h1)} z_s0=${f2(r.zscore_h1_s0)} rr=${f2(r.range_ratio_h1)}` +
       ` | M5s0: rsi=${f1(r.rsi_m5_s0)} sl=${f2(r.slope_m5_s0)} dsl=${f2(r.dslope_m5_s0)} z=${f2(r.zscore_m5_s0)}`
     ).join("\n");
 

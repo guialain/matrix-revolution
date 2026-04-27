@@ -176,10 +176,9 @@ export default function MarketTrend() {
           const dir    = change > 0 ? "up" : change < 0 ? "down" : "flat";
 
 
-          // dslope_d1 live (slope_d1_s0 − slope_d1) — identique au calcul V8R,
-          // sinon affichage/moteur désynchronisés (raw.dslope_d1 CSV ≠ live)
-          const _dslopeLive = (raw.slope_d1_s0 != null && raw.slope_d1 != null)
-            ? Number(raw.slope_d1_s0) - Number(raw.slope_d1)
+          // dslope_d1_s0 expose par server.js (calc s0 - s1, identique V8R)
+          const _dslopeLive = raw.dslope_d1_s0 != null
+            ? Number(raw.dslope_d1_s0)
             : null;
           const d1State  = getD1State(raw.slope_d1_s0, _dslopeLive);
           // null quand la donnée brute est absente → RegimeBadge retombe sur "---"

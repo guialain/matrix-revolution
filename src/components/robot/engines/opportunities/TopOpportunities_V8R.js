@@ -666,11 +666,11 @@ const TopOpportunities_V8R = (() => {
       match = { route: selected.route, side: selected.side };
 
       if (TOP_CFG.verbose) {
-        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_live=${_dslope_d1_live?.toFixed(2)} (csv=${num(row?.dslope_d1)?.toFixed(2)}) → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
+        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_live?.toFixed(2)} → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
         if (d1State === "D1_EMERGING_DOWN" || d1State === "D1_EMERGING_UP")
           console.log(`[D1_EMERGING] ${symbol} d1State=${d1State} → signalType=${signalType} signalMode=${signalMode}`);
         if (match.route?.includes("EXHAUSTION")) {
-          console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_live=${_dslope_h1_live?.toFixed(2)} csv=${num(row?.dslope_h1)?.toFixed(2)}`);
+          console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_s0=${_dslope_h1_live?.toFixed(2)}`);
         }
       }
 
@@ -684,7 +684,7 @@ const TopOpportunities_V8R = (() => {
         zscore_h1_s0:   num(row?.zscore_h1_s0),
         slope_h1:       num(row?.slope_h1),
         slope_h1_s0:    _slope_h1_s0,
-        dslope_h1:      _dslope_h1_live,
+        dslope_h1_s0:   _dslope_h1_live,
         intraday_class: intradayLevel,
         atr_m15:        num(row?.atr_m15),
         close_m5_s1:    num(row?.close_m5_s1),
@@ -717,25 +717,23 @@ const TopOpportunities_V8R = (() => {
         d1State,
 
         // D1
-        slope_d1_s0:    _sd1s0,
-        dslope_d1_live: _dslope_d1_live,   // live = slope_d1_s0 - slope_d1
-        dslope_d1_csv:  num(row?.dslope_d1), // original CSV pour debug
+        slope_d1_s0:  _sd1s0,
+        dslope_d1_s0: _dslope_d1_live,            // live = slope_d1_s0 - slope_d1
 
         // H4
-        slope_h4:    num(row?.slope_h4),
-        dslope_h4:   num(row?.dslope_h4),
-        rsi_h4_s0:   num(row?.rsi_h4_s0),
-        slope_h4_s0: num(row?.slope_h4_s0),
-        dslopeH4:    dslopeH4,
+        slope_h4:     num(row?.slope_h4),
+        dslope_h4_s0: num(row?.dslope_h4_s0),
+        rsi_h4_s0:    num(row?.rsi_h4_s0),
+        slope_h4_s0:  num(row?.slope_h4_s0),
+        dslopeH4:     dslopeH4,
 
         // H1 s1
-        rsi_h1:         num(row?.rsi_h1),
-        slope_h1:       num(row?.slope_h1),
-        dslope_h1:      _dslope_h1_live,      // live = slope_h1_s0 - slope_h1
-        dslope_h1_csv:  num(row?.dslope_h1),  // original CSV pour debug
-        zscore_h1:      num(row?.zscore_h1),
-        dz_h1:          num(row?.dz_h1),
-        atr_h1:         num(row?.atr_h1),
+        rsi_h1:       num(row?.rsi_h1),
+        slope_h1:     num(row?.slope_h1),
+        dslope_h1_s0: _dslope_h1_live,            // live = slope_h1_s0 - slope_h1
+        zscore_h1:       num(row?.zscore_h1),
+        dz_h1:           num(row?.dz_h1),
+        atr_h1:          num(row?.atr_h1),
 
         // H1 s0
         rsi_h1_s0:    num(row?.rsi_h1_s0),
@@ -745,16 +743,16 @@ const TopOpportunities_V8R = (() => {
         sigma_h1:     num(row?.sigma_h1),
 
         // M15
-        atr_m15:    num(row?.atr_m15),
-        rsi_m15:    num(row?.rsi_m15),
-        slope_m15:  num(row?.slope_m15),
-        dslope_m15: num(row?.dslope_m15),
+        atr_m15:       num(row?.atr_m15),
+        rsi_m15:       num(row?.rsi_m15),
+        slope_m15:     num(row?.slope_m15),
+        dslope_m15_s0: num(row?.dslope_m15_s0),
 
         // M5 s1
-        rsi_m5:    num(row?.rsi_m5),
-        slope_m5:  num(row?.slope_m5),
-        dslope_m5: num(row?.dslope_m5),
-        zscore_m5: num(row?.zscore_m5),
+        rsi_m5:       num(row?.rsi_m5),
+        slope_m5:     num(row?.slope_m5),
+        dslope_m5_s0: num(row?.dslope_m5_s0),
+        zscore_m5:    num(row?.zscore_m5),
 
         // M5 s0
         rsi_m5_s0:    num(row?.rsi_m5_s0),
@@ -838,7 +836,7 @@ const TopOpportunities_V8R = (() => {
           zscore_h1_s0:   num(row?.zscore_h1_s0),
           slope_h1:       num(row?.slope_h1),
           slope_h1_s0:    _slope_h1_s0_dbg,
-          dslope_h1:      _dslope_h1_dbg,
+          dslope_h1_s0:   _dslope_h1_dbg,
           intraday_class: intradayLevel,
           atr_m15:        num(row?.atr_m15),
           close_m5_s1:    num(row?.close_m5_s1),

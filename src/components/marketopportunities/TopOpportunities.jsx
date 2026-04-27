@@ -100,16 +100,19 @@ function NeoOpportunityLine({ op }) {
 
 export default function TopOpportunities({ opportunities }) {
   const list = opportunities?.list ?? [];
+  const tradable = list.filter(op =>
+    !op?.isWait && op?.route !== "WAIT" && op?.type !== "WAIT"
+  );
 
   return (
     <>
       <div className="neo-title neo-title-section">TOP OPPORTUNITIES</div>
 
-      {!list.length ? (
+      {!tradable.length ? (
         <div className="neo-muted">No exploitable opportunities</div>
       ) : (
         <div className="neo-op-list">
-          {list.slice(0, 6).map((op, i) => (
+          {tradable.slice(0, 6).map((op, i) => (
             <NeoOpportunityLine key={i} op={op} />
           ))}
         </div>

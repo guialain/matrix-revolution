@@ -21,7 +21,7 @@ function WaitSection({ opportunities }) {
         <div className="neo-op-list">
           {opportunities.slice(0, 6).map((op, i) => {
             const type      = String(op.type ?? "").toUpperCase();
-            const typeShort = type === "CONTINUATION" ? "CONT" : type === "REVERSAL" ? "REV" : type;
+            const typeShort = type === "CONTINUATION" ? "CONT" : type === "EXHAUSTION" ? "EXH" : type;
             const waitState = String(op.state ?? "").replace(/^WAIT_/, "");
 
             return (

@@ -57,7 +57,7 @@ function NeoOpportunityLine({ op }) {
   const phase     = op.signalPhase ?? op.signalType ?? "";
   const intraday  = op.intraday_change ?? null;
   const breakdown = op.score_breakdown ?? op.breakdown ?? null;
-  const typeShort = type === "CONTINUATION" ? "CONT" : type === "REVERSAL" ? "REV" : type;
+  const typeShort = type === "CONTINUATION" ? "CONT" : type === "EXHAUSTION" ? "EXH" : type;
 
   return (
     <div className="neo-op-card">
@@ -84,12 +84,12 @@ function NeoOpportunityLine({ op }) {
 
       {breakdown && (
         <div className="neo-op-breakdown">
-          <BreakdownBar label="RSI"   value={breakdown.rsiScore}        max={30} />
-          <BreakdownBar label="Bollinger"   value={breakdown.zscoreScore}     max={15} />
-          <BreakdownBar label="Slope"   value={breakdown.slopeScore}      max={20} />
-          <BreakdownBar label="D-Slope"  value={breakdown.dslopeScore}     max={10} />
-          <BreakdownBar label="Volatility"   value={breakdown.volatilityScore} max={7} />
-          <BreakdownBar label="Daily %" value={breakdown.intradayScore}   max={20} />
+          <BreakdownBar label="RSI"         value={breakdown.c1_rsi ?? 0}                                                                  max={3} />
+          <BreakdownBar label="Bollinger"   value={breakdown.c2_zscore ?? 0}                                                               max={5} />
+          <BreakdownBar label="Momentum H1" value={(breakdown.c3a_slope_s1 ?? 0) + (breakdown.c3b_slope_s0 ?? 0) + (breakdown.c4_dslope ?? 0)} max={9} />
+          <BreakdownBar label="Volatility"  value={breakdown.c5_volatility ?? 0}                                                           max={4} />
+          <BreakdownBar label="Intraday %"  value={breakdown.c6_intraday ?? 0}                                                             max={4} />
+          <BreakdownBar label="Daily Trend" value={(breakdown.c7_alignment ?? 0) + (breakdown.c8_mode ?? 0)}                                max={8} />
         </div>
       )}
     </div>

@@ -223,6 +223,7 @@ const RobotCore = {
     // FINAL — useRobotCore consomme uniquement neo + trinity
     // ======================================================================
 
+    funnel.dump();
     return { neo, trinity };
 
   }

@@ -289,7 +289,6 @@ const SignalFilters = (() => {
     }
 
     funnel.inc('waitOut', waitOpportunities.length);
-    funnel.dump();
 
     return { validOpportunities, waitOpportunities };
   }

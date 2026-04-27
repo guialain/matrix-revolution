@@ -17,6 +17,8 @@ import AssetEligibility from "./engines/trading/AssetEligibility";
 
 import SignalFilters    from "./engines/trading/SignalFilters";
 
+import * as funnel      from "../../utils/funnelDebug";
+
 // ============================================================================
 // CORE
 // ============================================================================
@@ -127,6 +129,11 @@ const RobotCore = {
       const symbol = op?.symbol;
       if (!symbol) continue;
 
+      // Skip WAIT inline pour le compteur eligibility (deja comptes en v8rEmitWait)
+      if (!op?.isWait && op?.route !== 'WAIT' && op?.type !== 'WAIT') {
+        funnel.inc('eligibilityIn');
+      }
+
       // 🔍 retrouver la ligne brute marketWatch
       const rawRow = (snapshot.marketWatch ?? []).find(r => r.symbol === symbol);
 
@@ -166,6 +173,9 @@ const RobotCore = {
       };
 
       if (eligibility?.eligible) {
+        if (!op?.isWait && op?.route !== 'WAIT' && op?.type !== 'WAIT') {
+          funnel.inc('eligibilityOut');
+        }
         tradableMarket.push(enriched);
       } else {
         notTradableMarket.push(enriched);

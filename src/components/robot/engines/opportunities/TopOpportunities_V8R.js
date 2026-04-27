@@ -37,6 +37,7 @@ import {
 import { scoreOpportunity } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
+import * as funnel from "../../../../utils/funnelDebug.js";
 
 // ============================================================================
 // SPACING TECHNIQUE MOTEUR (ne pas confondre avec cooldown UI) :
@@ -184,11 +185,11 @@ const TopOpportunities_V8R = (() => {
 
     if (conditions.h1_s0_min !== null) {
       const min_rank = ZONE_RANK[conditions.h1_s0_min];
-      if (zone_s0_rank < min_rank) return false;
+      if (zone_s0_rank < min_rank) { funnel.inc('slopeZoneFail'); return false; }
     }
     if (conditions.h1_s0_max !== null) {
       const max_rank = ZONE_RANK[conditions.h1_s0_max];
-      if (zone_s0_rank > max_rank) return false;
+      if (zone_s0_rank > max_rank) { funnel.inc('slopeZoneFail'); return false; }
     }
 
     // Etape 2 : dslope_h1 selon V-shape ou cas normal
@@ -200,23 +201,23 @@ const TopOpportunities_V8R = (() => {
         const cap = conditions.h1_dslope_max_v_shape !== null
           ? conditions.h1_dslope_max_v_shape
           : conditions.h1_dslope_max;
-        if (cap !== null && dslope_h1 > cap) return false;
-        if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) return false;
+        if (cap !== null && dslope_h1 > cap) { funnel.inc('dslopeFail'); return false; }
+        if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) { funnel.inc('dslopeFail'); return false; }
       } else {
         const floor = conditions.h1_dslope_min_v_shape !== null
           ? conditions.h1_dslope_min_v_shape
           : conditions.h1_dslope_min;
-        if (floor !== null && dslope_h1 < floor) return false;
-        if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) return false;
+        if (floor !== null && dslope_h1 < floor) { funnel.inc('dslopeFail'); return false; }
+        if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) { funnel.inc('dslopeFail'); return false; }
       }
     } else {
-      if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) return false;
-      if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) return false;
+      if (conditions.h1_dslope_min !== null && dslope_h1 < conditions.h1_dslope_min) { funnel.inc('dslopeFail'); return false; }
+      if (conditions.h1_dslope_max !== null && dslope_h1 > conditions.h1_dslope_max) { funnel.inc('dslopeFail'); return false; }
     }
 
     // Etape 3 : zscore_h1_s0
-    if (conditions.zscoreCap !== null && zscore_h1_s0 > conditions.zscoreCap) return false;
-    if (conditions.zscoreFloor !== null && zscore_h1_s0 < conditions.zscoreFloor) return false;
+    if (conditions.zscoreCap !== null && zscore_h1_s0 > conditions.zscoreCap) { funnel.inc('zscoreCapFail'); return false; }
+    if (conditions.zscoreFloor !== null && zscore_h1_s0 < conditions.zscoreFloor) { funnel.inc('zscoreCapFail'); return false; }
 
     return true;
   }
@@ -471,8 +472,10 @@ const TopOpportunities_V8R = (() => {
   // MAIN
   // ============================================================================
   function evaluate(marketData = [], opts = {}) {
+    funnel.reset();
     const rows = Array.isArray(marketData) ? marketData : [];
     if (!rows.length) return [];
+    funnel.inc('marketWatchTotal', rows.length);
 
     const TOP_CFG = {
       minSignalSpacingMinutes: num(opts?.minSignalSpacingMinutes) ?? 0,
@@ -514,6 +517,7 @@ const TopOpportunities_V8R = (() => {
                          (_zscore_h1_s0_check > -0.5 && _zscore_h1_s0_check < 0.5);
 
       if (isGreyZone) {
+        funnel.inc('v8rEmitWait');
         opps.push({
           type:        null,
           mode:        null,
@@ -572,6 +576,7 @@ const TopOpportunities_V8R = (() => {
       // Pre-filtre spike multi-source (H1 + IC) — emit payload WAIT a l'UI
       const _spike = detectSpike(_slope_h1_s0, intradayLevel);
       if (_spike.isSpike) {
+        funnel.inc('v8rEmitWait');
         opps.push({
           type:            'WAIT',
           waitReason:      'spike',
@@ -635,10 +640,12 @@ const TopOpportunities_V8R = (() => {
         if (c.side === 'SELL' && _skipSell) return false;
         return true;
       });
+      if (candidates.length > 0) funnel.inc('matchRouteOut');
 
       // Etape 5 : selectRoute — choisit selon D1 + IC
       const selected = selectRoute(candidates, _slope_d1, _sd1s0, intradayLevel);
       if (!selected) continue;
+      funnel.inc('selectRouteOut');
 
       // Etape 6 : getMode (D1 + IC, sans H1)
       signalMode = getMode(selected.side, intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
@@ -661,6 +668,7 @@ const TopOpportunities_V8R = (() => {
       );
 
       if (!conditionsOk) continue;
+      funnel.inc('checkConditionsOut');
 
       // La route est deja determinee par selectRoute, on cree match a partir de selected
       match = { route: selected.route, side: selected.side };
@@ -697,6 +705,7 @@ const TopOpportunities_V8R = (() => {
       const breakdown = scored.breakdown ?? {};
 
       if (score < TOP_CFG.scoreMin) continue;
+      funnel.inc('v8rEmitTrue');
 
       opps.push({
         type:        signalType,

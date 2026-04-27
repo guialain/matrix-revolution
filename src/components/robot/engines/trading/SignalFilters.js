@@ -15,6 +15,7 @@
 
 import { getVolatilityRegime } from "../config/VolatilityConfig";
 import { TIMING_CONFIG } from "../config/TimingConfig";
+import * as funnel from "../../../../utils/funnelDebug";
 
 const SignalFilters = (() => {
 
@@ -215,6 +216,8 @@ const SignalFilters = (() => {
   // =========================================================
   function evaluate({ opportunities } = {}) {
     const opps = Array.isArray(opportunities) ? opportunities : [];
+    const tradableOpps = opps.filter(o => o?.side && !o?.isWait && o?.route !== 'WAIT' && o?.type !== 'WAIT');
+    funnel.inc('signalFiltersIn', tradableOpps.length);
 
     const validOpportunities = [];
     const waitOpportunities  = [];
@@ -222,6 +225,7 @@ const SignalFilters = (() => {
     for (const opp of opps) {
       const side = opp?.side;
       if (!side) continue;
+      const isTradable = !opp?.isWait && opp?.route !== 'WAIT' && opp?.type !== 'WAIT';
 
       // Pre-calc M5 V-shape detection (sert pour wait_reason + payload)
       const _slope_m5    = num(opp?.slope_m5);
@@ -260,6 +264,7 @@ const SignalFilters = (() => {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_OVEREXTENDED", wait_reason: "M5_GATE1", m5Level: mode, is_vshape_m5 });
         continue;
       }
+      if (isTradable) funnel.inc('gate1Pass');
 
       // 6. M5 SetupOK — CONT vs V-shape, 3 conditions AND
       if (!isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode)) {
@@ -267,6 +272,7 @@ const SignalFilters = (() => {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_SETUP", wait_reason, m5Level: mode, is_vshape_m5 });
         continue;
       }
+      if (isTradable) funnel.inc('gate2Pass');
 
       // 7. M5 confidence — calculé sur les opportunités valides
       const m5Confidence = getM5Confidence(opp, side);
@@ -279,7 +285,11 @@ const SignalFilters = (() => {
         m5Level:          mode,         // "relaxed" | "soft" | "normal" | "strict"
         is_vshape_m5,
       });
+      if (isTradable) funnel.inc('validOut');
     }
+
+    funnel.inc('waitOut', waitOpportunities.length);
+    funnel.dump();
 
     return { validOpportunities, waitOpportunities };
   }

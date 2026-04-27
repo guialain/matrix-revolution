@@ -30,8 +30,9 @@ function buildSignalId(opp) {
 function buildSignalLogPayload(opp, verdict) {
   return {
     signal_id:       buildSignalId(opp),
-    emittedAt:       opp.emittedAt,
-    loggedAt:        Date.now(),
+    // Format ISO 8601 UTC pour lisibilite Excel/pandas (vs ms epoch -> 1.7E+12)
+    emittedAt:       Number.isFinite(opp.emittedAt) ? new Date(opp.emittedAt).toISOString() : "",
+    loggedAt:        new Date().toISOString(),
     verdict,                                  // "VALID" ou "WAIT"
     wait_reason:     opp.wait_reason || "",
     symbol:          opp.symbol,

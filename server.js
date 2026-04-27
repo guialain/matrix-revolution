@@ -889,6 +889,7 @@ const SIGNALS_LOG_COLUMNS = [
   "slope_m5_s0", "slope_m5", "dslope_m5_s0", "is_vshape_m5",
   "rsi_m5_s0", "zscore_m5",
   "middle_h1", "sigma_h1",
+  "spread", "tp_used", "sl_used",
 ];
 // Separateur ; aligne avec les autres CSV du projet (Excel FR compatible)
 const SIGNALS_LOG_SEP = ";";

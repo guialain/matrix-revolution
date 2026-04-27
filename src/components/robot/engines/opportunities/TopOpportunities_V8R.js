@@ -759,6 +759,9 @@ const TopOpportunities_V8R = (() => {
         middle_h1:    num(row?.middle_h1),
         sigma_h1:     num(row?.sigma_h1),
 
+        // Spread broker (pour fallback TP/SL)
+        spread:       num(row?.spread),
+
         // M15
         atr_m15:       num(row?.atr_m15),
         rsi_m15:       num(row?.rsi_m15),

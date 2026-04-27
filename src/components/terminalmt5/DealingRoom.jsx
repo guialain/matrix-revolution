@@ -93,31 +93,35 @@ const normalizePrice = (price) => {
 
   const entry = selectedSide === "BUY" ? ask : bid;
 
-  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based)
-  // Formule : prix = middle_h1 + zscore_target * sigma_h1
-  //          zscore_SL = entry_zscore +/- 1.5 selon side
-  //          zscore_TP = entry_zscore +/- 0.5 selon side (ratio 1:3 avec SL)
+  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based) avec fallback spread
+  //   distance_sigma = 0.5 * sigma_h1 (TP) / 1.5 * sigma_h1 (SL)
+  //   distance_min   = 4 * spread (TP) / 12 * spread (SL)
+  //   distance_used  = max(distance_sigma, distance_min)
+  // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
   const SL_DELTA_ZSCORE = 1.5;
   const TP_DELTA_ZSCORE = 0.5;
+  const SL_SPREAD_MULT  = 12;
+  const TP_SPREAD_MULT  = 4;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(draftDeal?.zscore_h1_s0);
   const middle_h1    = _num(draftDeal?.middle_h1);
   const sigma_h1     = _num(draftDeal?.sigma_h1);
+  const spread       = _num(asset?.spread ?? draftDeal?.spread);
 
   if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
     console.warn('[SLTP] Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL/TP calculation');
     return null;
   }
 
-  const zscore_SL = (selectedSide === "BUY")
-    ? entry_zscore - SL_DELTA_ZSCORE
-    : entry_zscore + SL_DELTA_ZSCORE;
-  let slValue = middle_h1 + zscore_SL * sigma_h1;
+  const sl_dist_sigma = SL_DELTA_ZSCORE * sigma_h1;
+  const sl_dist_min   = (spread !== null && spread > 0) ? SL_SPREAD_MULT * spread : 0;
+  const sl_dist_used  = Math.max(sl_dist_sigma, sl_dist_min);
+  let slValue = (selectedSide === "BUY") ? entry - sl_dist_used : entry + sl_dist_used;
 
-  const zscore_TP = (selectedSide === "BUY")
-    ? entry_zscore + TP_DELTA_ZSCORE
-    : entry_zscore - TP_DELTA_ZSCORE;
-  let tpValue = middle_h1 + zscore_TP * sigma_h1;
+  const tp_dist_sigma = TP_DELTA_ZSCORE * sigma_h1;
+  const tp_dist_min   = (spread !== null && spread > 0) ? TP_SPREAD_MULT * spread : 0;
+  const tp_dist_used  = Math.max(tp_dist_sigma, tp_dist_min);
+  let tpValue = (selectedSide === "BUY") ? entry + tp_dist_used : entry - tp_dist_used;
 
 
 

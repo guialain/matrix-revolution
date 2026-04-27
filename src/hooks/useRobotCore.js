@@ -53,7 +53,33 @@ function buildSignalLogPayload(opp, verdict) {
     zscore_m5:       opp.zscore_m5,
     middle_h1:       opp.middle_h1,
     sigma_h1:        opp.sigma_h1,
+    spread:          opp.spread ?? null,
+    // TP/SL distances appliquees (miroir computeSLTP : max(sigma_delta, spread_mult * spread))
+    tp_used:         computeTpUsed(opp),
+    sl_used:         computeSlUsed(opp),
   };
+}
+
+// Miroir de la logique computeSLTP (DealingRoom + useAutoTrader) — sortie en distance abs.
+function computeTpUsed(opp) {
+  const sigma  = Number(opp?.sigma_h1);
+  const spread = Number(opp?.spread);
+  const tpSigma  = Number.isFinite(sigma) ? 0.5 * sigma : null;
+  const tpMin    = Number.isFinite(spread) && spread > 0 ? 4 * spread : null;
+  if (tpSigma === null && tpMin === null) return null;
+  if (tpSigma === null) return tpMin;
+  if (tpMin   === null) return tpSigma;
+  return Math.max(tpSigma, tpMin);
+}
+function computeSlUsed(opp) {
+  const sigma  = Number(opp?.sigma_h1);
+  const spread = Number(opp?.spread);
+  const slSigma  = Number.isFinite(sigma) ? 1.5 * sigma : null;
+  const slMin    = Number.isFinite(spread) && spread > 0 ? 12 * spread : null;
+  if (slSigma === null && slMin === null) return null;
+  if (slSigma === null) return slMin;
+  if (slMin   === null) return slSigma;
+  return Math.max(slSigma, slMin);
 }
 
 function logSignal(opp, verdict) {

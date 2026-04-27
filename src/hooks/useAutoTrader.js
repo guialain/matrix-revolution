@@ -156,33 +156,37 @@ function computeSLTP(op, cfg, snapshot) {
 
   if (!Number.isFinite(price) || price <= 0) return null;
 
-  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based)
-  // Formule : prix = middle_h1 + zscore_target * sigma_h1
-  //          zscore_SL = entry_zscore +/- 1.5 selon side
-  //          zscore_TP = entry_zscore +/- 0.5 selon side (ratio 1:3 avec SL)
+  // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based) avec fallback spread
+  //   distance_sigma = 0.5 * sigma_h1 (TP) / 1.5 * sigma_h1 (SL)
+  //   distance_min   = 4 * spread (TP) / 12 * spread (SL)
+  //   distance_used  = max(distance_sigma, distance_min)
+  // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
   const SL_DELTA_ZSCORE = 1.5;
   const TP_DELTA_ZSCORE = 0.5;
+  const SL_SPREAD_MULT  = 12;
+  const TP_SPREAD_MULT  = 4;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(op?.zscore_h1_s0);
   const middle_h1    = _num(op?.middle_h1);
   const sigma_h1     = _num(op?.sigma_h1);
+  const spread       = _num(scanRow?.spread ?? op?.spread);
 
   if (entry_zscore === null || middle_h1 === null || sigma_h1 === null) {
     console.warn(`[AUTO-TRADER] [SLTP] ${op.symbol}: Missing zscore inputs (zscore_h1_s0, middle_h1, sigma_h1) - abort SL/TP`);
     return null;
   }
 
-  const zscore_SL = (op.side === "BUY")
-    ? entry_zscore - SL_DELTA_ZSCORE
-    : entry_zscore + SL_DELTA_ZSCORE;
-  let sl = middle_h1 + zscore_SL * sigma_h1;
-  const slDist = Math.abs(price - sl);
+  const sl_dist_sigma = SL_DELTA_ZSCORE * sigma_h1;
+  const sl_dist_min   = (spread !== null && spread > 0) ? SL_SPREAD_MULT * spread : 0;
+  const sl_dist_used  = Math.max(sl_dist_sigma, sl_dist_min);
+  let sl = (op.side === "BUY") ? price - sl_dist_used : price + sl_dist_used;
+  const slDist = sl_dist_used;
 
-  const zscore_TP = (op.side === "BUY")
-    ? entry_zscore + TP_DELTA_ZSCORE
-    : entry_zscore - TP_DELTA_ZSCORE;
-  let tp = middle_h1 + zscore_TP * sigma_h1;
-  const tpDist = Math.abs(tp - price);
+  const tp_dist_sigma = TP_DELTA_ZSCORE * sigma_h1;
+  const tp_dist_min   = (spread !== null && spread > 0) ? TP_SPREAD_MULT * spread : 0;
+  const tp_dist_used  = Math.max(tp_dist_sigma, tp_dist_min);
+  let tp = (op.side === "BUY") ? price + tp_dist_used : price - tp_dist_used;
+  const tpDist = tp_dist_used;
 
   // Enforce broker stopsLevel (minimum distance from entry)
   const stopsLevel = Number(cfg.stopsLevel);

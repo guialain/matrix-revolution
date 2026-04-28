@@ -10,9 +10,9 @@ import { useEffect, useRef } from "react";
 import ExitOnExtremeM1 from "../components/robot/engines/management/ExitOnExtremeM1";
 import { sendCloseToMT5 } from "../utilitaires/sendMT5Instructions";
 
-// Kill-switch global : desactive tant que le bug rsi_m1_s0=0 n'est pas fixe
-// (63 closes en 7min sur SELL avec rsi=0 < RSI_LOW=25 toujours vrai).
-const GUARD_ENABLED = false;
+// Kill-switch global : reactive apres fix MQL5 (rsi_m1_s0 desormais expose
+// par TopMoversScanner_NEO recompile). Patch defensif rsi===0 conserve.
+const GUARD_ENABLED = true;
 
 const INFLIGHT_TIMEOUT_MS = 10_000;
 

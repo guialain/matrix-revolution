@@ -10,6 +10,10 @@ import { useEffect, useRef } from "react";
 import ExitOnExtremeM1 from "../components/robot/engines/management/ExitOnExtremeM1";
 import { sendCloseToMT5 } from "../utilitaires/sendMT5Instructions";
 
+// Kill-switch global : desactive tant que le bug rsi_m1_s0=0 n'est pas fixe
+// (63 closes en 7min sur SELL avec rsi=0 < RSI_LOW=25 toujours vrai).
+const GUARD_ENABLED = false;
+
 const INFLIGHT_TIMEOUT_MS = 10_000;
 
 const API_BASE = typeof window !== "undefined" && window.location?.hostname === "localhost"
@@ -20,6 +24,7 @@ export default function useExitGuards(snapshot) {
   const inFlight = useRef(new Map()); // ticket -> expiresAt (ms)
 
   useEffect(() => {
+    if (!GUARD_ENABLED) return;
     if (!snapshot) return;
 
     const positions   = snapshot.openPositions ?? [];

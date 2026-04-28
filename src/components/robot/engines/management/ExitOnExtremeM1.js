@@ -50,7 +50,9 @@ const ExitOnExtremeM1 = (() => {
       // Lookup rsi_m1_s0
       const row = marketWatch.find(r => r.symbol === p.symbol);
       const rsi = Number(row?.rsi_m1_s0);
-      if (!Number.isFinite(rsi)) continue;
+      // Garde-fou : rsi=0 est statistiquement improbable sur RSI reel,
+      // c'est une valeur sentinel suspecte (probable bug en amont).
+      if (!Number.isFinite(rsi) || rsi === 0) continue;
 
       const side = String(p.side ?? "").toUpperCase();
       let reason = null;

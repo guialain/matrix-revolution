@@ -8,9 +8,13 @@ import TerminalMT5 from "./components/pages/TerminalMT5";
 import Performance from "./components/pages/Performance";
 
 import useMT5Data from "./hooks/useMT5Data";
+import useExitGuards from "./hooks/useExitGuards";
 
 export default function App() {
   const { data: snapshot, ready } = useMT5Data();
+
+  // Exit guards : fermeture auto sur RSI M1 extreme (en profit + warmup OK)
+  useExitGuards(snapshot);
 
   if (!ready) {
     return (

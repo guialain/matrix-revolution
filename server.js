@@ -610,6 +610,8 @@ app.get("/api/mt5data", (req, res) => {
           slope_m5_s0:     num(r.slope_m5_s0),
           drsi_m5_s0:      num(r.drsi_m5_s0),
           zscore_m5_s0:    num(r.zscore_m5_s0),
+          // M1 (exit guard)
+          rsi_m1_s0:       num(r.rsi_m1_s0),
           // Meta
           atr_m15:         num(r.atr_m15),
           spread:          num(r.spread),
@@ -925,6 +927,35 @@ app.post("/api/log_signal", (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error("[log_signal] error:", err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+// ============================================================================
+// LOGGER /api/log_exit — append CSV exit_guards.csv (fermetures auto)
+// ============================================================================
+const EXIT_LOG_PATH = path.join(path.resolve(), "logs", "exit_guards.csv");
+const EXIT_LOG_COLUMNS = [
+  "ticket", "symbol", "side",
+  "opened_at", "closed_at",
+  "rsi_at_close", "pnl_pts", "pnl_eur", "spread_points",
+  "reason",
+];
+const EXIT_LOG_HEADER = EXIT_LOG_COLUMNS.join(SIGNALS_LOG_SEP) + "\n";
+
+function ensureExitLogFile() {
+  const dir = path.dirname(EXIT_LOG_PATH);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(EXIT_LOG_PATH)) fs.writeFileSync(EXIT_LOG_PATH, EXIT_LOG_HEADER);
+}
+
+app.post("/api/log_exit", (req, res) => {
+  try {
+    ensureExitLogFile();
+    fs.appendFileSync(EXIT_LOG_PATH, toCsvLine(req.body || {}, EXIT_LOG_COLUMNS));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[log_exit] error:", err);
     res.status(500).json({ ok: false, error: err.message });
   }
 });

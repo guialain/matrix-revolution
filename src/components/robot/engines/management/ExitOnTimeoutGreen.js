@@ -14,6 +14,9 @@
 // rsi_at_close : null (non pertinent pour ce guard)
 // ============================================================================
 
+// Kill-switch local : desactive ce guard en gardant ExitOnExtremeM1 actif
+const MODULE_ENABLED = false;
+
 const ROBOT_MAGIC = 202601;
 const MAX_HOLD_MS = 90 * 60 * 1000; // 90 min
 
@@ -26,6 +29,7 @@ const ExitOnTimeoutGreen = (() => {
    */
   // eslint-disable-next-line no-unused-vars
   function evaluate(positions, marketWatch) {
+    if (!MODULE_ENABLED) return [];
     if (!Array.isArray(positions) || !positions.length) return [];
 
     const now = Date.now();

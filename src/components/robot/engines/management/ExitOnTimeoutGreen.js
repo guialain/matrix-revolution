@@ -15,7 +15,7 @@
 // ============================================================================
 
 const ROBOT_MAGIC = 202601;
-const MAX_HOLD_MS = 45 * 60 * 1000; // 45 min
+const MAX_HOLD_MS = 90 * 60 * 1000; // 90 min
 
 const ExitOnTimeoutGreen = (() => {
 

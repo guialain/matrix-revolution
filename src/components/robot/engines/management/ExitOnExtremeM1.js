@@ -13,8 +13,8 @@
 
 const ROBOT_MAGIC = 202601;
 const WARMUP_MS   = 120_000;
-const RSI_HIGH    = 75;
-const RSI_LOW     = 25;
+const RSI_HIGH    = 73;
+const RSI_LOW     = 27;
 
 const ExitOnExtremeM1 = (() => {
 

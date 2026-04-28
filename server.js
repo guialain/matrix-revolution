@@ -907,6 +907,7 @@ function toCsvLine(obj, columns) {
   return columns.map(col => {
     const v = obj[col];
     if (v === null || v === undefined) return "";
+    if (typeof v === "number" && Number.isNaN(v)) return "";   // NaN -> vide
     const s = String(v);
     if (s.includes(SIGNALS_LOG_SEP) || s.includes('"') || s.includes("\n")) {
       return '"' + s.replace(/"/g, '""') + '"';

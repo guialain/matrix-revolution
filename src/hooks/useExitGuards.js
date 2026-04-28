@@ -1,13 +1,17 @@
 // ============================================================================
 // useExitGuards.js
-// Rôle : surveiller les openPositions, declencher fermeture auto sur RSI M1
-//        extreme contre la position (en profit + warmup OK).
-//        Anti-rafale : inFlight Set 10s par ticket.
+// Rôle : surveiller les openPositions, declencher fermeture auto via guards
+//        modulaires :
+//          - ExitOnExtremeM1   : RSI M1 extreme + en profit + warmup
+//          - ExitOnTimeoutGreen: time-stop 45 min sur positions vertes
+//        Anti-rafale partage : inFlight Set 10s par ticket (mutualise les 2).
 //        Log fire-and-forget vers /api/log_exit (CSV exit_guards.csv).
+//        Kill-switch GUARD_ENABLED s'applique aux deux modules.
 // ============================================================================
 
 import { useEffect, useRef } from "react";
-import ExitOnExtremeM1 from "../components/robot/engines/management/ExitOnExtremeM1";
+import ExitOnExtremeM1     from "../components/robot/engines/management/ExitOnExtremeM1";
+import ExitOnTimeoutGreen  from "../components/robot/engines/management/ExitOnTimeoutGreen";
 import { sendCloseToMT5 } from "../utilitaires/sendMT5Instructions";
 
 // Kill-switch global : reactive apres fix MQL5 (rsi_m1_s0 desormais expose
@@ -38,8 +42,18 @@ export default function useExitGuards(snapshot) {
       if (exp < now) inFlight.current.delete(ticket);
     }
 
-    const closes = ExitOnExtremeM1.evaluate(positions, marketWatch);
-    if (!closes.length) return;
+    // Evaluate both guards, merge results, dedupe par ticket (premiere occurrence gagne)
+    const closesExtreme = ExitOnExtremeM1.evaluate(positions, marketWatch);
+    const closesTimeout = ExitOnTimeoutGreen.evaluate(positions, marketWatch);
+    const merged = [];
+    const seen   = new Set();
+    for (const c of [...closesExtreme, ...closesTimeout]) {
+      if (seen.has(c.ticket)) continue;
+      seen.add(c.ticket);
+      merged.push(c);
+    }
+    if (!merged.length) return;
+    const closes = merged;
 
     for (const c of closes) {
       if (inFlight.current.has(c.ticket)) continue;
@@ -69,7 +83,8 @@ export default function useExitGuards(snapshot) {
       }).catch(() => {});
 
       // eslint-disable-next-line no-console
-      console.info(`[ExitGuard] ${c.symbol} ${c.side} ticket=${c.ticket} rsi_m1=${c.rsi_at_close.toFixed(1)} pnl=${c.pnl_pts}pts → CLOSE (${c.reason})`);
+      const rsiStr = Number.isFinite(c.rsi_at_close) ? `rsi_m1=${c.rsi_at_close.toFixed(1)}` : "rsi=N/A";
+      console.info(`[ExitGuard] ${c.symbol} ${c.side} ticket=${c.ticket} ${rsiStr} pnl=${c.pnl_pts}pts → CLOSE (${c.reason})`);
     }
   }, [snapshot]);
 }

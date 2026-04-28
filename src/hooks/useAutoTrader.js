@@ -163,8 +163,8 @@ function computeSLTP(op, cfg, snapshot) {
   // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
   const SL_DELTA_ZSCORE = 1.5;
   const TP_DELTA_ZSCORE = 0.5;
-  const SL_SPREAD_MULT  = 12;
-  const TP_SPREAD_MULT  = 4;
+  const SL_SPREAD_MULT  = 16;
+  const TP_SPREAD_MULT  = 5;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(op?.zscore_h1_s0);
   const middle_h1    = _num(op?.middle_h1);

@@ -78,7 +78,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 0.76rem;
+  font-size: 0.92rem;
 }
 
 /* ============================================================
@@ -86,8 +86,8 @@
 ============================================================ */
 .mw-table thead th {
   text-align: center;
-  padding: 0.30rem 0.20rem;
-  font-size: 0.66rem;
+  padding: 0.40rem 0.20rem;
+  font-size: 0.80rem;
   font-weight: 300;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -103,7 +103,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 0.76rem;
+  font-size: 0.92rem;
 }
 
 /* largeur optimisée pour éviter scroll */
@@ -118,10 +118,10 @@
    BODY
 ============================================================ */
 .mw-table tbody td {
-  padding: 0.18rem 0.20rem;
+  padding: 0.24rem 0.20rem;
   border-bottom: 1px dashed rgba(255,255,255,0.04);
   text-align: center;
-  font-size: 0.78rem;
+  font-size: 0.94rem;
   font-weight: 300;
   color: #ffe9c2;
   line-height: 1.2;

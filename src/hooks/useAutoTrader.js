@@ -19,7 +19,7 @@ import { sendOrderToMT5 } from "../utilitaires/sendMT5Instructions";
 
 const MAX_OPEN_POSITIONS = 8;
 const DEDUP_WINDOW_MS   = 60_000;  // same symbol+side cooldown
-const MIN_MARGIN_LEVEL  = 200;     // ValidateMargin threshold
+const MIN_MARGIN_LEVEL  = 350;     // ValidateMargin threshold
 const LEVERAGE_MAX      = 20;      // CapitalAllocation.LEVERAGE_MAX
 
 // ============================================================================

@@ -58,6 +58,46 @@ export function buildCooldownSet(positions, cooldownMs) {
 }
 
 // ============================================================================
+// Cooldown intra-VALID (etage 2) — throttle 15s par symbol
+//
+// Empeche la rafale de VALID republies a chaque tick (~800ms) tant que
+// MANUAL n'a pas valide / AUTO n'a pas encore envoye d'ordre. Granularite :
+// symbol seul (BUY+SELL confondus). Map singleton module-level.
+// ============================================================================
+
+const VALID_COOLDOWN_MS = 15000;
+const lastValidEmission = new Map(); // symbol -> timestamp ms
+
+/**
+ * Filtre une liste d'opportunites VALID en supprimant celles dont le symbol
+ * a deja emis un VALID il y a moins de VALID_COOLDOWN_MS.
+ *
+ * @param {Array} validOpps
+ * @returns {Array} validOpps filtrees
+ */
+export function filterValidCooldown(validOpps) {
+  if (!Array.isArray(validOpps) || !validOpps.length) return [];
+  const now = Date.now();
+  const out = [];
+  for (const opp of validOpps) {
+    const sym = opp?.symbol;
+    if (!sym) continue;
+    const last = lastValidEmission.get(sym);
+    if (Number.isFinite(last) && (now - last) < VALID_COOLDOWN_MS) continue;
+    lastValidEmission.set(sym, now);
+    out.push(opp);
+  }
+  return out;
+}
+
+/**
+ * Reset (utile pour tests ou flush manuel).
+ */
+export function resetValidCooldown() {
+  lastValidEmission.clear();
+}
+
+// ============================================================================
 // Cooldown intra-WAIT (etage 3) — throttle 5s par symbol
 //
 // Empeche la republication d'un meme WAIT toutes les ~800ms (tick rate).

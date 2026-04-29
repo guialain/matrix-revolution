@@ -14,8 +14,8 @@
 // rsi_at_close : null (non pertinent pour ce guard)
 // ============================================================================
 
-// Kill-switch local : reactive avec MAX_HOLD_MS = 45 min
-const MODULE_ENABLED = true;
+// Kill-switch local : desactive temporairement (test conditions etage 2/3)
+const MODULE_ENABLED = false;
 
 const ROBOT_MAGIC = 202601;
 const MAX_HOLD_MS = 45 * 60 * 1000; // 45 min

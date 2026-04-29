@@ -86,12 +86,12 @@
 /* ─── COLUMN HEADERS ────────────────────────────────────── */
 
 .mt-col-headers {
-  padding: 10px 16px;
+  padding: 13px 16px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .mt-ch {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -112,7 +112,7 @@
 }
 
 .mt-row {
-  padding: 6px 16px;
+  padding: 8px 16px;
   min-height: 32px;
   transition: background 0.2s;
   cursor: default;
@@ -134,7 +134,7 @@
 
 .mt-asset {
   justify-content: flex-start;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: #e8d9a8;
@@ -154,7 +154,7 @@
 
 .mt-pct-value {
   display: block;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -167,7 +167,7 @@
 
 .mt-mval {
   font-family: monospace;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -206,7 +206,7 @@
   padding: 3px 10px;
   border-radius: 12px;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
   white-space: nowrap;

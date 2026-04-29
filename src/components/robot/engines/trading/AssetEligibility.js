@@ -9,6 +9,7 @@
 
 import GlobalMarketHours from "./GlobalMarketHours";
 import { getVolatilityRegime, isTradableVolatility } from '../config/VolatilityConfig';
+import { ALLOWED_SYMBOLS } from '../../../../config/allowedSymbols';
 
 // ============================================================================
 // Helper — lookup de la row marketWatch pour un symbole
@@ -43,20 +44,8 @@ export const BLOCKED_SYMBOLS = [
   "JAPAN_225",
 ];
 
-export const ALLOWED_SYMBOLS = [
-  // FX
-  "EURUSD", "AUDUSD", "GBPUSD", "USDJPY", "USDCHF", "EURJPY", "GBPJPY", "AUDJPY",
-  // INDEX
-  "GERMANY_40", "UK_100", "US_30", "US_500", "US_TECH100", "JAPAN_225",
-  // CRYPTO
-  "BTCUSD", "BTCEUR", "BTCJPY", "ETHUSD",
-  // METAL
-  "GOLD", "SILVER",
-  // ENERGY
-  "CrudeOIL", "BRENT_OIL", "GASOLINE",
-  // AGRI
-  "WHEAT",
-];
+// ALLOWED_SYMBOLS importe depuis src/config/allowedSymbols.js (source unique)
+export { ALLOWED_SYMBOLS };
 
 // ============================================================================
 // CORE

@@ -9,7 +9,7 @@ import { useState, useCallback } from "react";
 import useMT5Data       from "../../hooks/useMT5Data";
 import useClosedTrades  from "../../hooks/useClosedTrades";
 
-import PerformanceKPI   from "../matrixanalysis/Performance";
+import Results         from "./Results";
 import OpenPositions    from "../terminalmt5/OpenPositions";
 import ClosedTrades     from "../matrixanalysis/ClosedTrades";
 
@@ -41,7 +41,7 @@ export default function Performance() {
 
       {/* ── DROITE ── */}
       <div className="perf-page-col perf-page-right">
-        <PerformanceKPI
+        <Results
           account={account}
           trades={allTrades}
           onFilteredTrades={handleFilteredTrades}

@@ -146,9 +146,9 @@ function StatBox({ label, value, sub, color }) {
   );
 }
 
-// ─── Performance ─────────────────────────────────────────────────────────────
+// ─── Results ─────────────────────────────────────────────────────────────────
 
-export default function Performance({ account, trades = [], onFilteredTrades }) {
+export default function Results({ account, trades = [], onFilteredTrades }) {
   const [preset, setPreset]         = useState("day");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo]     = useState("");

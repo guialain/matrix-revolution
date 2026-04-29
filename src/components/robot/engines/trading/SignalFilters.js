@@ -37,10 +37,10 @@ const SignalFilters = (() => {
   // V-shape detecte si slope_m5 (s1) contre le sens du trade
   // =========================================================
   const CONT_BUY = {
-    relaxed: { s0_min: -5.0, s0_max:  7.0, dslope_min: -4.0, s1_min: null },
-    soft:    { s0_min: -3.0, s0_max:  6.0, dslope_min: -2.5, s1_min: null },
-    normal:  { s0_min: -1.0, s0_max:  5.0, dslope_min: -1.0, s1_min: -1.5 },
-    strict:  { s0_min:  0.5, s0_max:  4.0, dslope_min:  0.0, s1_min:  0.0 },
+    relaxed: { s0_min: -5.0, s0_max:  5.5, dslope_min: -4.0, s1_min: null },
+    soft:    { s0_min: -3.0, s0_max:  4.5, dslope_min: -2.5, s1_min: null },
+    normal:  { s0_min: -1.0, s0_max:  3.5, dslope_min: -1.0, s1_min: -1.5 },
+    strict:  { s0_min:  0.5, s0_max:  2.5, dslope_min:  0.0, s1_min:  0.0 },
   };
 
   const VSHAPE_BUY = {
@@ -51,10 +51,10 @@ const SignalFilters = (() => {
   };
 
   const CONT_SELL = {
-    relaxed: { s0_min: -7.0, s0_max:  5.0, dslope_max:  4.0, s1_max: null },
-    soft:    { s0_min: -6.0, s0_max:  3.0, dslope_max:  2.5, s1_max: null },
-    normal:  { s0_min: -5.0, s0_max:  1.0, dslope_max:  1.0, s1_max:  1.5 },
-    strict:  { s0_min: -4.0, s0_max: -0.5, dslope_max:  0.0, s1_max:  0.0 },
+    relaxed: { s0_min: -5.5, s0_max:  5.0, dslope_max:  4.0, s1_max: null },
+    soft:    { s0_min: -4.5, s0_max:  3.0, dslope_max:  2.5, s1_max: null },
+    normal:  { s0_min: -3.5, s0_max:  1.0, dslope_max:  1.0, s1_max:  1.5 },
+    strict:  { s0_min: -2.5, s0_max: -0.5, dslope_max:  0.0, s1_max:  0.0 },
   };
 
   const VSHAPE_SELL = {

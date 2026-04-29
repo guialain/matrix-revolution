@@ -2,6 +2,12 @@
 // allowedSymbols.js — source de verite UNIQUE pour la whitelist symbol
 // Utilise par : server.js (filtrage marketWatch + Claude API context),
 //               AssetEligibility.js (gate per-symbol)
+//
+// ⚠️ MIRROR : cette liste doit rester synchronisee avec l'input
+// EnabledSymbols dans TopMoversScanner_NEO.mq5
+// (terminal MT5 → Onglet Experts → proprietes EA → onglet Inputs).
+// Si desynchronise : pas de bug fonctionnel (Node refiltre cote serveur),
+// juste perte de l'optimisation CPU cote MT5.
 // ============================================================================
 
 export const ALLOWED_SYMBOLS = [

@@ -3,6 +3,11 @@
 // Utilise par : server.js (filtrage marketWatch + Claude API context),
 //               AssetEligibility.js (gate per-symbol)
 //
+// ⚠️ Cette liste contient 22 symboles trades + 5 context-only.
+// Les context-only (DOLLAR_INDX, PLATINUM, PALLADIUM, COCOA, COFFEE_C)
+// ne sont PAS trades par le bot — ils servent de proxies macro pour
+// NeoMacroContext (Data_Structure.mqh, FillMacroContext()).
+//
 // ⚠️ MIRROR : cette liste doit rester synchronisee avec l'input
 // EnabledSymbols dans TopMoversScanner_NEO.mq5
 // (terminal MT5 → Onglet Experts → proprietes EA → onglet Inputs).
@@ -23,6 +28,8 @@ export const ALLOWED_SYMBOLS = [
   "CrudeOIL", "BRENT_OIL", "GASOLINE",
   // AGRI
   "WHEAT",
+  // CONTEXT_ONLY (non trades, utilises comme proxies macro NeoMacroContext)
+  "DOLLAR_INDX", "PLATINUM", "PALLADIUM", "COCOA", "COFFEE_C",
 ];
 
 const ALLOWED_SET = new Set(ALLOWED_SYMBOLS.map(s => s.toUpperCase()));

@@ -74,7 +74,7 @@ function computeTpUsed(opp) {
 function computeSlUsed(opp) {
   const sigma  = Number(opp?.sigma_h1);
   const spread = Number(opp?.spread);
-  const slSigma  = Number.isFinite(sigma) ? 1.5 * sigma : null;
+  const slSigma  = Number.isFinite(sigma) ? 1.6 * sigma : null;
   const slMin    = Number.isFinite(spread) && spread > 0 ? 16 * spread : null;
   if (slSigma === null && slMin === null) return null;
   if (slSigma === null) return slMin;

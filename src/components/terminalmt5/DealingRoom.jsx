@@ -98,7 +98,7 @@ const normalizePrice = (price) => {
   //   distance_min   = 4 * spread (TP) / 12 * spread (SL)
   //   distance_used  = max(distance_sigma, distance_min)
   // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
-  const SL_DELTA_ZSCORE = 1.5;
+  const SL_DELTA_ZSCORE = 1.6;
   const TP_DELTA_ZSCORE = 0.4;
   const SL_SPREAD_MULT  = 16;
   const TP_SPREAD_MULT  = 4;

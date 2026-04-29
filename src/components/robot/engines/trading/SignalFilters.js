@@ -182,36 +182,6 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // M5 CONFIDENCE — concordance s1 + s0
-  //
-  // "strong" : s1 et s0 pointent dans la même direction
-  //            → signal M5 haute confiance
-  // "normal" : s1 seul ou contradiction s1/s0
-  // =========================================================
-  function getM5Confidence(opp, side) {
-    const slope_s0 = num(opp?.slope_m5_s0);
-    const slope_s1 = num(opp?.slope_m5);
-    const rsi_s0   = num(opp?.rsi_m5_s0);
-    const dslope   = (slope_s0 !== null && slope_s1 !== null)
-      ? slope_s0 - slope_s1
-      : null;
-
-    if (dslope === null || slope_s0 === null) return "normal";
-
-    if (side === "BUY") {
-      if (dslope > 0 && slope_s0 > 0 && (rsi_s0 === null || rsi_s0 < 65))
-        return "strong";
-    }
-
-    if (side === "SELL") {
-      if (dslope < 0 && slope_s0 < 0 && (rsi_s0 === null || rsi_s0 > 35))
-        return "strong";
-    }
-
-    return "normal";
-  }
-
-  // =========================================================
   // MAIN
   // =========================================================
   function evaluate({ opportunities } = {}) {
@@ -291,14 +261,10 @@ const SignalFilters = (() => {
       }
       if (isTradable) funnel.inc('gate2Pass');
 
-      // 7. M5 confidence — calculé sur les opportunités valides
-      const m5Confidence = getM5Confidence(opp, side);
-
       validOpportunities.push({
         ...opp,
         state:           "VALID",
         volatilityRegime: regime ?? null,
-        m5Confidence,    // "strong" | "normal"
         m5Level:          mode,         // "relaxed" | "soft" | "normal" | "strict"
         is_vshape_m5,
       });

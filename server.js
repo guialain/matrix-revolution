@@ -1195,7 +1195,7 @@ app.post("/api/claude", async (req, res) => {
             ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1_s0)} z_s0=${f2(s.zscore_h1_s0)}` +
             ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
             ` tpAtr=${rc.tpAtr} slAtr=${rc.slAtr} TP=${tp} SL=${sl}` +
-            ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)} m5Conf=${s.m5Confidence ?? "—"}` +
+            ` | EXHST=${boo(s.exhaustion)} CONT-RES=${boo(s.contResume)}` +
             ` | IC_regime=${getIntradayRegime(s.intraday_change, s.symbol)} IC_val=${s.intraday_change ?? "—"}%` +
             ` IC_seuils: ${formatIntradayConfig(s.symbol)}`
           );

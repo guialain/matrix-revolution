@@ -57,6 +57,49 @@ export function buildCooldownSet(positions, cooldownMs) {
   return set;
 }
 
+// ============================================================================
+// Cooldown intra-WAIT (etage 3) — throttle 5s par symbol
+//
+// Empeche la republication d'un meme WAIT toutes les ~800ms (tick rate).
+// Granularite : symbol seul (BUY+SELL+wait_reason confondus).
+// VALID jamais affecte (different appel cote orchestrateur).
+// Map singleton module-level : survit aux re-renders React, perdue au
+// hard-reload navigateur (acceptable : reset propre).
+// ============================================================================
+
+const WAIT_COOLDOWN_MS = 5000;
+const lastWaitEmission = new Map(); // symbol -> timestamp ms
+
+/**
+ * Filtre une liste d'opportunites WAIT en supprimant celles dont le symbol
+ * a deja emis un WAIT il y a moins de WAIT_COOLDOWN_MS.
+ * Les opportunites passantes ont leur timestamp mis a jour.
+ *
+ * @param {Array} waitOpps
+ * @returns {Array} waitOpps filtrees (meme objets, pas de copie)
+ */
+export function filterWaitCooldown(waitOpps) {
+  if (!Array.isArray(waitOpps) || !waitOpps.length) return [];
+  const now = Date.now();
+  const out = [];
+  for (const opp of waitOpps) {
+    const sym = opp?.symbol;
+    if (!sym) continue;
+    const last = lastWaitEmission.get(sym);
+    if (Number.isFinite(last) && (now - last) < WAIT_COOLDOWN_MS) continue;
+    lastWaitEmission.set(sym, now);
+    out.push(opp);
+  }
+  return out;
+}
+
+/**
+ * Reset (utile pour tests ou flush manuel).
+ */
+export function resetWaitCooldown() {
+  lastWaitEmission.clear();
+}
+
 // ── HELPER ─────────────────────────────────────────────────────────────────
 // MT5 format: "2026.04.29 14:30" -> ISO UTC ms
 function parseOpenTime(open_time) {

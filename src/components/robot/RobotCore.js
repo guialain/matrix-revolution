@@ -19,7 +19,7 @@ import SignalFilters    from "./engines/trading/SignalFilters";
 import SignalFrequency  from "./engines/trading/SignalFrequency";
 
 import * as funnel      from "../../utils/funnelDebug";
-import { buildCooldownSet } from "../../utils/tradeCooldown";
+import { buildCooldownSet, filterWaitCooldown } from "../../utils/tradeCooldown";
 
 // ============================================================================
 // CORE
@@ -223,7 +223,9 @@ const RobotCore = {
     // Stamp each opp with emittedAt only if not already set
     const stampEmittedAt = op => ({ ...op, emittedAt: op.emittedAt ?? Date.now() });
     const validOpportunities = rawValid.map(stampEmittedAt);
-    const waitOpportunities  = rawWait.map(stampEmittedAt);
+    // Etage 3 : throttle WAIT 5s par symbol (VALID inchanges).
+    // Empeche la republication ~800ms des memes WAIT, allege CSV + UI.
+    const waitOpportunities  = filterWaitCooldown(rawWait.map(stampEmittedAt));
 
     const allowed = validOpportunities.length > 0;
 

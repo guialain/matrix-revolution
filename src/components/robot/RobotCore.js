@@ -16,8 +16,10 @@ import AssetEligibility from "./engines/trading/AssetEligibility";
 // ================= TRINITY FILTERS ======================
 
 import SignalFilters    from "./engines/trading/SignalFilters";
+import SignalFrequency  from "./engines/trading/SignalFrequency";
 
 import * as funnel      from "../../utils/funnelDebug";
+import { buildCooldownSet } from "../../utils/tradeCooldown";
 
 // ============================================================================
 // CORE
@@ -109,7 +111,19 @@ const RobotCore = {
     // distinct du cooldown UI personnel géré par SignalFrequency côté trader.
     // Un signal valide est republié toutes les 1 min tant qu'il persiste,
     // pour permettre au trader de le voir même s'il ne regarde pas en temps réel.
-    const allOpps = TopOpportunities_V8R.evaluate(topRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
+
+    // Cooldown UI-driven : skip evaluation des actifs avec position robot
+    // ouverte depuis < cooldownMin minutes (cf SignalFrequency.getCooldownMinutes,
+    // dropdown DealPipeline). Granularite symbol seul (BUY+SELL confondus),
+    // filtre magic=ROBOT_MAGIC, compteur s'arrete a la fermeture.
+    const cooldownMin = SignalFrequency.getCooldownMinutes() || 0;
+    const cooldownMs  = cooldownMin * 60 * 1000;
+    const symbolsInCooldown = buildCooldownSet(snapshot.openPositions ?? [], cooldownMs);
+    const filteredRows = symbolsInCooldown.size > 0
+      ? topRows.filter(r => !symbolsInCooldown.has(r.symbol))
+      : topRows;
+
+    const allOpps = TopOpportunities_V8R.evaluate(filteredRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 

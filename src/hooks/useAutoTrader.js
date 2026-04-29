@@ -164,7 +164,7 @@ function computeSLTP(op, cfg, snapshot) {
   const SL_DELTA_ZSCORE = 1.5;
   const TP_DELTA_ZSCORE = 0.4;
   const SL_SPREAD_MULT  = 16;
-  const TP_SPREAD_MULT  = 5;
+  const TP_SPREAD_MULT  = 4;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;
   const entry_zscore = _num(op?.zscore_h1_s0);
   const middle_h1    = _num(op?.middle_h1);

@@ -64,7 +64,7 @@ function buildSignalLogPayload(opp, verdict) {
 function computeTpUsed(opp) {
   const sigma  = Number(opp?.sigma_h1);
   const spread = Number(opp?.spread);
-  const tpSigma  = Number.isFinite(sigma) ? 0.5 * sigma : null;
+  const tpSigma  = Number.isFinite(sigma) ? 0.4 * sigma : null;
   const tpMin    = Number.isFinite(spread) && spread > 0 ? 5 * spread : null;
   if (tpSigma === null && tpMin === null) return null;
   if (tpSigma === null) return tpMin;

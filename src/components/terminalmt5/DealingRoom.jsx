@@ -99,7 +99,7 @@ const normalizePrice = (price) => {
   //   distance_used  = max(distance_sigma, distance_min)
   // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
   const SL_DELTA_ZSCORE = 1.5;
-  const TP_DELTA_ZSCORE = 0.5;
+  const TP_DELTA_ZSCORE = 0.4;
   const SL_SPREAD_MULT  = 16;
   const TP_SPREAD_MULT  = 5;
   const _num = (v) => Number.isFinite(Number(v)) ? Number(v) : null;

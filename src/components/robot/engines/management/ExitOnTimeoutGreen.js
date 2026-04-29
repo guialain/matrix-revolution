@@ -14,11 +14,11 @@
 // rsi_at_close : null (non pertinent pour ce guard)
 // ============================================================================
 
-// Kill-switch local : desactive ce guard en gardant ExitOnExtremeM1 actif
-const MODULE_ENABLED = false;
+// Kill-switch local : reactive avec MAX_HOLD_MS = 45 min
+const MODULE_ENABLED = true;
 
 const ROBOT_MAGIC = 202601;
-const MAX_HOLD_MS = 90 * 60 * 1000; // 90 min
+const MAX_HOLD_MS = 45 * 60 * 1000; // 45 min
 
 const ExitOnTimeoutGreen = (() => {
 

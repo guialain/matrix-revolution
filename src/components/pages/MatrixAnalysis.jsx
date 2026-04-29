@@ -6,7 +6,7 @@ import { sendSwitchSymbol } from "../../utilitaires/sendMT5Instructions";
 import NeomatrixMTAnalysis from "../matrixanalysis/NeomatrixMTAnalysis";
 import AccountLevels from "../matrixanalysis/AccountLevels";
 import MarketTrend from "../matrixanalysis/MarketTrend";
-import MarketWatch from "../marketopportunities/MarketWatch";
+import MarketWatch from "../matrixanalysis/MarketWatch";
 
 // styles
 import "../../styles/stylespages/matrixanalysis.css";

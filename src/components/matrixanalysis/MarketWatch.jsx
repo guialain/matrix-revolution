@@ -6,7 +6,7 @@
 
 import { useMemo, Fragment } from "react";
 import useMT5Data from "../../hooks/useMT5Data";
-import "../../styles/marketopportunities/marketwatch.css";
+import "../../styles/stylesmatrixanalysis/marketwatch.css";
 
 // ============================================================================
 // CONFIG

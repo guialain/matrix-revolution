@@ -266,6 +266,23 @@ const SignalFilters = (() => {
       }
       if (isTradable) funnel.inc('gate1Pass');
 
+      // 5b. M5 RSI hard floor — bloque CONT solo si rsi M5 deja epuise
+      // SELL CONT : rsi_m5_s0 < 28 (epuisement baissier, rebond imminent)
+      // BUY  CONT : rsi_m5_s0 > 72 (epuisement haussier, retournement imminent)
+      if (opp?.type === "CONTINUATION") {
+        const rsi_m5_s0 = num(opp?.rsi_m5_s0);
+        if (Number.isFinite(rsi_m5_s0)) {
+          if (side === "SELL" && rsi_m5_s0 < 28) {
+            waitOpportunities.push({ ...opp, state: "WAIT_M5_RSI_EXTREME", wait_reason: "M5_RSI_LOW", m5Level: mode, is_vshape_m5 });
+            continue;
+          }
+          if (side === "BUY" && rsi_m5_s0 > 72) {
+            waitOpportunities.push({ ...opp, state: "WAIT_M5_RSI_EXTREME", wait_reason: "M5_RSI_HIGH", m5Level: mode, is_vshape_m5 });
+            continue;
+          }
+        }
+      }
+
       // 6. M5 SetupOK — CONT vs V-shape, 3 conditions AND
       if (!isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode)) {
         const wait_reason = is_vshape_m5 ? "M5_GATE2_VSHAPE" : "M5_GATE2_CONT";

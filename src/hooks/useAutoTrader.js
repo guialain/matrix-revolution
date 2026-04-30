@@ -157,10 +157,10 @@ function computeSLTP(op, cfg, snapshot) {
   if (!Number.isFinite(price) || price <= 0) return null;
 
   // Phase SL-2 + TP-2 : SL et TP en zscore (sigma_h1 based) avec fallback spread
-  //   distance_sigma = 0.5 * sigma_h1 (TP) / 1.5 * sigma_h1 (SL)
-  //   distance_min   = 4 * spread (TP) / 12 * spread (SL)
+  //   distance_sigma = 0.4 * sigma_h1 (TP) / 1.6 * sigma_h1 (SL)
+  //   distance_min   = 4 * spread (TP) / 16 * spread (SL)
   //   distance_used  = max(distance_sigma, distance_min)
-  // Ratio 1:3 preserve naturellement (12/4 = 3) en mode fallback.
+  // Ratio 1:4 coherent sur les deux dimensions (1.6/0.4 = 16/4 = 4).
   const SL_DELTA_ZSCORE = 1.6;
   const TP_DELTA_ZSCORE = 0.4;
   const SL_SPREAD_MULT  = 16;

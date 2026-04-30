@@ -242,7 +242,7 @@ function closePosition(p, e) {
                 </td>
 
                 <td className={maxHoldAlerts.some(a => a.ticket === p.ticket) ? "maxhold-alert" : ""}>
-                  {p.duration_h != null ? `${p.duration_h.toFixed(1)}h` : "—"}
+                  {p.duration_h != null ? `${Math.round(p.duration_h * 60)} min` : "—"}
                   {maxHoldAlerts.some(a => a.ticket === p.ticket) && " ⏰"}
                 </td>
 

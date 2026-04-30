@@ -89,6 +89,11 @@ const RobotCore = {
       sigma_h1:    row.sigma_h1     ?? null,
       // M15
       atr_m15:     row.atr_m15      ?? null,
+      // Meta prix (spread broker, tick size) — fallback TP/SL + logging signals_log
+      spread:        row.spread        ?? null,
+      spread_points: row.spread_points ?? null,
+      tick_size:     row.tick_size     ?? null,
+      digits:        row.digits        ?? null,
       rsi_m15:     row.rsi_m15      ?? null,
       slope_m15:     row.slope_m15     ?? null,
       dslope_m15_s0: row.dslope_m15_s0 ?? null,

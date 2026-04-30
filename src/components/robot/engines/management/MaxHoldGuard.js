@@ -9,6 +9,10 @@ import { getRiskConfig, RISK_CONFIG } from "../config/RiskConfig";
 
 const DEFAULT_MAX_HOLD_H = RISK_CONFIG.default?.defaultMaxHoldH || 8;
 
+// Kill-switch local : desactive temporairement (cloture forcee 96h trop agressive
+// vs duree typique des trades). Pour reactiver : MODULE_ENABLED = true.
+const MODULE_ENABLED = false;
+
 const MaxHoldGuard = (() => {
 
   /**
@@ -17,6 +21,7 @@ const MaxHoldGuard = (() => {
    * @returns {Array} positions to close: [{ ticket, symbol, side, reason, duration_h, maxHoldH }]
    */
   function evaluate(positions) {
+    if (!MODULE_ENABLED) return [];
     if (!Array.isArray(positions) || !positions.length) return [];
 
     const now = Date.now();

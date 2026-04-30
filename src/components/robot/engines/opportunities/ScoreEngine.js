@@ -186,23 +186,36 @@ function scoreIntraday(intraday_class, type, side) {
 // =====================================================================
 // COMPOSANTE 7 — Alignment D1
 // =====================================================================
-const ALIGNMENT_TABLE = {
-  BUY:  { aligned_up: 4,   transition_up: 3,   inversion_up: 2,   fade_up: 1 },
-  SELL: { aligned_down: 4, transition_down: 3, inversion_down: 2, fade_down: 1 },
+// Etiquette V3 : <intensite>_<contexte>_<sens>_from_<zone>
+// Score derive du contexte (aligned/transition/inversion). fade_* n'existe plus
+// en V3 (absorbe par flat_aligned_*_from_*).
+const ALIGNMENT_CONTEXT_SCORE = {
+  aligned:    4,
+  transition: 3,
+  inversion:  2,
 };
 
 function scoreAlignment(alignmentD1, side) {
-  if (!alignmentD1) return 0;
-  const table = ALIGNMENT_TABLE[side];
-  if (!table) {
-    console.warn('[ScoreEngine] scoreAlignment side inconnu:', side);
+  if (typeof alignmentD1 !== 'string' || alignmentD1.length === 0) return 0;
+
+  // Cas special : alignment exclu en amont (V8R skip), defense en profondeur
+  if (alignmentD1 === 'flat_transition_flat_from_flat') return 0;
+
+  // Verifier coherence side/sens
+  const expectedDir = side === 'BUY' ? '_up_' : (side === 'SELL' ? '_down_' : null);
+  if (expectedDir === null) return 0;
+  if (!alignmentD1.includes(expectedDir)) {
+    console.warn('[ScoreEngine] scoreAlignment side/sens incompatible', side, alignmentD1);
     return 0;
   }
-  if (!(alignmentD1 in table)) {
-    console.warn(`[ScoreEngine] scoreAlignment alignment incompatible ${side}: ${alignmentD1}`);
-    return 0;
-  }
-  return table[alignmentD1];
+
+  // Extraire contexte
+  if (alignmentD1.includes('_aligned_'))    return ALIGNMENT_CONTEXT_SCORE.aligned;
+  if (alignmentD1.includes('_transition_')) return ALIGNMENT_CONTEXT_SCORE.transition;
+  if (alignmentD1.includes('_inversion_'))  return ALIGNMENT_CONTEXT_SCORE.inversion;
+
+  console.warn('[ScoreEngine] scoreAlignment contexte inconnu', alignmentD1);
+  return 0;
 }
 
 // =====================================================================

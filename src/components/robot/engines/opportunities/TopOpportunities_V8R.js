@@ -30,9 +30,11 @@ import { getSlopeConfig, getSlopeClass } from "../config/SlopeConfig.js";
 import {
   getIntradayLevel,
   getSlopeLevel,
-  getD1State,
-  getSlopeD1Zone,
   getAlignmentD1,
+  getAlignmentD1Mode,
+  getSignalTypeFromAlignment,
+  D1_ALIGNMENTS_BUY,
+  D1_ALIGNMENTS_SELL,
 } from "../../../../utils/marketLevels.js";
 import { scoreOpportunity } from "./ScoreEngine.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
@@ -324,27 +326,21 @@ const TopOpportunities_V8R = (() => {
   //   3. Aucun candidat valide → null
   // ============================================================================
 
-  const D1_ALIGNMENTS_BUY  = new Set(['aligned_up', 'transition_up', 'inversion_up', 'fade_up']);
-  const D1_ALIGNMENTS_SELL = new Set(['aligned_down', 'transition_down', 'inversion_down', 'fade_down']);
   const IC_BEARISH_BLOCK_BUY  = new Set(['SOFT_DOWN', 'STRONG_DOWN', 'EXPLOSIVE_DOWN', 'SPIKE_DOWN']);
   const IC_BULLISH_BLOCK_SELL = new Set(['SOFT_UP', 'STRONG_UP', 'EXPLOSIVE_UP', 'SPIKE_UP']);
 
-  function selectRoute(candidates, slope_d1_s1, slope_d1_s0, intradayLevel) {
+  function selectRoute(candidates, alignmentD1, intradayLevel) {
     if (!candidates || candidates.length === 0) return null;
-
-    const zone_s1 = getSlopeD1Zone(slope_d1_s1);
-    const zone_s0 = getSlopeD1Zone(slope_d1_s0);
-    const alignment = getAlignmentD1(zone_s1, zone_s0);
-    if (alignment === null) return null;
+    if (alignmentD1 === null) return null;
 
     for (const c of candidates) {
       if (c.side === 'BUY') {
-        if (!D1_ALIGNMENTS_BUY.has(alignment)) continue;
+        if (!D1_ALIGNMENTS_BUY.has(alignmentD1)) continue;
         if (IC_BEARISH_BLOCK_BUY.has(intradayLevel)) continue;
         return c;
       }
       if (c.side === 'SELL') {
-        if (!D1_ALIGNMENTS_SELL.has(alignment)) continue;
+        if (!D1_ALIGNMENTS_SELL.has(alignmentD1)) continue;
         if (IC_BULLISH_BLOCK_SELL.has(intradayLevel)) continue;
         return c;
       }
@@ -385,79 +381,6 @@ const TopOpportunities_V8R = (() => {
     if (intradayLevel === 'SPIKE_DOWN') return { isSpike: true, direction: 'down', source: 'ic' };
 
     return { isSpike: false, direction: null, source: null };
-  }
-
-  // ============================================================================
-  // getMode — calcul du mode base sur D1 alignment + IC
-  //
-  // Architecture : cascade de cas explicites par (D1 alignment x IC level).
-  // Plus de table H1, plus de default fourre-tout.
-  //
-  // Inputs :
-  //   side          : 'BUY' ou 'SELL'
-  //   intradayLevel : niveau IC classifie
-  //   slope_d1_s1   : slope D1 historique
-  //   slope_d1_s0   : slope D1 actuelle
-  //   alignment     : alignement D1 (aligned_up, aligned_down, transition_up,
-  //                   transition_down, inversion_up, inversion_down,
-  //                   fade_up, fade_down)
-  //
-  // Output : 'relaxed' | 'soft' | 'normal' | 'strict'
-  // ============================================================================
-
-  const D1_STRONG_ZONES_UP   = new Set(['up_strong', 'up_extreme']);
-  const D1_STRONG_ZONES_DOWN = new Set(['down_strong', 'down_extreme']);
-  const IC_BULLISH_LEVELS = { 'EXPLOSIVE_UP': 'EXPLOSIVE', 'STRONG_UP': 'STRONG', 'SOFT_UP': 'SOFT' };
-  const IC_BEARISH_LEVELS = { 'EXPLOSIVE_DOWN': 'EXPLOSIVE', 'STRONG_DOWN': 'STRONG', 'SOFT_DOWN': 'SOFT' };
-
-  function getMode(side, intradayLevel, slope_d1_s1, slope_d1_s0, alignment) {
-    // R1 : IC NEUTRE -> strict
-    if (intradayLevel === 'NEUTRE') return 'strict';
-
-    // Determiner le niveau IC dans le sens du trade
-    // (selectRoute filtre deja IC contre le trend, mais defense en profondeur)
-    const icLevels = side === 'BUY' ? IC_BULLISH_LEVELS : IC_BEARISH_LEVELS;
-    const icLevel = icLevels[intradayLevel];
-    if (!icLevel) return 'strict'; // safety : IC ni dans le sens ni NEUTRE
-
-    // Determiner les zones D1 fortes pour le side
-    const strongZones = side === 'BUY' ? D1_STRONG_ZONES_UP : D1_STRONG_ZONES_DOWN;
-
-    // Branche aligned (R2, R3, R4)
-    if (alignment === 'aligned_up' || alignment === 'aligned_down') {
-      const zone_s1 = getSlopeD1Zone(slope_d1_s1);
-      const zone_s0 = getSlopeD1Zone(slope_d1_s0);
-
-      // R2 : zones les 2 strong/extreme
-      if (strongZones.has(zone_s1) && strongZones.has(zone_s0)) return 'relaxed';
-
-      // R3, R4 : aligned mixte (au moins 1 weak)
-      if (icLevel === 'SOFT')                              return 'normal'; // R3
-      if (icLevel === 'STRONG' || icLevel === 'EXPLOSIVE') return 'soft';   // R4
-    }
-
-    // Branche transition (R5, R6, R7)
-    if (alignment === 'transition_up' || alignment === 'transition_down') {
-      if (icLevel === 'EXPLOSIVE') return 'soft';   // R5
-      if (icLevel === 'STRONG')    return 'normal'; // R6
-      if (icLevel === 'SOFT')      return 'strict'; // R7
-    }
-
-    // Branche inversion (R8, R9)
-    if (alignment === 'inversion_up' || alignment === 'inversion_down') {
-      if (icLevel === 'EXPLOSIVE') return 'normal'; // R8
-      return 'strict'; // R9 : STRONG ou SOFT
-    }
-
-    // Branche fade (R10, R11, R12)
-    if (alignment === 'fade_up' || alignment === 'fade_down') {
-      if (icLevel === 'EXPLOSIVE') return 'soft';   // R10
-      if (icLevel === 'STRONG')    return 'normal'; // R11
-      if (icLevel === 'SOFT')      return 'strict'; // R12
-    }
-
-    // Safety net : alignment imprevu (aligned_flat ou null) → strict
-    return 'strict';
   }
 
   // ============================================================================
@@ -569,9 +492,6 @@ const TopOpportunities_V8R = (() => {
         ? _sd1s0 - _slope_d1
         : null;
       const _dslope_d1_s0 = num(row?.dslope_d1_s0); // CSV : s0 vs s(-1), utilisé pour le contra-D1
-      const d1State = (_sd1s0 !== null && _dslope_d1_live !== null)
-        ? getD1State(_sd1s0, _dslope_d1_live)
-        : "D1_FLAT";
 
       const range_ratio_h1 = num(row?.range_ratio_h1);
 
@@ -617,26 +537,10 @@ const TopOpportunities_V8R = (() => {
       let signalType = null;
       let signalMode = null;
 
-      // D1 V2 classification (logging + résolveur interne)
-      const _zoneS1 = getSlopeD1Zone(_slope_d1);
-      const _zoneS0 = getSlopeD1Zone(_sd1s0);
-      const _alignmentD1 = getAlignmentD1(_zoneS1, _zoneS0);
+      // D1 V3 classification (slope_d1 stable + dslope_d1_live)
+      const _alignmentD1 = getAlignmentD1(_slope_d1, _dslope_d1_live);
       if (TOP_CFG.verbose) {
-        console.log(`[D1_V2] ${symbol} alignment=${_alignmentD1} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope_live=${_dslope_d1_live?.toFixed(2)} dslope_s0=${_dslope_d1_s0?.toFixed(2)}`);
-
-        // Sanity check : cohérence signe(dslope) vs progression zones s1→s0
-        if (_dslope_d1_live !== null && _zoneS1 !== null && _zoneS0 !== null) {
-          const zoneRank = {
-            'down_extreme': 0, 'down_strong': 1, 'down_weak': 2, 'flat': 3,
-            'up_weak': 4, 'up_strong': 5, 'up_extreme': 6
-          };
-          const rankDiff = zoneRank[_zoneS0] - zoneRank[_zoneS1];
-          const signMismatch = (rankDiff > 0 && _dslope_d1_live < 0) ||
-                               (rankDiff < 0 && _dslope_d1_live > 0);
-          if (signMismatch) {
-            console.warn(`[D1_V2 INCOHERENCE] ${symbol} zone_s1=${_zoneS1} zone_s0=${_zoneS0} dslope=${_dslope_d1_live.toFixed(2)} slope_d1=${_slope_d1} slope_d1_s0=${_sd1s0}`);
-          }
-        }
+        console.log(`[D1_V3] ${symbol} alignment=${_alignmentD1} slope_d1=${_slope_d1?.toFixed(2)} dslope_live=${_dslope_d1_live?.toFixed(2)}`);
       }
 
       // Etape 3 : matchRoute V2 — candidats RSI x zscore
@@ -651,13 +555,14 @@ const TopOpportunities_V8R = (() => {
       if (candidates.length > 0) funnel.inc('matchRouteOut');
 
       // Etape 5 : selectRoute — choisit selon D1 + IC
-      const selected = selectRoute(candidates, _slope_d1, _sd1s0, intradayLevel);
+      const selected = selectRoute(candidates, _alignmentD1, intradayLevel);
       if (!selected) continue;
       funnel.inc('selectRouteOut');
 
-      // Etape 6 : getMode (D1 + IC, sans H1)
-      signalMode = getMode(selected.side, intradayLevel, _slope_d1, _sd1s0, _alignmentD1);
-      signalType = selected.type;
+      // Etape 6 : mode V3 (table 49 entrees + modulation IC)
+      signalMode = getAlignmentD1Mode(_alignmentD1, intradayLevel, selected.side);
+      signalType = getSignalTypeFromAlignment(_alignmentD1) ?? selected.type;
+      if (signalMode === null) continue;
 
       if (TOP_CFG.verbose) {
         console.log(`[ROUTE] ${symbol} side=${selected.side} type=${signalType} route=${selected.route} mode=${signalMode}`);
@@ -682,9 +587,7 @@ const TopOpportunities_V8R = (() => {
       match = { route: selected.route, side: selected.side };
 
       if (TOP_CFG.verbose) {
-        console.log(`[D1] ${symbol} d1State=${d1State} slope_d1_s0=${_sd1s0?.toFixed(2)} dslope_d1_s0=${_dslope_d1_live?.toFixed(2)} → SELL_gate=${_dslope_d1_live !== null ? (_dslope_d1_live < -0.5 ? 'OK' : 'BLOCK') : 'null'} BUY_gate=${_dslope_d1_live !== null ? (_dslope_d1_live > 0.5 ? 'OK' : 'BLOCK') : 'null'}`);
-        if (d1State === "D1_EMERGING_DOWN" || d1State === "D1_EMERGING_UP")
-          console.log(`[D1_EMERGING] ${symbol} d1State=${d1State} → signalType=${signalType} signalMode=${signalMode}`);
+        console.log(`[D1] ${symbol} alignment=${_alignmentD1} slope_d1=${_slope_d1?.toFixed(2)} dslope_live=${_dslope_d1_live?.toFixed(2)}`);
         if (match.route?.includes("EXHAUSTION")) {
           console.log(`[EXHAUSTION] ${symbol} route=${match.route} mode=${signalMode} slope_h1_s0=${_slope_h1_s0?.toFixed(2)} dslope_h1_s0=${_dslope_h1_live?.toFixed(2)}`);
         }
@@ -731,7 +634,7 @@ const TopOpportunities_V8R = (() => {
         breakdown,
         intradayLevel,
         slopeH4Level,
-        d1State,
+        alignmentD1:  _alignmentD1,
 
         // D1
         slope_d1_s0:  _sd1s0,
@@ -831,19 +734,20 @@ const TopOpportunities_V8R = (() => {
         const _dbg_sd1s0    = num(row?.slope_d1_s0);
         const _dbg_slope_d1 = num(row?.slope_d1);
 
-        // Calcul alignement D1 pour le gate
-        const _dbg_alignmentD1 = getAlignmentD1(
-          getSlopeD1Zone(_dbg_slope_d1),
-          getSlopeD1Zone(_dbg_sd1s0)
-        );
+        // Calcul alignement D1 V3 (slope_d1 stable + dslope_d1_live)
+        const _dbg_dslope_d1_live = (_dbg_sd1s0 !== null && _dbg_slope_d1 !== null)
+          ? _dbg_sd1s0 - _dbg_slope_d1
+          : null;
+        const _dbg_alignmentD1 = getAlignmentD1(_dbg_slope_d1, _dbg_dslope_d1_live);
         const _dbg_candidates = matchRoute(num(row?.rsi_h1_s0), num(row?.zscore_h1_s0));
-        const _dbg_selected = selectRoute(_dbg_candidates, _dbg_slope_d1, _dbg_sd1s0, intradayLevel);
+        const _dbg_selected = selectRoute(_dbg_candidates, _dbg_alignmentD1, intradayLevel);
         if (!_dbg_selected) continue;
         cSelectRoute++;
 
         const activeSide = _dbg_selected.side;
-        const activeType = _dbg_selected.type;
-        const activeMode = getMode(activeSide, intradayLevel, _dbg_slope_d1, _dbg_sd1s0, _dbg_alignmentD1);
+        const activeType = getSignalTypeFromAlignment(_dbg_alignmentD1) ?? _dbg_selected.type;
+        const activeMode = getAlignmentD1Mode(_dbg_alignmentD1, intradayLevel, activeSide);
+        if (activeMode === null) continue;
         if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
         cExhaustionKill++;
 

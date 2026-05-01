@@ -7,14 +7,16 @@
 // Filtres :
 //   - magic = ROBOT_MAGIC (positions ouvertes par le robot)
 //   - profit : pnl_pts > spread_points (rentable apres spread)
+//   - profit min : pnl_eur >= MIN_PROFIT_EUR (eviter close sur micro-gains)
 //   - warmup : >=120s depuis open_time (2 bougies M1)
-//   - RSI extreme : BUY rsi_m1_s0 > 75, SELL rsi_m1_s0 < 25
+//   - RSI extreme : BUY rsi_m1_s0 > RSI_HIGH, SELL rsi_m1_s0 < RSI_LOW
 // ============================================================================
 
-const ROBOT_MAGIC = 202601;
-const WARMUP_MS   = 120_000;
-const RSI_HIGH    = 73;
-const RSI_LOW     = 27;
+const ROBOT_MAGIC    = 202601;
+const WARMUP_MS      = 120_000;
+const RSI_HIGH       = 73;
+const RSI_LOW        = 27;
+const MIN_PROFIT_EUR = 3;
 
 const ExitOnExtremeM1 = (() => {
 
@@ -41,6 +43,10 @@ const ExitOnExtremeM1 = (() => {
       const spread = Number(p.spread);
       if (!Number.isFinite(pnl) || !Number.isFinite(spread)) continue;
       if (pnl <= spread) continue;
+
+      // Filtre 2b : profit minimum en euros
+      const pnlEur = Number(p.pnl_eur);
+      if (!Number.isFinite(pnlEur) || pnlEur < MIN_PROFIT_EUR) continue;
 
       // Filtre 3 : warmup
       const openMs = parseOpenTime(p.open_time);

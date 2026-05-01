@@ -13,12 +13,13 @@
   flex-direction: column;
   gap: 8px;
   font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8em;
 }
 
 /* ─── TITLE ──────────────────────────────────────────────── */
 
 .al-title {
-  font-size: 11px;
+  font-size: 8.8px;
   font-weight: 700;
   color: #f5c26b;
   text-transform: uppercase;
@@ -60,14 +61,14 @@
 /* ─── CELLS ──────────────────────────────────────────────── */
 
 .al-label {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   color: #ffe9c2;
   white-space: nowrap;
 }
 
 .al-value {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: center;
@@ -75,7 +76,7 @@
 }
 
 .al-stage {
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;

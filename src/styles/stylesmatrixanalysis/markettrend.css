@@ -12,6 +12,7 @@
   border-radius: 8px;
   overflow: hidden;
   font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8em;
 }
 
 .markettrend-loading {
@@ -19,7 +20,7 @@
   align-items: center;
   gap: 8px;
   padding: 14px;
-  font-size: 10px;
+  font-size: 8px;
   color: rgba(0, 255, 136, 0.5);
   letter-spacing: 0.1em;
 }
@@ -52,14 +53,14 @@
 }
 
 .mt-title {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
   color: #f5c26b;
   letter-spacing: 0.15em;
 }
 
 .mt-topbar-time {
-  font-size: 9px;
+  font-size: 7.2px;
   color: rgba(0, 255, 136, 0.4);
   letter-spacing: 0.1em;
 }
@@ -91,7 +92,7 @@
 }
 
 .mt-ch {
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -134,7 +135,7 @@
 
 .mt-asset {
   justify-content: flex-start;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
   color: #e8d9a8;
@@ -154,7 +155,7 @@
 
 .mt-pct-value {
   display: block;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -167,7 +168,7 @@
 
 .mt-mval {
   font-family: monospace;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -206,7 +207,7 @@
   padding: 3px 10px;
   border-radius: 12px;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 700;
   letter-spacing: 0.5px;
   white-space: nowrap;

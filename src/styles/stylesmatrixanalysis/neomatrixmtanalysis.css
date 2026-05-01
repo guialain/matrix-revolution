@@ -12,6 +12,7 @@
   overflow: hidden;
   font-family: 'Courier New', Courier, monospace;
   color: #e8d9a8;
+  font-size: 0.8em;
 }
 
 /* ─── TOP BAR ──────────────────────────────────────────── */
@@ -42,28 +43,28 @@
 }
 
 .nmt-title {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
   color: #f5c26b;
   letter-spacing: 0.15em;
 }
 
 .nmt-symbol {
-  font-size: 11px;
+  font-size: 8.8px;
   font-weight: 700;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
 .nmt-time {
-  font-size: 9px;
+  font-size: 7.2px;
   color: rgba(0, 255, 136, 0.4);
   letter-spacing: 0.1em;
 }
 
 .nmt-empty {
   padding: 14px;
-  font-size: 11px;
+  font-size: 8.8px;
   color: rgba(232, 217, 168, 0.5);
 }
 
@@ -78,7 +79,7 @@
 }
 
 .nmt-section-title {
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
@@ -109,13 +110,13 @@
 
 .nmt-synth-title {
   font-weight: 700;
-  font-size: 16px;
+  font-size: 12.8px;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
 .nmt-synth-tfs {
-  font-size: 13px;
+  font-size: 10.4px;
   opacity: 0.6;
   font-family: monospace;
   color: #e8d9a8;
@@ -141,7 +142,7 @@
 .nmt-fill-flat { background: #a89e7a; }
 
 .nmt-syn-verdict {
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 700;
   text-align: center;
   letter-spacing: 1px;
@@ -152,7 +153,7 @@
 .nmt-dir-flat { color: #e8d9a8; }
 
 .nmt-syn-status {
-  font-size: 12px;
+  font-size: 9.6px;
   color: rgba(232, 217, 168, 0.65);
   letter-spacing: 0.5px;
 }
@@ -162,7 +163,7 @@
 .nmt-table {
   display: flex;
   flex-direction: column;
-  font-size: 15px;
+  font-size: 12px;
 }
 
 .nmt-thead,
@@ -175,7 +176,7 @@
 }
 
 .nmt-thead {
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 700;
   letter-spacing: 1.5px;
   color: #e8d9a8;
@@ -207,21 +208,21 @@
 }
 
 .nmt-tf {
-  font-size: 16px;
+  font-size: 12.8px;
   font-weight: 700;
   color: #e8d9a8;
   letter-spacing: 0.5px;
 }
 
 .nmt-signal {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .nmt-num {
   font-family: monospace;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 700;
   color: #e8d9a8;
 }
@@ -236,7 +237,7 @@
   padding: 4px 12px;
   border-radius: 12px;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 10.4px;
   font-weight: 700;
   letter-spacing: 0.5px;
   white-space: nowrap;

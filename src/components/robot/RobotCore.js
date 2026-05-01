@@ -51,7 +51,8 @@ const RobotCore = {
       // D1
       rsi_d1:        row.rsi_d1        ?? null,
       slope_d1:      row.slope_d1      ?? null,
-      dslope_d1_s0:  row.dslope_d1_s0  ?? null,
+      dslope_d1_s0:  row.dslope_d1_s0  ?? null,    // live (server-computed s0-s1)
+      dslope_d1_stale: row.dslope_d1_stale ?? null, // CSV column dslope_d1 (s1 vs s2)
       drsi_d1:       row.drsi_d1       ?? null,
       rsi_d1_s0:   row.rsi_d1_s0   ?? null,
       slope_d1_s0: row.slope_d1_s0 ?? null,

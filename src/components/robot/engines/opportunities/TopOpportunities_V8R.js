@@ -492,6 +492,7 @@ const TopOpportunities_V8R = (() => {
         ? _sd1s0 - _slope_d1
         : null;
       const _dslope_d1_s0 = num(row?.dslope_d1_s0); // CSV : s0 vs s(-1), utilisé pour le contra-D1
+      const _dslope_d1_stale = num(row?.dslope_d1_stale); // CSV column dslope_d1 (s1 vs s2)
 
       const range_ratio_h1 = num(row?.range_ratio_h1);
 
@@ -559,8 +560,11 @@ const TopOpportunities_V8R = (() => {
       if (!selected) continue;
       funnel.inc('selectRouteOut');
 
-      // Etape 6 : mode V3 (table 49 entrees + modulation IC)
-      signalMode = getAlignmentD1Mode(_alignmentD1, intradayLevel, selected.side);
+      // Etape 6 : mode V3 (dispatcher resolveNeutral / resolveDirectional + IC)
+      const _modeResult = getAlignmentD1Mode(
+        _alignmentD1, intradayLevel, selected.side, _dslope_d1_live, _dslope_d1_stale
+      );
+      signalMode = _modeResult.mode;
       signalType = getSignalTypeFromAlignment(_alignmentD1) ?? selected.type;
       if (signalMode === null) continue;
 
@@ -733,6 +737,7 @@ const TopOpportunities_V8R = (() => {
 
         const _dbg_sd1s0    = num(row?.slope_d1_s0);
         const _dbg_slope_d1 = num(row?.slope_d1);
+        const _dbg_dslope_d1_stale = num(row?.dslope_d1_stale);
 
         // Calcul alignement D1 V3 (slope_d1 stable + dslope_d1_live)
         const _dbg_dslope_d1_live = (_dbg_sd1s0 !== null && _dbg_slope_d1 !== null)
@@ -746,7 +751,10 @@ const TopOpportunities_V8R = (() => {
 
         const activeSide = _dbg_selected.side;
         const activeType = getSignalTypeFromAlignment(_dbg_alignmentD1) ?? _dbg_selected.type;
-        const activeMode = getAlignmentD1Mode(_dbg_alignmentD1, intradayLevel, activeSide);
+        const _dbg_modeResult = getAlignmentD1Mode(
+          _dbg_alignmentD1, intradayLevel, activeSide, _dbg_dslope_d1_live, _dbg_dslope_d1_stale
+        );
+        const activeMode = _dbg_modeResult.mode;
         if (activeMode === null) continue;
         if (activeType === "EXHAUSTION" && _riskCfg.exhaustionEnabled === false) continue;
         cExhaustionKill++;

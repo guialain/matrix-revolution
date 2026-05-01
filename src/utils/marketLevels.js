@@ -16,7 +16,9 @@
 //   getAlignmentD1(slope_d1, dslope_d1_live) → 1 des 49 étiquettes
 //     - slope_d1     = pente stable (s1, bougie D1 fermée hier)
 //     - dslope_d1_live = slope_d1_s0 - slope_d1 (variation live vs stable)
-//   getAlignmentD1Mode(alignment, icLevel, side) → mode V8R modulé par IC
+//   getAlignmentD1Mode(alignment, icLevel, side, dslope_d1_live, dslope_d1_stale)
+//     → { mode, side } : mode V8R modulé par IC + side validé/recalculé
+//     - side accepte 'BUY', 'SELL', 'AUTO' (AUTO laisse resolveNeutral trancher)
 // ============================================================================
 
 import { getSlopeClass } from "../components/robot/engines/config/SlopeConfig.js";
@@ -253,15 +255,46 @@ export function getAlignmentD1(slope_d1, dslope_d1_live) {
 }
 
 // ============================================================================
-// D1_ALIGNMENT_MODE — table 49 entrées : alignement → mode V8R de base
-// Modes : strict | normal | soft | relaxed | null (skip)
+// Tables alignment → mode V8R de base. Modes : strict | normal | soft | relaxed
 // Calibré manuellement (xlsx alignment_d1_v2)
+//
+// Scindées en deux selon le préfixe d'étiquette (intensité du dslope) :
+//   - D1_ALIGNMENT_MODE_NEUTRAL     (7)  : préfixe `flat_` (dslope_d1 neutre)
+//   - D1_ALIGNMENT_MODE_DIRECTIONAL (42) : préfixes `weak_` / `soft_` / `strong_`
+//
+// Consommateurs :
+//   - resolveDirectional → D1_ALIGNMENT_MODE_DIRECTIONAL (lookup pure)
+//   - resolveNeutral     → MODE_MATRIX_NEUTRAL (logique 6a basée sur dslope_stale)
+//     D1_ALIGNMENT_MODE_NEUTRAL n'est plus lu en prod mais conservée comme
+//     fallback documentaire / référence des modes "purs" hors logique 6a.
 // ============================================================================
-const D1_ALIGNMENT_MODE = {
-  // ─── BUY CONT (aligned_up + transition_up = 12+3=15 entrées) ─────────────
-  'flat_aligned_up_from_extreme_up':       'strict',
-  'flat_aligned_up_from_strong_up':        'soft',
-  'flat_aligned_up_from_weak_up':          'normal',
+
+// ─── NEUTRAL (7 entrées : dslope_d1 neutre, |dslope| < WEAK) ─────────────────
+// Préfixe `flat_` = aucune accélération D1 mesurable. Le slope reste tel quel.
+// Note : cette table N'est PLUS lue par getAlignmentD1Mode (resolveNeutral
+// utilise MODE_MATRIX_NEUTRAL + dslope_d1_stale). Conservée comme référence
+// documentaire des modes "purs" pré-6a.
+const D1_ALIGNMENT_MODE_NEUTRAL = {
+  // BUY (slope up, dslope flat) — 3 zones
+  'flat_aligned_up_from_extreme_up':     'strict',
+  'flat_aligned_up_from_strong_up':      'soft',
+  'flat_aligned_up_from_weak_up':        'normal',
+
+  // SELL (slope down, dslope flat) — 3 zones
+  'flat_aligned_down_from_extreme_down': 'strict',
+  'flat_aligned_down_from_strong_down':  'soft',
+  'flat_aligned_down_from_weak_down':    'normal',
+
+  // SKIP (slope flat ET dslope flat = vrai rien)
+  'flat_transition_flat_from_flat':      null,
+};
+
+// ─── DIRECTIONAL (42 entrées : dslope_d1 actif, |dslope| >= WEAK) ────────────
+// Préfixes `weak_` / `soft_` / `strong_` = accélération D1 présente.
+// Couvre les contextes aligned (slope+dslope même sens), transition (slope flat
+// + dslope directionnel), inversion (slope+dslope sens opposés).
+const D1_ALIGNMENT_MODE_DIRECTIONAL = {
+  // ─── BUY CONT (aligned_up + transition_up = 9+3=12 entrées) ──────────────
   'weak_aligned_up_from_extreme_up':       'normal',
   'weak_aligned_up_from_strong_up':        'soft',
   'weak_aligned_up_from_weak_up':          'normal',
@@ -287,10 +320,7 @@ const D1_ALIGNMENT_MODE = {
   'strong_inversion_up_from_strong_down':  'relaxed',
   'strong_inversion_up_from_weak_down':    'relaxed',
 
-  // ─── SELL CONT (aligned_down + transition_down = 12+3=15 entrées) ────────
-  'flat_aligned_down_from_extreme_down':   'strict',
-  'flat_aligned_down_from_strong_down':    'soft',
-  'flat_aligned_down_from_weak_down':      'normal',
+  // ─── SELL CONT (aligned_down + transition_down = 9+3=12 entrées) ─────────
   'weak_aligned_down_from_extreme_down':   'normal',
   'weak_aligned_down_from_strong_down':    'soft',
   'weak_aligned_down_from_weak_down':      'normal',
@@ -315,9 +345,16 @@ const D1_ALIGNMENT_MODE = {
   'strong_inversion_down_from_extreme_up': 'relaxed',
   'strong_inversion_down_from_strong_up':  'relaxed',
   'strong_inversion_down_from_weak_up':    'relaxed',
+};
 
-  // ─── SKIP ────────────────────────────────────────────────────────────────
-  'flat_transition_flat_from_flat':        null,
+// ─── MODE_MATRIX_NEUTRAL — matrice (zone_slope × force_stale) → mode base ───
+// Utilisée par resolveNeutral (logique 6a). Remplace la lookup
+// D1_ALIGNMENT_MODE_NEUTRAL pour les cas où dslope_d1_live est neutre :
+// le mode dépend de la zone du slope ET de la force du dslope STALE (s1 vs s2).
+const MODE_MATRIX_NEUTRAL = {
+  extreme: { weak: 'strict', medium: 'strict', strong: 'normal'  },
+  strong:  { weak: 'strict', medium: 'soft',   strong: 'soft'    },
+  weak:    { weak: 'normal', medium: 'soft',   strong: 'relaxed' },
 };
 
 // ============================================================================
@@ -355,16 +392,100 @@ function applyICModulation(modeBase, icLevel, side) {
 }
 
 // ============================================================================
-// getAlignmentD1Mode — combine table D1 + modulation IC
+// getAlignmentD1Mode — dispatcher resolveNeutral / resolveDirectional + IC
 //
-// Output : 'strict' | 'normal' | 'soft' | 'relaxed' | null
-//   null = alignment exclu (flat_transition_flat_from_flat ou alignment inconnu)
+// Inputs :
+//   alignment        : étiquette V3 (49 valeurs possibles)
+//   icLevel          : niveau intraday classifié
+//   side             : 'BUY' | 'SELL' | 'AUTO' (AUTO laisse 6a trancher)
+//   dslope_d1_live   : variation live (slope_d1_s0 - slope_d1)
+//   dslope_d1_stale  : CSV column dslope_d1 (s1 vs s2 = bougie précédente)
+//
+// Output : { mode, side }
+//   mode : 'strict' | 'normal' | 'soft' | 'relaxed' | null
+//   side : 'BUY' | 'SELL' | null
+//   { mode: null, side: null } = signal exclu (alignment inconnu, dégénéré,
+//                                 cohérence side/sens KO, ou logique 6a échoue)
 // ============================================================================
-export function getAlignmentD1Mode(alignment, icLevel, side) {
-  if (alignment === null || alignment === undefined) return null;
-  const modeBase = D1_ALIGNMENT_MODE[alignment];
-  if (modeBase === null || modeBase === undefined) return null;
-  return applyICModulation(modeBase, icLevel, side);
+
+// 6a — resolveNeutral : pour étiquettes "flat_*" (dslope_d1_live neutre).
+// Utilise dslope_d1_stale (s1 vs s2) pour détecter le sens et la force,
+// dslope_d1_live (signe) pour confirmer que ça ne s'inverse pas.
+function resolveNeutral(alignment, icLevel, side, dslope_d1_live, dslope_d1_stale) {
+  // Étape 1 : cas dégénéré (slope flat ET dslope flat)
+  if (alignment === 'flat_transition_flat_from_flat') return { mode: null, side: null };
+
+  // Garde-fou : sans dslope_stale on ne peut pas classifier
+  if (dslope_d1_stale === null || dslope_d1_stale === undefined
+   || !Number.isFinite(Number(dslope_d1_stale))) return { mode: null, side: null };
+  if (dslope_d1_live === null || dslope_d1_live === undefined
+   || !Number.isFinite(Number(dslope_d1_live)))  return { mode: null, side: null };
+
+  // Étape 2 : classification stale (sens + force) et live (signe)
+  const stale = Number(dslope_d1_stale);
+  const live  = Number(dslope_d1_live);
+
+  const stale_class =
+      stale >=  DSLOPE_D1_THRESHOLDS.WEAK ? 'up'
+    : stale <= -DSLOPE_D1_THRESHOLDS.WEAK ? 'down'
+    : 'neutral';
+
+  const absStale = Math.abs(stale);
+  const stale_force =
+      absStale >= DSLOPE_D1_THRESHOLDS.STRONG ? 'strong'
+    : absStale >= DSLOPE_D1_THRESHOLDS.MEDIUM ? 'medium'
+    : absStale >= DSLOPE_D1_THRESHOLDS.WEAK   ? 'weak'
+    : 'flat';
+
+  const live_sign = live >= 0 ? 'pos' : 'neg';
+
+  // Étape 3 : direction du slope depuis l'étiquette
+  const slopeDir = alignment.includes('_up_') ? 'up' : 'down';
+
+  // Étape 4 : matrice du sens trading
+  let side_calc = null;
+  if (slopeDir === 'up') {
+    if      (stale_class === 'up'   && live_sign === 'pos') side_calc = 'BUY';
+    else if (stale_class === 'down' && live_sign === 'neg') side_calc = 'SELL';
+  } else {
+    if      (stale_class === 'down' && live_sign === 'neg') side_calc = 'SELL';
+    else if (stale_class === 'up'   && live_sign === 'pos') side_calc = 'BUY';
+  }
+  if (side_calc === null) return { mode: null, side: null };
+
+  // Étape 5 : cohérence avec le side demandé
+  if (side !== 'AUTO' && side !== side_calc) return { mode: null, side: null };
+  const side_final = side_calc;
+
+  // Étape 6 : mode base via matrice (zone_slope × stale_force)
+  const zone_slope =
+      alignment.includes('extreme') ? 'extreme'
+    : alignment.includes('strong')  ? 'strong'
+    : 'weak';
+  const mode_base = MODE_MATRIX_NEUTRAL[zone_slope][stale_force];
+  if (!mode_base) return { mode: null, side: null }; // safety
+
+  // Étape 7 : modulation IC
+  const mode_final = applyICModulation(mode_base, icLevel, side_final);
+  return { mode: mode_final, side: side_final };
+}
+
+// 6b — resolveDirectional : pour étiquettes weak_/soft_/strong_ (dslope actif).
+// Lookup classique dans D1_ALIGNMENT_MODE_DIRECTIONAL + modulation IC.
+function resolveDirectional(alignment, icLevel, side) {
+  const modeBase = D1_ALIGNMENT_MODE_DIRECTIONAL[alignment];
+  if (modeBase === null || modeBase === undefined) return { mode: null, side: null };
+  const mode_final = applyICModulation(modeBase, icLevel, side);
+  return { mode: mode_final, side };
+}
+
+// 6c — dispatcher
+export function getAlignmentD1Mode(alignment, icLevel, side, dslope_d1_live, dslope_d1_stale) {
+  if (alignment === null || alignment === undefined) return { mode: null, side: null };
+  if (alignment.startsWith('flat_')) {
+    return resolveNeutral(alignment, icLevel, side, dslope_d1_live, dslope_d1_stale);
+  }
+  return resolveDirectional(alignment, icLevel, side);
 }
 
 // ============================================================================

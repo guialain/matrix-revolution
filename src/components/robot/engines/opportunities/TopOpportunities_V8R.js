@@ -76,18 +76,18 @@ const TopOpportunities_V8R = (() => {
   function getH1Conditions(side, mode, type) {
     // CONT BUY (h1_s0 doit etre haut, dslope positif requis, V-shape autorise)
     if (type === 'CONTINUATION' && side === 'BUY') {
-      if (mode === 'strict')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: 1.5,  h1_dslope_max: 3.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 5,  zscoreCap: 1.75, zscoreFloor: null };
-      if (mode === 'normal')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: 0.5,  h1_dslope_max: 3.5,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 6,  zscoreCap: 2.0,  zscoreFloor: null };
-      if (mode === 'soft')    return { h1_s0_min: 'flat',      h1_s0_max: null, h1_dslope_min: -1.5, h1_dslope_max: 6.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 8,  zscoreCap: 2.25, zscoreFloor: null };
-      if (mode === 'relaxed') return { h1_s0_min: 'down_weak', h1_s0_max: null, h1_dslope_min: -3.3, h1_dslope_max: 8.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 10, zscoreCap: 2.75, zscoreFloor: null };
+      if (mode === 'strict')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: -1.5, h1_dslope_max: 4.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 5,  zscoreCap: 1.75, zscoreFloor: null };
+      if (mode === 'normal')  return { h1_s0_min: 'up_weak',   h1_s0_max: null, h1_dslope_min: -2.5, h1_dslope_max: 5.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 6,  zscoreCap: 2.0,  zscoreFloor: null };
+      if (mode === 'soft')    return { h1_s0_min: 'flat',      h1_s0_max: null, h1_dslope_min: -3.5, h1_dslope_max: 7.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 8,  zscoreCap: 2.25, zscoreFloor: null };
+      if (mode === 'relaxed') return { h1_s0_min: 'down_weak', h1_s0_max: null, h1_dslope_min: -4.5, h1_dslope_max: 8.0,  h1_dslope_min_v_shape: null, h1_dslope_max_v_shape: 10, zscoreCap: 2.75, zscoreFloor: null };
     }
 
     // CONT SELL (miroir CONT BUY)
     if (type === 'CONTINUATION' && side === 'SELL') {
-      if (mode === 'strict')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -3.0, h1_dslope_max: -1.5, h1_dslope_min_v_shape: -5,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.75 };
-      if (mode === 'normal')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -3.5, h1_dslope_max: -0.5, h1_dslope_min_v_shape: -6,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.0 };
-      if (mode === 'soft')    return { h1_s0_min: null, h1_s0_max: 'flat',      h1_dslope_min: -6.0, h1_dslope_max: 1.5,  h1_dslope_min_v_shape: -8,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.25 };
-      if (mode === 'relaxed') return { h1_s0_min: null, h1_s0_max: 'up_weak',   h1_dslope_min: -8.0, h1_dslope_max: 3.3,  h1_dslope_min_v_shape: -10, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.75 };
+      if (mode === 'strict')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -4.0, h1_dslope_max: 1.5,  h1_dslope_min_v_shape: -5,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -1.75 };
+      if (mode === 'normal')  return { h1_s0_min: null, h1_s0_max: 'down_weak', h1_dslope_min: -5.0, h1_dslope_max: 2.5,  h1_dslope_min_v_shape: -6,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.0 };
+      if (mode === 'soft')    return { h1_s0_min: null, h1_s0_max: 'flat',      h1_dslope_min: -7.0, h1_dslope_max: 3.5,  h1_dslope_min_v_shape: -8,  h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.25 };
+      if (mode === 'relaxed') return { h1_s0_min: null, h1_s0_max: 'up_weak',   h1_dslope_min: -8.0, h1_dslope_max: 4.5,  h1_dslope_min_v_shape: -10, h1_dslope_max_v_shape: null, zscoreCap: null, zscoreFloor: -2.75 };
     }
 
     // EXH BUY (h1_s0 doit etre bas, dslope deja en remontee, anti-spike retournement)

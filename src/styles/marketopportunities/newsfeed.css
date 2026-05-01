@@ -87,13 +87,15 @@
 
 .nf-item-title {
   font-size: 0.75rem;
-  color: #e8d9a8;
+  /* aligned with NOT ELIGIBLE symbol color (.neo-op-symbol in topopportunities.css) */
+  color: #ffe9c2;
   line-height: 1.45;
   transition: color 0.12s;
 }
 
 .nf-item:hover .nf-item-title {
-  color: #00ff88;
+  /* warm gold hover, matches .nf-title / .rc-not-eligible-title accent */
+  color: #f5c26b;
 }
 
 /* ── Status ── */

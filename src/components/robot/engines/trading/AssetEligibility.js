@@ -9,7 +9,7 @@
 
 import GlobalMarketHours from "./GlobalMarketHours";
 import { getVolatilityRegime, isTradableVolatility } from '../config/VolatilityConfig';
-import { ALLOWED_SYMBOLS } from '../../../../config/allowedSymbols';
+import { TRADABLE_SYMBOLS } from '../../../../config/allowedSymbols';
 
 // ============================================================================
 // Helper — lookup de la row marketWatch pour un symbole
@@ -44,9 +44,6 @@ export const BLOCKED_SYMBOLS = [
   "JAPAN_225",
 ];
 
-// ALLOWED_SYMBOLS importe depuis src/config/allowedSymbols.js (source unique)
-export { ALLOWED_SYMBOLS };
-
 // ============================================================================
 // CORE
 // ============================================================================
@@ -71,10 +68,10 @@ const AssetEligibility = {
       };
     }
 
-    if (!ALLOWED_SYMBOLS.includes(symbol)) {
+    if (!TRADABLE_SYMBOLS.includes(symbol)) {
       return {
         eligible: false,
-        reasons: [`Symbol not in allowed list`],
+        reasons: [`Symbol not in tradable list`],
         context: { symbol }
       };
     }

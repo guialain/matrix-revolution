@@ -151,7 +151,7 @@ export const DSLOPE_LEVEL_ABBR = {
 export const SLOPE_D1_THRESHOLDS = {
   EXTREME: 5.0,
   STRONG:  1.9,
-  WEAK:    0.5,
+  WEAK:    0.3,
 };
 
 export const DSLOPE_D1_THRESHOLDS = {

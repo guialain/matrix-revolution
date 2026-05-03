@@ -7,7 +7,7 @@
 // ============================================================================
 
 // ================= MARKET / ASSET ======================
-import TopOpportunities_V8R from "./engines/opportunities/TopOpportunities_V8R";
+import TopOpportunities_V10R from "./engines/opportunities/TopOpportunities_V10R";
 import AssetBrain       from "./engines/asset/AssetBrain";
 
 // ================= DECISION (NEO) =======================
@@ -129,7 +129,7 @@ const RobotCore = {
       ? topRows.filter(r => !symbolsInCooldown.has(r.symbol))
       : topRows;
 
-    const allOpps = TopOpportunities_V8R.evaluate(filteredRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
+    const allOpps = TopOpportunities_V10R.evaluate(filteredRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };
 
@@ -149,7 +149,7 @@ const RobotCore = {
       const symbol = op?.symbol;
       if (!symbol) continue;
 
-      // Skip WAIT inline pour le compteur eligibility (deja comptes en v8rEmitWait)
+      // Skip WAIT inline pour le compteur eligibility (déjà émis en amont par V10R)
       if (!op?.isWait && op?.route !== 'WAIT' && op?.type !== 'WAIT') {
         funnel.inc('eligibilityIn');
       }

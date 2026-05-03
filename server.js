@@ -880,7 +880,7 @@ const SIGNALS_LOG_PATH = path.join(path.resolve(), "logs", "signals_log.csv");
 const SIGNALS_LOG_COLUMNS = [
   "signal_id", "emittedAt", "loggedAt", "verdict", "wait_reason",
   "symbol", "side", "mode", "route", "score",
-  "entry_zscore_h1", "intraday_class", "alignmentD1",
+  "entry_zscore_h1", "intraday_class", "reasonD1",
   "slope_h1_s0", "dslope_h1_s0",
   "slope_m5_s0", "slope_m5", "dslope_m5_s0", "is_vshape_m5",
   "rsi_m5_s0", "zscore_m5",
@@ -1191,7 +1191,7 @@ app.post("/api/claude", async (req, res) => {
           const sl = s.atr_h1 != null ? (rc.slAtr * s.atr_h1).toFixed(5) : "?";
           return (
             `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
-            ` score=${s.score ?? "—"} route=${s.route ?? "—"} align=${s.alignmentD1 ?? "—"} mode=${s.mode ?? "—"}` +
+            ` score=${s.score ?? "—"} route=${s.route ?? "—"} reason=${s.reasonD1 ?? "—"} mode=${s.mode ?? "—"}` +
             ` vol=${s.volatilityLevel ?? "—"} phase=${s.phase ?? "—"}` +
             ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1_s0)} z_s0=${f2(s.zscore_h1_s0)}` +
             ` rr=${f2(s.range_ratio_h1)} atr=${f2(s.atr_h1)}` +
@@ -1206,7 +1206,7 @@ app.post("/api/claude", async (req, res) => {
     const waitLines = waitOpportunities.length
       ? waitOpportunities.map(s =>
           `  ${(s.symbol ?? "").padEnd(12)} ${(s.side ?? "").padEnd(5)} [${s.type ?? "?"}]` +
-          ` score=${s.score ?? "—"} wait=${s.waitState ?? "—"} route=${s.route ?? "—"} align=${s.alignmentD1 ?? "—"}` +
+          ` score=${s.score ?? "—"} wait=${s.waitState ?? "—"} route=${s.route ?? "—"} reason=${s.reasonD1 ?? "—"}` +
           ` vol=${s.volatilityLevel ?? "—"}` +
           ` | rsi_s0=${f1(s.rsi_h1_s0)} dsl=${f2(s.dslope_h1_s0)} z_s0=${f2(s.zscore_h1_s0)}` +
           ` rr=${f2(s.range_ratio_h1)}` +

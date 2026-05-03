@@ -42,7 +42,7 @@ function buildSignalLogPayload(opp, verdict) {
     score:           opp.score,
     entry_zscore_h1: opp.zscore_h1_s0 ?? opp.entry_zscore_h1 ?? null,
     intraday_class:  opp.intradayLevel ?? opp.intraday_class ?? null,
-    alignmentD1:     opp.alignmentD1 ?? null,
+    reasonD1:        opp.reasonD1 ?? null,
     slope_h1_s0:     opp.slope_h1_s0,
     dslope_h1_s0:    opp.dslope_h1_s0,
     slope_m5_s0:     opp.slope_m5_s0,

@@ -85,11 +85,11 @@ function NeoOpportunityLine({ op }) {
       {breakdown && (
         <div className="neo-op-breakdown">
           <BreakdownBar label="RSI"         value={breakdown.c1_rsi ?? 0}                                                                  max={3} />
-          <BreakdownBar label="Bollinger"   value={breakdown.c2_zscore ?? 0}                                                               max={5} />
-          <BreakdownBar label="Momentum H1" value={(breakdown.c3a_slope_s1 ?? 0) + (breakdown.c3b_slope_s0 ?? 0) + (breakdown.c4_dslope ?? 0)} max={9} />
+          <BreakdownBar label="Bollinger"   value={breakdown.c2_zscore ?? 0}                                                               max={8} />
+          <BreakdownBar label="Momentum H1" value={(breakdown.c3a_slope_s1 ?? 0) + (breakdown.c3b_slope_s0 ?? 0) + (breakdown.c4_dslope ?? 0)} max={10} />
           <BreakdownBar label="Volatility"  value={breakdown.c5_volatility ?? 0}                                                           max={4} />
           <BreakdownBar label="Intraday %"  value={breakdown.c6_intraday ?? 0}                                                             max={4} />
-          <BreakdownBar label="Daily Trend" value={(breakdown.c7_alignment ?? 0) + (breakdown.c8_mode ?? 0)}                                max={8} />
+          <BreakdownBar label="Daily Trend" value={breakdown.c7_alignment ?? 0}                                                            max={4} />
         </div>
       )}
     </div>

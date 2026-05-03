@@ -1,5 +1,5 @@
 // ============================================================================
-// funnelDebug.js — counters par étage du pipeline V8R + RobotCore + SignalFilters
+// funnelDebug.js — counters par étage du pipeline RobotCore + SignalFilters
 //
 // Activation : localStorage.setItem('debug.funnel', '1')
 //   ou globalThis.__funnelDebug = true (instantané, sans reload)
@@ -18,8 +18,6 @@ const STAGES = [
   'dslopeFail',
   'zscoreCapFail',
   'checkConditionsOut',
-  'v8rEmitTrue',
-  'v8rEmitWait',
   'eligibilityIn',
   'eligibilityOut',
   'signalFiltersIn',
@@ -67,8 +65,6 @@ function buildRows() {
     { stage: 'checkCond slope_zone',       in: slopeZoneIn,           out: slopeZoneIn - f.slopeZoneFail },
     { stage: 'checkCond dslope_h1',        in: dslopeIn,              out: dslopeIn - f.dslopeFail },
     { stage: 'checkCond zscore_h1_s0',     in: zscoreCapIn,           out: f.checkConditionsOut },
-    { stage: 'V8R emit (true)',            in: f.checkConditionsOut,  out: f.v8rEmitTrue },
-    { stage: 'V8R emit (WAIT inline)',     in: f.marketWatchTotal,    out: f.v8rEmitWait },
     { stage: 'AssetEligibility',           in: f.eligibilityIn,       out: f.eligibilityOut },
     { stage: 'SignalFilters in',           in: f.eligibilityOut,      out: f.signalFiltersIn },
     { stage: 'Gate 1 (M5 overextended)',   in: f.signalFiltersIn,     out: f.gate1Pass },
@@ -81,7 +77,7 @@ function buildRows() {
 export function dump() {
   if (!enabled()) return;
   const f = _f;
-  const summary = `mw=${f.marketWatchTotal} match=${f.matchRouteOut} sel=${f.selectRouteOut} | null=${f.nullGuardFail} zUnk=${f.zoneUnknownFail} slz=${f.slopeZoneFail} ds=${f.dslopeFail} z=${f.zscoreCapFail} | chk=${f.checkConditionsOut} v8r=${f.v8rEmitTrue} elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
+  const summary = `mw=${f.marketWatchTotal} match=${f.matchRouteOut} sel=${f.selectRouteOut} | null=${f.nullGuardFail} zUnk=${f.zoneUnknownFail} slz=${f.slopeZoneFail} ds=${f.dslopeFail} z=${f.zscoreCapFail} | chk=${f.checkConditionsOut} elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
   // eslint-disable-next-line no-console
   console.log('%c[funnel]', 'background:#222;color:#bada55;padding:2px 6px;border-radius:3px;font-weight:bold', summary);
   // eslint-disable-next-line no-console

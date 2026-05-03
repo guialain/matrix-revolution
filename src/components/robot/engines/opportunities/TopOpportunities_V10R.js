@@ -22,6 +22,7 @@ import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
 import { scoreOpportunity } from "./ScoreEngine.js";
 import * as funnel from "../../../../utils/funnelDebug.js";
+import { getZscoreH1Zone } from "../../../../utils/zoneClassifier.js";
 
 const TopOpportunities_V10R = (() => {
 
@@ -142,19 +143,9 @@ const TopOpportunities_V10R = (() => {
   };
 
   // ============================================================================
-  // 1. getZscoreH1Zone — classification 5 zones (+ grise + 2 extremes)
+  // 1. getZscoreH1Zone — importé depuis ../../../../utils/zoneClassifier.js
+  //    (classification 5 zones + grise + 2 extremes, partagé avec l'UI)
   // ============================================================================
-  function getZscoreH1Zone(zscore) {
-    if (zscore === null || !Number.isFinite(Number(zscore))) return 'UNKNOWN';
-    const v = Number(zscore);
-    if (v > +2.9)              return 'EXTREME_HAUTE';
-    if (v > +1.5)              return 'HAUTE';
-    if (v > +0.5)              return 'NORMALE_HAUTE';
-    if (v >= -0.5)             return 'GRISE';
-    if (v > -1.5)              return 'NORMALE_BASSE';
-    if (v >= -2.9)             return 'BASSE';
-    return 'EXTREME_BASSE';
-  }
 
   // Helper local : classifie dsigma_ratio_h1_pct selon les memes seuils que Gate IC.
   function classifyDsigmaForExh(dsigmaRatioPct) {

@@ -52,7 +52,6 @@ export default function MarketOpportunities() {
   }
 
   const topOpportunities = core?.topOpportunities ?? { list: [], blocked: [] };
-  const blocked = topOpportunities.blocked ?? [];
   const waitOpportunities = core?.waitOpportunities ?? [];
 
   return (
@@ -63,10 +62,10 @@ export default function MarketOpportunities() {
         <NewsFeed />
       </section>
 
-      {/* ====== CENTER (20%) — Robot + Wait + Not Eligible ====== */}
+      {/* ====== CENTER (20%) — Robot + Wait + Zone Classification ====== */}
       <RobotNeo
         waitOpportunities={waitOpportunities}
-        blocked={blocked}
+        marketWatch={snapshot?.marketWatch ?? []}
       />
 
       {/* ====== RIGHT (40%) — TOP OPPORTUNITIES ====== */}

@@ -1,8 +1,9 @@
 // ============================================================================
-// RobotNeo.jsx — Robot image + Wait opportunities + Not Eligible
+// RobotNeo.jsx — Robot image + Wait opportunities + Zone Classification
 // ============================================================================
 
 import { fmtScore } from "./TopOpportunities";
+import ZoneClassification from "./ZoneClassification";
 import "../../styles/marketopportunities/robotneo.css";
 
 /* ─── WaitSection ─────────────────────────────────────────────────────────── */
@@ -48,57 +49,9 @@ function WaitSection({ opportunities }) {
   );
 }
 
-/* ─── NotEligibleSection ──────────────────────────────────────────────────── */
-
-function resolveBlockReason(op) {
-  const eligible = op.eligibility?.eligible;
-  const reasons  = op.eligibility?.reasons ?? [];
-
-  // Not eligible → use eligibility reason
-  if (!eligible && reasons.length > 0) return reasons[0];
-  if (!eligible) return "Not eligible";
-
-  // Eligible but blocked by score
-  const score = op.score ?? 0;
-  return `Low score (${Math.round(score)})`;
-}
-
-function NotEligibleSection({ blocked }) {
-  return (
-    <section className="mo-section rc-not-eligible">
-      <div className="neo-title rc-not-eligible-title">NOT ELIGIBLE</div>
-
-      {blocked.length > 0 ? (
-        <div className="rc-ne-lines">
-          {blocked.slice(0, 6).map((op, i) => {
-            const reason   = resolveBlockReason(op);
-            const volLevel = op.eligibility?.context?.volatilityLevel ?? null;
-
-            return (
-              <div key={i} className="rc-ne-line">
-                <span className="neo-op-symbol">{op.symbol}</span>
-                <span className="rc-ne-reason" data-reason={reason}>
-                  {reason}
-                </span>
-                {volLevel && (
-                  <span className={`rc-ne-vol rc-ne-vol-${volLevel.toLowerCase()}`}>
-                    {volLevel}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="neo-muted">No blocked opportunities</div>
-      )}
-    </section>
-  );
-}
-
 /* ─── RobotNeo ────────────────────────────────────────────────────────────── */
 
-export default function RobotNeo({ waitOpportunities, blocked }) {
+export default function RobotNeo({ waitOpportunities, marketWatch }) {
   return (
     <div className="rc-container">
       <section className="mo-section rc-robot">
@@ -106,7 +59,7 @@ export default function RobotNeo({ waitOpportunities, blocked }) {
       </section>
 
       <WaitSection opportunities={waitOpportunities} />
-      <NotEligibleSection blocked={blocked} />
+      <ZoneClassification marketWatch={marketWatch} />
     </div>
   );
 }

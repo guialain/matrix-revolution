@@ -65,7 +65,7 @@ function ZoneClassification({ marketWatch = [] }) {
   return (
     <div className="zone-classification">
       <div className="zc-header">
-        <span className="zc-title">CLASSIFICATION</span>
+        <span className="zc-title">ASSETS TRENDS</span>
       </div>
 
       <div className="zc-section zc-grey">

@@ -21,6 +21,7 @@ import { getIntradayLevel } from "../../../../utils/marketLevels.js";
 import GlobalMarketHours from "../trading/GlobalMarketHours.js";
 import { resolveMarket } from "../trading/AssetEligibility.js";
 import { scoreOpportunity } from "./ScoreEngine.js";
+import * as funnel from "../../../../utils/funnelDebug.js";
 
 const TopOpportunities_V10R = (() => {
 
@@ -633,19 +634,18 @@ const TopOpportunities_V10R = (() => {
 
     let opps = [];
 
-    // Compteurs debug locaux
-    let cTotal = 0, cNonGrey = 0, cExhCandidates = 0, cExhValid = 0, cContTested = 0, cContValid = 0, cEmit = 0;
+    funnel.inc('marketWatchTotal', rows.length);
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
 
       const symbol = row?.symbol;
       if (!symbol) continue;
-      cTotal++;
 
       // Filtre amont 1 : gate horaire
       const marketKey = resolveMarket(row?.assetclass);
       if (!GlobalMarketHours.check(marketKey, new Date(), symbol).allowed) continue;
+      funnel.inc('hourGatePass');
 
       const riskCfg  = getRiskConfig(symbol);
       const intCfg   = INTRADAY_CONFIG[symbol] ?? INTRADAY_CONFIG.default;
@@ -654,6 +654,7 @@ const TopOpportunities_V10R = (() => {
       // Filtre amont 2 : ATR cap (> 4× cap)
       const atrH1 = num(row?.atr_h1);
       if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
+      funnel.inc('atrCapPass');
 
       const intra         = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);
@@ -667,6 +668,7 @@ const TopOpportunities_V10R = (() => {
       // Filtre amont 3+4 : spike H1 ou IC → emit WAIT + skip
       const _spike = detectSpike(_slope_h1_s0, intradayLevel);
       if (_spike.isSpike) {
+        funnel.inc('spikeWait');
         opps.push({
           type:            'WAIT',
           waitReason:      'spike',
@@ -696,6 +698,7 @@ const TopOpportunities_V10R = (() => {
 
       // Zone grise → WAIT
       if (zone === 'GRISE' || zone === 'UNKNOWN') {
+        funnel.inc('greyZoneWait');
         opps.push({
           type:        null,
           mode:        null,
@@ -717,7 +720,7 @@ const TopOpportunities_V10R = (() => {
         continue;
       }
 
-      cNonGrey++;
+      funnel.inc('nonGreyZone');
 
       // Détermination des routes EXH et CONT éligibles selon la zone
       let exhRoute = null, exhSide = null;
@@ -795,10 +798,10 @@ const TopOpportunities_V10R = (() => {
       // ====== 1. Test EXH (priorité, exclusif) ======
       let exhEmitted = false;
       if (exhRoute !== null) {
-        cExhCandidates++;
+        funnel.inc('exhTested');
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);
         if (exhResult.valid) {
-          cExhValid++;
+          funnel.inc('exhValid');
           if (riskCfg.exhaustionEnabled !== false) {
             // Récupérer reasonD1 pour le scoring (sans bloquer)
             const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
@@ -832,7 +835,7 @@ const TopOpportunities_V10R = (() => {
               ...propagated,
               exhaustion:  true,
             });
-            cEmit++;
+            funnel.inc('v10rEmit');
             exhEmitted = true;
           }
         }
@@ -843,20 +846,29 @@ const TopOpportunities_V10R = (() => {
         const gateD1 = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
 
         for (const side of contSides) {
+          funnel.inc('contTested');
+
           const allowed = (side === 'BUY')  ? gateD1.buyAllowed
                         : (side === 'SELL') ? gateD1.sellAllowed
                         : false;
-          if (!allowed) continue;
-
-          cContTested++;
+          if (!allowed) {
+            funnel.inc('contGateD1Block');
+            continue;
+          }
 
           const gateIC = evaluateGateIC(side, intradayLevel, _dsigma_ratio_h1_pct);
-          if (gateIC.mode === 'wait') continue;
+          if (gateIC.mode === 'wait') {
+            funnel.inc('contGateICWait');
+            continue;
+          }
 
           const gateH1 = evaluateGateH1(side, gateIC.mode, _slope_h1, _slope_h1_s0, _dslope_h1_live, symbol);
-          if (!gateH1.valid) continue;
+          if (!gateH1.valid) {
+            funnel.inc('contGateH1Fail');
+            continue;
+          }
 
-          cContValid++;
+          funnel.inc('contValid');
 
           // V-shape CONT : slope_h1 stable opposé au sens du trade
           const vshape = (side === 'BUY'  && _slope_h1 !== null && _slope_h1 < 0)
@@ -892,7 +904,7 @@ const TopOpportunities_V10R = (() => {
             ...propagated,
             exhaustion:  false,
           });
-          cEmit++;
+          funnel.inc('v10rEmit');
         }
       }
     }
@@ -905,19 +917,6 @@ const TopOpportunities_V10R = (() => {
     });
 
     opps = applyDedupeAndSpacing(opps, TOP_CFG);
-
-    if (TOP_CFG.debug) {
-      console.info("TOPOPP V10R", { total_rows: rows.length, signals: opps.length });
-      console.table({
-        "0 — total rows":      { count: cTotal,         pct: "100%" },
-        "1 — non-grey rows":   { count: cNonGrey,       pct: cTotal ? ((cNonGrey/cTotal)*100).toFixed(1)+"%" : "0%" },
-        "2 — EXH candidates":  { count: cExhCandidates, pct: cNonGrey ? ((cExhCandidates/cNonGrey)*100).toFixed(1)+"%" : "0%" },
-        "3 — EXH validated":   { count: cExhValid,      pct: cExhCandidates ? ((cExhValid/cExhCandidates)*100).toFixed(1)+"%" : "0%" },
-        "4 — CONT tested":     { count: cContTested,    pct: cNonGrey ? ((cContTested/cNonGrey)*100).toFixed(1)+"%" : "0%" },
-        "5 — CONT validated":  { count: cContValid,     pct: cContTested ? ((cContValid/cContTested)*100).toFixed(1)+"%" : "0%" },
-        "6 — emit final":      { count: cEmit,          pct: cTotal ? ((cEmit/cTotal)*100).toFixed(1)+"%" : "0%" },
-      });
-    }
 
     return opps;
   }

@@ -129,6 +129,7 @@ const RobotCore = {
       ? topRows.filter(r => !symbolsInCooldown.has(r.symbol))
       : topRows;
 
+    funnel.reset();
     const allOpps = TopOpportunities_V10R.evaluate(filteredRows, { minSignalSpacingMinutes: 1, scoreMin: 0 });
 
     const detected = { mainTF: "H1", rankMode: "multi", list: allOpps };

@@ -1,5 +1,5 @@
 // ============================================================================
-// funnelDebug.js — counters par étage du pipeline RobotCore + SignalFilters
+// funnelDebug.js — counters par étage du pipeline V10R + RobotCore + SignalFilters
 //
 // Activation : localStorage.setItem('debug.funnel', '1')
 //   ou globalThis.__funnelDebug = true (instantané, sans reload)
@@ -8,16 +8,24 @@
 // Inspecter en live : window.__funnel.snapshot()  /  window.__funnel.dump()
 // ============================================================================
 
-const STAGES = [
-  'marketWatchTotal',
-  'matchRouteOut',
-  'selectRouteOut',
-  'nullGuardFail',
-  'zoneUnknownFail',
-  'slopeZoneFail',
-  'dslopeFail',
-  'zscoreCapFail',
-  'checkConditionsOut',
+export const STAGES = [
+  // === Pipeline V10R amont (TopOpportunities_V10R) ===
+  'marketWatchTotal',     // rows entrants
+  'hourGatePass',         // après filtre GlobalMarketHours
+  'atrCapPass',           // après filtre ATR cap (volatility eligibility)
+  'spikeWait',            // WAIT spike émis (H1 ou IC)
+  'greyZoneWait',         // WAIT zone grise émis
+  'nonGreyZone',          // rows en zone non-grise (entrée routing)
+  'exhTested',            // EXH tenté (zone Forte ou Extreme)
+  'exhValid',             // EXH validé par evaluateExhRoute
+  'contTested',           // CONT testé pour un side
+  'contGateD1Block',      // bloqué par Gate D1
+  'contGateICWait',       // bloqué par Gate IC (mode 'wait')
+  'contGateH1Fail',       // bloqué par Gate H1
+  'contValid',            // CONT validé (avant emit)
+  'v10rEmit',             // émission finale par V10R (par opp pushée)
+
+  // === Pipeline aval (RobotCore + SignalFilters) ===
   'eligibilityIn',
   'eligibilityOut',
   'signalFiltersIn',
@@ -50,34 +58,19 @@ export function inc(key, n = 1) {
 }
 
 function buildRows() {
-  const f = _f;
-  const nullGuardIn  = f.selectRouteOut;
-  const zoneUnkIn    = nullGuardIn - f.nullGuardFail;
-  const slopeZoneIn  = zoneUnkIn - f.zoneUnknownFail;
-  const dslopeIn     = slopeZoneIn - f.slopeZoneFail;
-  const zscoreCapIn  = dslopeIn - f.dslopeFail;
-  return [
-    { stage: 'marketWatch total',          in: f.marketWatchTotal,    out: f.marketWatchTotal },
-    { stage: 'matchRoute (RSI×zscore)',    in: f.marketWatchTotal,    out: f.matchRouteOut },
-    { stage: 'selectRoute (D1+IC)',        in: f.matchRouteOut,       out: f.selectRouteOut },
-    { stage: 'checkCond null guard',       in: nullGuardIn,           out: nullGuardIn - f.nullGuardFail },
-    { stage: 'checkCond zone unknown',     in: zoneUnkIn,             out: zoneUnkIn - f.zoneUnknownFail },
-    { stage: 'checkCond slope_zone',       in: slopeZoneIn,           out: slopeZoneIn - f.slopeZoneFail },
-    { stage: 'checkCond dslope_h1',        in: dslopeIn,              out: dslopeIn - f.dslopeFail },
-    { stage: 'checkCond zscore_h1_s0',     in: zscoreCapIn,           out: f.checkConditionsOut },
-    { stage: 'AssetEligibility',           in: f.eligibilityIn,       out: f.eligibilityOut },
-    { stage: 'SignalFilters in',           in: f.eligibilityOut,      out: f.signalFiltersIn },
-    { stage: 'Gate 1 (M5 overextended)',   in: f.signalFiltersIn,     out: f.gate1Pass },
-    { stage: 'Gate 2 (M5 setup OK)',       in: f.gate1Pass,           out: f.gate2Pass },
-    { stage: 'VALID final',                in: f.gate2Pass,           out: f.validOut },
-    { stage: 'WAIT final',                 in: f.signalFiltersIn,     out: f.waitOut },
-  ];
+  return STAGES.map(stage => ({ stage, count: _f[stage] }));
 }
 
 export function dump() {
   if (!enabled()) return;
   const f = _f;
-  const summary = `mw=${f.marketWatchTotal} match=${f.matchRouteOut} sel=${f.selectRouteOut} | null=${f.nullGuardFail} zUnk=${f.zoneUnknownFail} slz=${f.slopeZoneFail} ds=${f.dslopeFail} z=${f.zscoreCapFail} | chk=${f.checkConditionsOut} elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
+  const summary =
+    `mw=${f.marketWatchTotal} hour=${f.hourGatePass} atr=${f.atrCapPass} ` +
+    `| spk=${f.spikeWait} grey=${f.greyZoneWait} nonG=${f.nonGreyZone} ` +
+    `| exh=${f.exhTested}/${f.exhValid} ` +
+    `| cont=${f.contTested} d1Bk=${f.contGateD1Block} icW=${f.contGateICWait} h1F=${f.contGateH1Fail} contOk=${f.contValid} ` +
+    `| EMIT=${f.v10rEmit} ` +
+    `| elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
   // eslint-disable-next-line no-console
   console.log('%c[funnel]', 'background:#222;color:#bada55;padding:2px 6px;border-radius:3px;font-weight:bold', summary);
   // eslint-disable-next-line no-console

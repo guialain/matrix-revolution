@@ -842,33 +842,41 @@ const TopOpportunities_V10R = (() => {
       }
 
       // ====== 2. Test CONT (si EXH non émis et CONT éligibles) ======
-      if (!exhEmitted && contSides.length > 0 && _dsigma_ratio_h1_pct !== null) {
+      // Flags par row : on incrémente une seule fois par row (pas par side)
+      // pour éviter le double comptage BUY+SELL sur les zones NORMALE_*.
+      let _contTestedFlag      = false;
+      let _contGateD1BlockFlag = false;
+      let _contGateICWaitFlag  = false;
+      let _contGateH1FailFlag  = false;
+      let _contValidFlag       = false;
+
+      if (!exhEmitted && contSides.length > 0) {
         const gateD1 = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
 
         for (const side of contSides) {
-          funnel.inc('contTested');
+          _contTestedFlag = true;
 
           const allowed = (side === 'BUY')  ? gateD1.buyAllowed
                         : (side === 'SELL') ? gateD1.sellAllowed
                         : false;
           if (!allowed) {
-            funnel.inc('contGateD1Block');
+            _contGateD1BlockFlag = true;
             continue;
           }
 
           const gateIC = evaluateGateIC(side, intradayLevel, _dsigma_ratio_h1_pct);
           if (gateIC.mode === 'wait') {
-            funnel.inc('contGateICWait');
+            _contGateICWaitFlag = true;
             continue;
           }
 
           const gateH1 = evaluateGateH1(side, gateIC.mode, _slope_h1, _slope_h1_s0, _dslope_h1_live, symbol);
           if (!gateH1.valid) {
-            funnel.inc('contGateH1Fail');
+            _contGateH1FailFlag = true;
             continue;
           }
 
-          funnel.inc('contValid');
+          _contValidFlag = true;
 
           // V-shape CONT : slope_h1 stable opposé au sens du trade
           const vshape = (side === 'BUY'  && _slope_h1 !== null && _slope_h1 < 0)
@@ -907,6 +915,13 @@ const TopOpportunities_V10R = (() => {
           funnel.inc('v10rEmit');
         }
       }
+
+      // Flush des flags CONT (1× par row, pas par side)
+      if (_contTestedFlag)      funnel.inc('contTested');
+      if (_contGateD1BlockFlag) funnel.inc('contGateD1Block');
+      if (_contGateICWaitFlag)  funnel.inc('contGateICWait');
+      if (_contGateH1FailFlag)  funnel.inc('contGateH1Fail');
+      if (_contValidFlag)       funnel.inc('contValid');
     }
 
     // Tri : score desc, puis timestamp desc

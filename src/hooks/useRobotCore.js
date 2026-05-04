@@ -7,6 +7,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import RobotCore from "../components/robot/RobotCore";
 import SignalFrequency from "../components/robot/engines/trading/SignalFrequency";
+import { filterWaitCooldown } from "../utils/tradeCooldown";
 
 const API_BASE = window.location.hostname === "localhost"
   ? "http://localhost:3001"
@@ -170,19 +171,23 @@ export default function useRobotCore(snapshot) {
       return true;
     });
 
+    // Throttle WAIT 5s par symbol avant POST serveur (anti-spam).
+    // L'UI reçoit la liste brute via core.waitOpportunities (RobotCore).
+    const throttledWait = filterWaitCooldown(wait);
+
     // Always publish wait ops (lightweight), but only fresh valid ops
-    if (!throttledValid.length && !wait.length) return;
+    if (!throttledValid.length && !throttledWait.length) return;
 
     fetch(`${API_BASE}/api/signals/publish`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ validOpportunities: throttledValid, waitOpportunities: wait }),
+      body: JSON.stringify({ validOpportunities: throttledValid, waitOpportunities: throttledWait }),
     }).catch(() => {});
 
     // Logger CSV — dedup en memoire (signal_id), fire-and-forget
     valid.forEach(op => logSignal(op, "VALID"));
-    wait.forEach(op  => logSignal(op, "WAIT"));
+    throttledWait.forEach(op => logSignal(op, "WAIT"));
   }, [coreResult]);
 
   // Merge: core analysis + server signals

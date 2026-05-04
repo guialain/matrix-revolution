@@ -231,8 +231,9 @@ const RobotCore = {
     const stampEmittedAt = op => ({ ...op, emittedAt: op.emittedAt ?? Date.now() });
     // Etage 2 : throttle VALID 15s par symbol (rafale pre-ordre allegee).
     const validOpportunities = filterValidCooldown(rawValid.map(stampEmittedAt));
-    // Etage 3 : throttle WAIT 5s par symbol.
-    const waitOpportunities  = filterWaitCooldown(rawWait.map(stampEmittedAt));
+    // WAIT : pas de throttle ici — l'UI reçoit la liste brute pour affichage en continu.
+    // Le throttle 5s est appliqué côté useRobotCore juste avant le POST serveur.
+    const waitOpportunities  = rawWait.map(stampEmittedAt);
 
     const allowed = validOpportunities.length > 0;
 

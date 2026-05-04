@@ -108,33 +108,36 @@ const TopOpportunities_V10R = (() => {
   // Valeur false = BLOCK
   //
   // Logique :
-  //   - Stable bloque dans tous les cas (incoherence : mouvement IC sans signature sigma)
+  //   - Stable admis (sigma rolling pas encore impactée par le retournement amorcé,
+  //     cas typique des premiers ticks d'un V-shape — la confirmation slope live
+  //     suffit, on n'attend plus la signature sigma)
   //   - SOFT (preuve moderee) : exige contraction nette de sigma (comp_forte ou contraction)
-  //   - STRONG/EXPLOSIVE (preuve forte) : tolerent expansion et explosion (climax/capitulation)
+  //     ou stable
+  //   - STRONG/EXPLOSIVE (preuve forte) : tolerent toutes les classes sauf inadmises
   // ============================================================================
 
   // Zone BASSE / HAUTE (z = forte mais non extreme)
   const EXH_MATRIX_FORTE_BUY = {
-    SOFT_DOWN:      { compression_forte: true,  contraction: true,  stable: false, expansion: false, explosion: false },
-    STRONG_DOWN:    { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
-    EXPLOSIVE_DOWN: { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
+    SOFT_DOWN:      { compression_forte: true,  contraction: true,  stable: true,  expansion: false, explosion: false },
+    STRONG_DOWN:    { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
+    EXPLOSIVE_DOWN: { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
   };
 
   const EXH_MATRIX_FORTE_SELL = {
-    SOFT_UP:        { compression_forte: true,  contraction: true,  stable: false, expansion: false, explosion: false },
-    STRONG_UP:      { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
-    EXPLOSIVE_UP:   { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
+    SOFT_UP:        { compression_forte: true,  contraction: true,  stable: true,  expansion: false, explosion: false },
+    STRONG_UP:      { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
+    EXPLOSIVE_UP:   { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
   };
 
   // Zone EXTREME_BASSE / EXTREME_HAUTE (SOFT non admis)
   const EXH_MATRIX_EXTREME_BUY = {
-    STRONG_DOWN:    { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
-    EXPLOSIVE_DOWN: { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
+    STRONG_DOWN:    { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
+    EXPLOSIVE_DOWN: { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
   };
 
   const EXH_MATRIX_EXTREME_SELL = {
-    STRONG_UP:      { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
-    EXPLOSIVE_UP:   { compression_forte: true,  contraction: true,  stable: false, expansion: true,  explosion: true  },
+    STRONG_UP:      { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
+    EXPLOSIVE_UP:   { compression_forte: true,  contraction: true,  stable: true,  expansion: true,  explosion: true  },
   };
 
   // ============================================================================
@@ -181,17 +184,19 @@ const TopOpportunities_V10R = (() => {
   //        SELL Extrême : slope_h1 >= +0.5
   //        Note : Forte est PLUS PERMISSIVE que Extrême (inversion volontaire).
   //   3. règle combinée dslope_h1_live + dsigma classe :
-  //        BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {expansion, explosion}
-  //        SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {expansion, explosion}
-  //        Logique : retournement mesurable sur slope live ET signature
-  //        d'expansion sigma confirment l'épuisement (cap V-shape intégré).
+  //        BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
+  //        SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {stable, expansion, explosion}
+  //        Logique : retournement mesurable sur slope live suffit ; sigma peut
+  //        encore être stable (cas des premiers ticks de V-shape) ou expansée
+  //        (climax/capitulation). Cap V-shape intégré.
   //   (zscore_h1_s0 déjà filtré par la classification de zone amont — pas re-testé)
   //
   // === NIVEAU 2 — Affinage ===
   //   1. Matrice IC × dsigma_classe par zone :
-  //        Stable bloque toujours.
-  //        Forte   : SOFT/STRONG/EXPLOSIVE_(DOWN|UP) admis. SOFT exige contraction.
-  //        Extreme : seul STRONG/EXPLOSIVE admis. Plus permissif sur dsigma.
+  //        Stable admis (cohérent avec L1.3).
+  //        Forte   : SOFT/STRONG/EXPLOSIVE_(DOWN|UP) admis. SOFT exige contraction
+  //                  ou stable.
+  //        Extreme : seul STRONG/EXPLOSIVE admis. Toutes classes sigma admises.
   //
   // === RETOURS ===
   //   { valid: true,  vshape, level: 'L2_OK' }                                     — tous OK
@@ -249,14 +254,15 @@ const TopOpportunities_V10R = (() => {
     }
 
     // L1.3 : règle combinée dslope_h1_live + dsigma classe
-    //   BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {expansion, explosion}
-    //   SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {expansion, explosion}
+    //   BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
+    //   SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {stable, expansion, explosion}
     //   (cap V-shape intégré ici — ancien L2.1 supprimé)
+    //   Stable admis : sigma rolling pas encore impactée par le retournement amorcé.
     const dsigmaLevel = classifyDsigmaForExh(dsigma);
     if (dsigmaLevel === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
 
     const dslope_live = slope_s0 - slope_h1;
-    const dsigmaOk = dsigmaLevel === 'expansion' || dsigmaLevel === 'explosion';
+    const dsigmaOk = dsigmaLevel === 'stable' || dsigmaLevel === 'expansion' || dsigmaLevel === 'explosion';
 
     if (side === 'BUY') {
       if (!(dslope_live >= 0.5 && dslope_live < 7.5 && dsigmaOk)) {

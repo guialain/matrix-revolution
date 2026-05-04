@@ -16,18 +16,37 @@ export const STAGES = [
   'spikeBlock',           // wait-spike émis
   'greyZone',             // wait-grey émis
   'nonGreyZone',          // entrée routing EXH/CONT
-  'exhTested',            // EXH testé (zone HAUTE/BASSE/EXTREME)
-  'exhL1Pass',            // L1 OK (= L2_OK ou L2_FAIL)
-  'exhL1FailNormal',      // L1 fail en zone HAUTE/BASSE → bascule CONT
-  'exhL1FailExtreme',     // L1 fail en zone EXTREME → wait-exh-only
-  'exhL2Pass',            // L2 OK = valid EXH émise
-  'exhL2Fail',            // L1 OK + L2 fail = wait-exh
-  'contTested',           // rows entrées dans la branche CONT (1 par row)
-  'contGateD1Block',      // deepest stage reached = D1
-  'contGateICWait',       // deepest stage reached = IC
-  'contGateH1Fail',       // deepest stage reached = H1
-  'contValid',            // au moins 1 side validé = valid CONT émise
-  'v10rEmit',             // total opps V10R émises (= exhL2Pass + contValid)
+
+  // === EXH BUY (zones BASSE / NORMALE_BASSE / EXTREME_BASSE) ===
+  'exhBuy_tested',
+  'exhBuy_L1Pass',
+  'exhBuy_L1Fail',
+  'exhBuy_L2Pass',        // valid EXH BUY émise
+  'exhBuy_L2Fail',        // wait-exh BUY émis
+
+  // === EXH SELL (zones HAUTE / NORMALE_HAUTE / EXTREME_HAUTE) ===
+  'exhSell_tested',
+  'exhSell_L1Pass',
+  'exhSell_L1Fail',
+  'exhSell_L2Pass',
+  'exhSell_L2Fail',
+
+  // === CONT BUY (deepest stage reached par side) ===
+  'contBuy_tested',
+  'contBuy_D1Block',
+  'contBuy_ICWait',
+  'contBuy_H1Fail',
+  'contBuy_Valid',
+
+  // === CONT SELL ===
+  'contSell_tested',
+  'contSell_D1Block',
+  'contSell_ICWait',
+  'contSell_H1Fail',
+  'contSell_Valid',
+
+  // === Emit ===
+  'v10rEmit',             // = exhBuy_L2Pass + exhSell_L2Pass + contBuy_Valid + contSell_Valid
 
   // === Pipeline aval RobotCore + SignalFilters ===
   'eligibilityIn',
@@ -77,33 +96,42 @@ function buildRows() {
 
   const max0 = n => Math.max(0, n);
 
-  // === EXH ===
-  rows.push({ stage: 'exhTested',         in: c.nonGreyZone,       out: c.exhTested });
-  // Cascade L1 (3 buckets exclusifs par row) : in = restant après les buckets précédents
-  rows.push({ stage: 'exhL1Pass',         in: c.exhTested,         out: c.exhL1Pass });
-  let exhIn = max0(c.exhTested - c.exhL1Pass);
-  rows.push({ stage: 'exhL1FailNormal',   in: exhIn,               out: c.exhL1FailNormal });
-  exhIn = max0(exhIn - c.exhL1FailNormal);
-  rows.push({ stage: 'exhL1FailExtreme',  in: exhIn,               out: c.exhL1FailExtreme });
-  // Cascade L2 (2 buckets exclusifs par row, à partir de exhL1Pass)
-  rows.push({ stage: 'exhL2Pass',         in: c.exhL1Pass,         out: c.exhL2Pass });
-  rows.push({ stage: 'exhL2Fail',         in: max0(c.exhL1Pass - c.exhL2Pass), out: c.exhL2Fail });
+  // === EXH BUY cascade ===
+  rows.push({ stage: 'exhBuy_tested',  in: c.exhBuy_tested,  out: c.exhBuy_tested });
+  rows.push({ stage: 'exhBuy_L1Pass',  in: c.exhBuy_tested,  out: c.exhBuy_L1Pass });
+  rows.push({ stage: 'exhBuy_L1Fail',  in: max0(c.exhBuy_tested - c.exhBuy_L1Pass), out: c.exhBuy_L1Fail });
+  rows.push({ stage: 'exhBuy_L2Pass',  in: c.exhBuy_L1Pass,  out: c.exhBuy_L2Pass });
+  rows.push({ stage: 'exhBuy_L2Fail',  in: max0(c.exhBuy_L1Pass - c.exhBuy_L2Pass), out: c.exhBuy_L2Fail });
 
-  // === CONT ===
-  // Note : contTested.in = (nonGreyZone en NORMALE_*) + exhL1FailNormal
-  // Pas séparable proprement sans nouveau compteur dédié — donc in=out pour ce stage.
-  rows.push({ stage: 'contTested',        in: c.contTested,        out: c.contTested });
-  // Cascade CONT (4 buckets exclusifs par row, deepest stage reached)
-  rows.push({ stage: 'contGateD1Block',   in: c.contTested,        out: c.contGateD1Block });
-  let contIn = max0(c.contTested - c.contGateD1Block);
-  rows.push({ stage: 'contGateICWait',    in: contIn,              out: c.contGateICWait });
-  contIn = max0(contIn - c.contGateICWait);
-  rows.push({ stage: 'contGateH1Fail',    in: contIn,              out: c.contGateH1Fail });
-  contIn = max0(contIn - c.contGateH1Fail);
-  rows.push({ stage: 'contValid',         in: contIn,              out: c.contValid });
+  // === EXH SELL cascade ===
+  rows.push({ stage: 'exhSell_tested', in: c.exhSell_tested, out: c.exhSell_tested });
+  rows.push({ stage: 'exhSell_L1Pass', in: c.exhSell_tested, out: c.exhSell_L1Pass });
+  rows.push({ stage: 'exhSell_L1Fail', in: max0(c.exhSell_tested - c.exhSell_L1Pass), out: c.exhSell_L1Fail });
+  rows.push({ stage: 'exhSell_L2Pass', in: c.exhSell_L1Pass, out: c.exhSell_L2Pass });
+  rows.push({ stage: 'exhSell_L2Fail', in: max0(c.exhSell_L1Pass - c.exhSell_L2Pass), out: c.exhSell_L2Fail });
+
+  // === CONT BUY cascade (deepest stage reached) ===
+  rows.push({ stage: 'contBuy_tested',  in: c.contBuy_tested, out: c.contBuy_tested });
+  rows.push({ stage: 'contBuy_D1Block', in: c.contBuy_tested, out: c.contBuy_D1Block });
+  let cBuyIn = max0(c.contBuy_tested - c.contBuy_D1Block);
+  rows.push({ stage: 'contBuy_ICWait',  in: cBuyIn, out: c.contBuy_ICWait });
+  cBuyIn = max0(cBuyIn - c.contBuy_ICWait);
+  rows.push({ stage: 'contBuy_H1Fail',  in: cBuyIn, out: c.contBuy_H1Fail });
+  cBuyIn = max0(cBuyIn - c.contBuy_H1Fail);
+  rows.push({ stage: 'contBuy_Valid',   in: cBuyIn, out: c.contBuy_Valid });
+
+  // === CONT SELL cascade ===
+  rows.push({ stage: 'contSell_tested',  in: c.contSell_tested, out: c.contSell_tested });
+  rows.push({ stage: 'contSell_D1Block', in: c.contSell_tested, out: c.contSell_D1Block });
+  let cSellIn = max0(c.contSell_tested - c.contSell_D1Block);
+  rows.push({ stage: 'contSell_ICWait',  in: cSellIn, out: c.contSell_ICWait });
+  cSellIn = max0(cSellIn - c.contSell_ICWait);
+  rows.push({ stage: 'contSell_H1Fail',  in: cSellIn, out: c.contSell_H1Fail });
+  cSellIn = max0(cSellIn - c.contSell_H1Fail);
+  rows.push({ stage: 'contSell_Valid',   in: cSellIn, out: c.contSell_Valid });
 
   // === Emit V10R ===
-  rows.push({ stage: 'v10rEmit',          in: c.exhL2Pass + c.contValid, out: c.v10rEmit });
+  rows.push({ stage: 'v10rEmit', in: c.exhBuy_L2Pass + c.exhSell_L2Pass + c.contBuy_Valid + c.contSell_Valid, out: c.v10rEmit });
 
   // === Pipeline aval ===
   rows.push({ stage: 'eligibilityIn',     in: c.v10rEmit,          out: c.eligibilityIn });
@@ -123,8 +151,10 @@ export function dump() {
   const summary =
     `mw=${f.marketWatchTotal} hour=${f.hourGatePass} atr=${f.atrCapPass} ` +
     `| spk=${f.spikeBlock} grey=${f.greyZone} nonG=${f.nonGreyZone} ` +
-    `| EXH t=${f.exhTested} L1ok=${f.exhL1Pass}(N=${f.exhL1FailNormal}/E=${f.exhL1FailExtreme}) L2=${f.exhL2Pass}/${f.exhL2Fail} ` +
-    `| CONT t=${f.contTested} d1=${f.contGateD1Block} ic=${f.contGateICWait} h1=${f.contGateH1Fail} ok=${f.contValid} ` +
+    `| EXH-BUY t=${f.exhBuy_tested} L1=${f.exhBuy_L1Pass}/${f.exhBuy_L1Fail} L2=${f.exhBuy_L2Pass}/${f.exhBuy_L2Fail} ` +
+    `| EXH-SELL t=${f.exhSell_tested} L1=${f.exhSell_L1Pass}/${f.exhSell_L1Fail} L2=${f.exhSell_L2Pass}/${f.exhSell_L2Fail} ` +
+    `| CONT-BUY t=${f.contBuy_tested} d1=${f.contBuy_D1Block} ic=${f.contBuy_ICWait} h1=${f.contBuy_H1Fail} ok=${f.contBuy_Valid} ` +
+    `| CONT-SELL t=${f.contSell_tested} d1=${f.contSell_D1Block} ic=${f.contSell_ICWait} h1=${f.contSell_H1Fail} ok=${f.contSell_Valid} ` +
     `| EMIT=${f.v10rEmit} elig=${f.eligibilityOut} m5o=${f.m5OverextPass} m5s=${f.m5SetupPass} ` +
     `VALID=${f.validOut} WAIT=${f.waitOut}`;
   // eslint-disable-next-line no-console

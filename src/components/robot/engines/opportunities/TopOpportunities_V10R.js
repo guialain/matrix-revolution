@@ -833,12 +833,13 @@ const TopOpportunities_V10R = (() => {
       let exhEmitted = false;
       let _exhFailed = false;
       if (exhRoute !== null) {
-        funnel.inc('exhTested');
+        const exhKey = exhSide === 'BUY' ? 'exhBuy' : 'exhSell';
+        funnel.inc(`${exhKey}_tested`);
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);
         if (exhResult.valid) {
           // L2_OK : push valid EXH (logique inchangée)
-          funnel.inc('exhL1Pass');
-          funnel.inc('exhL2Pass');
+          funnel.inc(`${exhKey}_L1Pass`);
+          funnel.inc(`${exhKey}_L2Pass`);
           if (riskCfg.exhaustionEnabled !== false) {
             // Récupérer reasonD1 pour le scoring (sans bloquer)
             const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
@@ -877,8 +878,8 @@ const TopOpportunities_V10R = (() => {
           }
         } else if (exhResult.candidateExh) {
           // L1 OK + L2 fail : push wait-exh (candidat identifié, bloque la bascule CONT)
-          funnel.inc('exhL1Pass');
-          funnel.inc('exhL2Fail');
+          funnel.inc(`${exhKey}_L1Pass`);
+          funnel.inc(`${exhKey}_L2Fail`);
 
           // Score le candidat (données disponibles, même logique que valid EXH)
           const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
@@ -898,22 +899,20 @@ const TopOpportunities_V10R = (() => {
           });
           exhEmitted = true;
         } else {
-          // L1 fail : split selon zone (EXTREME=no CONT fallback, HAUTE/BASSE=bascule CONT)
-          if (contSides.length === 0) funnel.inc('exhL1FailExtreme');
-          else                         funnel.inc('exhL1FailNormal');
+          // L1 fail
+          funnel.inc(`${exhKey}_L1Fail`);
           _exhFailed = true;
         }
       }
 
       // ====== 2. Test CONT (si EXH non émis et CONT éligibles) ======
-      // Flags par row : on incrémente une seule fois par row (pas par side)
-      // pour éviter le double comptage BUY+SELL sur les zones NORMALE_*.
-      let _contTestedFlag      = false;
-      let _contGateD1BlockFlag = false;
-      let _contGateICWaitFlag  = false;
-      let _contGateH1FailFlag  = false;
+      // Flags par side : permettent de tracker BUY et SELL indépendamment
+      // sur les zones NORMALE_* (où contSides = ['BUY','SELL']).
+      let _contBuy_tested = false, _contBuy_d1 = false, _contBuy_ic = false, _contBuy_h1 = false, _contBuy_valid = false;
+      let _contSell_tested = false, _contSell_d1 = false, _contSell_ic = false, _contSell_h1 = false, _contSell_valid = false;
+      // Drapeau global (pour le wait-cont-* push qui est 1× par row max)
       let _contValidFlag       = false;
-      // Deepest stage reached parmi les sides testés (h1 > ic > d1)
+      // Deepest stage reached parmi les sides testés (h1 > ic > d1) — sert au wait_reason
       let _contDeepest         = null;
       let _contDeepestSide     = null;
       let _contReasonD1        = null;
@@ -930,31 +929,33 @@ const TopOpportunities_V10R = (() => {
         _contReasonD1 = gateD1.reason;
 
         for (const side of contSides) {
-          _contTestedFlag = true;
+          const isBuy = side === 'BUY';
+          if (isBuy) _contBuy_tested = true; else _contSell_tested = true;
 
           const allowed = (side === 'BUY')  ? gateD1.buyAllowed
                         : (side === 'SELL') ? gateD1.sellAllowed
                         : false;
           if (!allowed) {
-            _contGateD1BlockFlag = true;
+            if (isBuy) _contBuy_d1 = true; else _contSell_d1 = true;
             _bumpDeepest('d1', side);
             continue;
           }
 
           const gateIC = evaluateGateIC(side, intradayLevel, _dsigma_ratio_h1_pct);
           if (gateIC.mode === 'wait') {
-            _contGateICWaitFlag = true;
+            if (isBuy) _contBuy_ic = true; else _contSell_ic = true;
             _bumpDeepest('ic', side);
             continue;
           }
 
           const gateH1 = evaluateGateH1(side, gateIC.mode, _slope_h1, _slope_h1_s0, _dslope_h1_live, symbol);
           if (!gateH1.valid) {
-            _contGateH1FailFlag = true;
+            if (isBuy) _contBuy_h1 = true; else _contSell_h1 = true;
             _bumpDeepest('h1', side);
             continue;
           }
 
+          if (isBuy) _contBuy_valid = true; else _contSell_valid = true;
           _contValidFlag = true;
 
           // V-shape CONT : slope_h1 stable opposé au sens du trade
@@ -997,7 +998,7 @@ const TopOpportunities_V10R = (() => {
 
       // === Décision du wait à exposer (1 par row max, valid > all wait) ===
       if (!exhEmitted && !_contValidFlag) {
-        if (_contTestedFlag && _contDeepest) {
+        if ((_contBuy_tested || _contSell_tested) && _contDeepest) {
           // Wait CONT — deepest stage reached prime (h1 > ic > d1)
           const reason = _contDeepest === 'h1' ? 'wait-cont-h1'
                        : _contDeepest === 'ic' ? 'wait-cont-ic'
@@ -1042,14 +1043,21 @@ const TopOpportunities_V10R = (() => {
         // else : silent (cas !symbol défensif déjà filtré, exhDisabled config rare)
       }
 
-      // Flush des flags CONT (1× par row, deepest stage reached prime)
-      // contTested = contValid + contGateH1Fail + contGateICWait + contGateD1Block (4 buckets exclusifs)
-      if (_contTestedFlag) {
-        funnel.inc('contTested');
-        if      (_contValidFlag)        funnel.inc('contValid');
-        else if (_contDeepest === 'h1') funnel.inc('contGateH1Fail');
-        else if (_contDeepest === 'ic') funnel.inc('contGateICWait');
-        else if (_contDeepest === 'd1') funnel.inc('contGateD1Block');
+      // Flush des flags CONT par side (deepest stage reached, 1× max par side par row)
+      // Per side : tested = Valid + H1Fail + ICWait + D1Block (4 buckets exclusifs)
+      if (_contBuy_tested) {
+        funnel.inc('contBuy_tested');
+        if      (_contBuy_valid) funnel.inc('contBuy_Valid');
+        else if (_contBuy_h1)    funnel.inc('contBuy_H1Fail');
+        else if (_contBuy_ic)    funnel.inc('contBuy_ICWait');
+        else if (_contBuy_d1)    funnel.inc('contBuy_D1Block');
+      }
+      if (_contSell_tested) {
+        funnel.inc('contSell_tested');
+        if      (_contSell_valid) funnel.inc('contSell_Valid');
+        else if (_contSell_h1)    funnel.inc('contSell_H1Fail');
+        else if (_contSell_ic)    funnel.inc('contSell_ICWait');
+        else if (_contSell_d1)    funnel.inc('contSell_D1Block');
       }
     }
 

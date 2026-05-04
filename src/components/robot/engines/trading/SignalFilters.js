@@ -182,6 +182,22 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
+  // GATE 2 BIS — M5 SetupOK pour EXH (climax / capitulation)
+  //
+  // Logique inverse de isM5SetupOK : on cherche la signature
+  // climax (SELL) ou capitulation (BUY) sur M5 — pic RSI et
+  // pente violente dans le sens du mouvement à retourner.
+  //
+  //   SELL EXH : rsi_m5 > 65 ET slope_m5 > +1.5  (pic haussier M5)
+  //   BUY  EXH : rsi_m5 < 35 ET slope_m5 < -1.5  (capitulation baissière M5)
+  // =========================================================
+  function isM5SetupOK_EXH(rsi_m5, slope_m5, side) {
+    if (!Number.isFinite(rsi_m5) || !Number.isFinite(slope_m5)) return false;
+    if (side === 'SELL') return rsi_m5 > 65 && slope_m5 > 1.5;
+    return rsi_m5 < 35 && slope_m5 < -1.5;
+  }
+
+  // =========================================================
   // MAIN
   // =========================================================
   function evaluate({ opportunities } = {}) {
@@ -240,9 +256,20 @@ const SignalFilters = (() => {
       }
       if (isTradable) funnel.inc('m5OverextPass');
 
-      // 6. M5 SetupOK — CONT vs V-shape, 3 conditions AND
-      if (!isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode)) {
-        const wait_reason = is_vshape_m5 ? "M5_GATE2_VSHAPE" : "M5_GATE2_CONT";
+      // 6. M5 SetupOK — branchement par type
+      //    EXH (valid + wait-exh + wait-exh-only) → isM5SetupOK_EXH (climax/capitulation)
+      //    Tout le reste                          → isM5SetupOK CONT/V-shape
+      const isExh = opp?.type === 'EXHAUSTION'
+                 || opp?.waitReason === 'wait-exh'
+                 || opp?.waitReason === 'wait-exh-only';
+      const setupOK = isExh
+        ? isM5SetupOK_EXH(num(opp?.rsi_m5), _slope_m5, side)
+        : isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode);
+
+      if (!setupOK) {
+        const wait_reason = isExh
+          ? "M5_GATE2_EXH"
+          : (is_vshape_m5 ? "M5_GATE2_VSHAPE" : "M5_GATE2_CONT");
         waitOpportunities.push({ ...opp, state: "WAIT_M5_SETUP", wait_reason, m5Level: mode, is_vshape_m5 });
         if (isTradable) funnel.inc('waitOut');
         continue;

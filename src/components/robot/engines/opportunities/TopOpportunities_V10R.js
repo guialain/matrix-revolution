@@ -1,13 +1,11 @@
 // ============================================================================
 // TopOpportunities_V10R.js — H1 ROUTER V10R (zscore-centric, EXH + CONT)
 //
-// Architecture : 7 zones zscore_h1 (5 nommees + grise + 2 extremes)
+// Architecture : 5 zones zscore_h1 (3 nommees + grise + 2 extremes)
 //   z > +2.9          → EXTREME_HAUTE  → SELL EXH only
-//   +1.5 < z <= +2.9  → HAUTE          → SELL EXH | BUY CONT
-//   +0.5 < z <= +1.5  → NORMALE_HAUTE  → BUY CONT | SELL CONT
+//   +0.5 < z <= +2.9  → HAUTE          → SELL EXH | BUY CONT
 //   -0.5 <= z <= +0.5 → GRISE          → WAIT
-//   -1.5 < z < -0.5   → NORMALE_BASSE  → BUY CONT | SELL CONT
-//   -2.9 <= z <= -1.5 → BASSE          → BUY EXH | SELL CONT
+//   -2.9 <= z <  -0.5 → BASSE          → BUY EXH | SELL CONT
 //   z < -2.9          → EXTREME_BASSE  → BUY EXH only
 //
 // EXH : 2 niveaux (L1 candidat + L2 affinage). Si L2 OK → emit valid.
@@ -745,10 +743,6 @@ const TopOpportunities_V10R = (() => {
       } else if (zone === 'HAUTE') {
         exhRoute = 'haute_SELL_EXH';   exhSide = 'SELL';
         contSides.push('BUY');
-      } else if (zone === 'NORMALE_HAUTE') {
-        contSides.push('BUY', 'SELL');
-      } else if (zone === 'NORMALE_BASSE') {
-        contSides.push('BUY', 'SELL');
       } else if (zone === 'BASSE') {
         exhRoute = 'basse_BUY_EXH';    exhSide = 'BUY';
         contSides.push('SELL');

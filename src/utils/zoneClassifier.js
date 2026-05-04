@@ -9,10 +9,8 @@ export function getZscoreH1Zone(zscore) {
   }
   const v = Number(zscore);
   if (v >  +2.9)  return 'EXTREME_HAUTE';
-  if (v >  +1.5)  return 'HAUTE';
-  if (v >  +0.5)  return 'NORMALE_HAUTE';
+  if (v >  +0.5)  return 'HAUTE';
   if (v >= -0.5)  return 'GRISE';
-  if (v >  -1.5)  return 'NORMALE_BASSE';
   if (v >= -2.9)  return 'BASSE';
   return 'EXTREME_BASSE';
 }

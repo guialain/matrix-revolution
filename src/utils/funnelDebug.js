@@ -114,7 +114,7 @@ function buildRows() {
   rows.push({ stage: 'validOut',          in: c.m5SetupPass,       out: c.validOut });
   rows.push({ stage: 'waitOut',           in: c.signalFiltersIn,   out: c.waitOut });
 
-  return rows;
+  return rows.map(r => ({ ...r, pass: Math.max(0, (r.in ?? 0) - (r.out ?? 0)) }));
 }
 
 export function dump() {

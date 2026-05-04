@@ -189,12 +189,12 @@ const SignalFilters = (() => {
   // la direction du slope_m5 (qui peut avoir déjà basculé). Seul un
   // slope_m5 EXTRÊME contre-tendance déclenche un refus (anti-spike).
   //
-  //   SELL EXH : rsi_m5 > 65 ET slope_m5 < +7.5  (pas de spike haussier explosif)
+  //   SELL EXH : rsi_m5 > 35 ET slope_m5 < +7.5  (pas de spike haussier explosif)
   //   BUY  EXH : rsi_m5 < 65 ET slope_m5 > -7.5  (pas de spike baissier explosif)
   // =========================================================
   function isM5SetupOK_EXH(rsi_m5, slope_m5, side) {
     if (!Number.isFinite(rsi_m5) || !Number.isFinite(slope_m5)) return false;
-    if (side === 'SELL') return rsi_m5 > 65 && slope_m5 < 7.5;
+    if (side === 'SELL') return rsi_m5 > 35 && slope_m5 < 7.5;
     return rsi_m5 < 65 && slope_m5 > -7.5;
   }
 

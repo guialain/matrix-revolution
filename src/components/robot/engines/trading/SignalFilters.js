@@ -182,20 +182,26 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // GATE 2 BIS — M5 SetupOK pour EXH (RSI extrême + anti-spike)
+  // GATE 2 BIS — M5 SetupOK pour EXH (dslope amorcé + anti-spike)
   //
-  // Confirmation M5 d'un EXH H1 : RSI M5 doit refléter la zone extrême
-  // déjà acquise (capitulation BUY / climax SELL), sans condition sur
-  // la direction du slope_m5 (qui peut avoir déjà basculé). Seul un
-  // slope_m5 EXTRÊME contre-tendance déclenche un refus (anti-spike).
+  // Confirmation M5 d'un EXH H1 : retournement live amorcé sur M5 (dslope_m5)
+  // ET anti-spike borne haute (slope_m5_s0). RSI M5 reste très permissif —
+  // c'est le timing dslope qui prime, pas le niveau RSI absolu.
   //
-  //   SELL EXH : rsi_m5 > 35 ET slope_m5 < +7.5  (pas de spike haussier explosif)
-  //   BUY  EXH : rsi_m5 < 65 ET slope_m5 > -7.5  (pas de spike baissier explosif)
+  //   SELL EXH : rsi_m5 > 35 ET dslope_m5 < -0.5 ET slope_m5_s0 > -7.5
+  //   BUY  EXH : rsi_m5 < 65 ET dslope_m5 > +0.5 ET slope_m5_s0 < +7.5
+  //
+  // Logique miroir L1.3 H1 (dslope_h1_live) : on exige une signature de
+  // retournement aussi sur M5, pas juste l'absence de spike.
   // =========================================================
-  function isM5SetupOK_EXH(rsi_m5, slope_m5, side) {
-    if (!Number.isFinite(rsi_m5) || !Number.isFinite(slope_m5)) return false;
-    if (side === 'SELL') return rsi_m5 > 35 && slope_m5 < 7.5;
-    return rsi_m5 < 65 && slope_m5 > -7.5;
+  function isM5SetupOK_EXH(rsi_m5, slope_m5, slope_m5_s0, side) {
+    if (!Number.isFinite(rsi_m5) || !Number.isFinite(slope_m5) || !Number.isFinite(slope_m5_s0)) return false;
+    const dslope_m5 = slope_m5_s0 - slope_m5;
+    if (side === 'SELL') {
+      return rsi_m5 > 35 && dslope_m5 < -0.5 && slope_m5_s0 > -7.5;
+    }
+    // BUY
+    return rsi_m5 < 65 && dslope_m5 > 0.5 && slope_m5_s0 < 7.5;
   }
 
   // =========================================================
@@ -264,7 +270,7 @@ const SignalFilters = (() => {
                  || opp?.waitReason === 'wait-exh'
                  || opp?.waitReason === 'wait-exh-only';
       const setupOK = isExh
-        ? isM5SetupOK_EXH(num(opp?.rsi_m5), _slope_m5, side)
+        ? isM5SetupOK_EXH(num(opp?.rsi_m5), _slope_m5, _slope_m5_s0, side)
         : isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode);
 
       if (!setupOK) {

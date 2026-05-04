@@ -171,11 +171,9 @@ const TopOpportunities_V10R = (() => {
   // Architecture 2 niveaux (early-return au premier fail dans chaque niveau) :
   //
   // === NIVEAU 1 — Classification candidat EXH ===
-  //   1. RSI dual (rsi instantané + prev3) selon zone :
-  //        SELL Forte    : rsi > 65 ET prevHigh3 > 70
-  //        SELL Extreme  : rsi > 68 ET prevHigh3 > 72
-  //        BUY  Forte    : rsi < 35 ET prevLow3  < 30
-  //        BUY  Extreme  : rsi < 32 ET prevLow3  < 28
+  //   1. RSI dual (rsi instantané + prev3) — uniforme Forte ET Extreme :
+  //        SELL : rsi > 65 ET prevHigh3 > 70
+  //        BUY  : rsi < 35 ET prevLow3  < 30
   //   2. slope_h1 (s1) selon zone :
   //        Forte (BASSE/HAUTE)   : SELL >= +2.7 / BUY <= -2.7
   //        Extreme (z |.| > 2.9) : SELL >= +3.5 / BUY <= -3.5
@@ -225,19 +223,11 @@ const TopOpportunities_V10R = (() => {
     // NIVEAU 1 — Classification candidat EXH
     // ====================================
 
-    // L1.1 : RSI dual (par zone)
+    // L1.1 : RSI dual (uniforme Forte ET Extreme)
     if (side === 'SELL') {
-      if (isExtreme) {
-        if (!(rsi > 68 && rsiPrevHigh3 > 72)) return { valid: false, vshape: false, level: 'L1_FAIL' };
-      } else {
-        if (!(rsi > 65 && rsiPrevHigh3 > 70)) return { valid: false, vshape: false, level: 'L1_FAIL' };
-      }
+      if (!(rsi > 65 && rsiPrevHigh3 > 70)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      if (isExtreme) {
-        if (!(rsi < 32 && rsiPrevLow3 < 28)) return { valid: false, vshape: false, level: 'L1_FAIL' };
-      } else {
-        if (!(rsi < 35 && rsiPrevLow3 < 30)) return { valid: false, vshape: false, level: 'L1_FAIL' };
-      }
+      if (!(rsi < 35 && rsiPrevLow3 < 30)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
     // L1.2 : slope_h1 par zone

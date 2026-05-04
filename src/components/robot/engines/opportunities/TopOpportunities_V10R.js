@@ -1021,12 +1021,19 @@ const TopOpportunities_V10R = (() => {
           });
         } else if (_exhFailed && contSides.length === 0) {
           // Wait EXH-only — zone EXTREME sans fallback CONT
+          // Score le candidat (même logique que valid EXH / wait-exh)
+          const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
+          const scoringRow = buildScoringRow(row, 'EXHAUSTION', exhSide, intradayLevel, gateD1ForScoring.reason);
+          const scoreResult = scoreOpportunity(scoringRow);
+
           opps.push({
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: 'wait-exh-only',
             symbol, timestamp: row?.timestamp,
             zone, zscore_h1_s0: _zscore_h1_s0, side: exhSide,
-            score: 0, breakdown: {},
+            score: scoreResult.total,
+            score_brut: scoreResult.total_brut,
+            breakdown: scoreResult.breakdown,
           });
         }
         // else : silent (cas !symbol défensif déjà filtré, exhDisabled config rare)
@@ -1052,11 +1059,21 @@ const TopOpportunities_V10R = (() => {
 
     opps = applyDedupeAndSpacing(opps, TOP_CFG);
 
-    console.log('[V10R-OUT]',
-      'total=' + opps.length,
-      'waits=' + opps.filter(o => o.waitReason).length,
-      'reasons=' + JSON.stringify(opps.filter(o => o.waitReason).reduce((acc, o) => { acc[o.waitReason] = (acc[o.waitReason] || 0) + 1; return acc; }, {}))
-    );
+    if (typeof window !== 'undefined' && window.__v10rDebug === true) {
+      const valids = opps.filter(o => o.type === 'EXHAUSTION' || o.type === 'CONTINUATION');
+      const waits = opps.filter(o => o.waitReason);
+      const byReason = waits.reduce((acc, o) => {
+        acc[o.waitReason] = (acc[o.waitReason] || 0) + 1;
+        return acc;
+      }, {});
+      console.log('[V10R-OUT]',
+        'total=' + opps.length,
+        'valids=' + valids.length,
+        'validsList=', valids.map(v => ({s: v.symbol, side: v.side, type: v.type, route: v.route, score: v.score})),
+        'waits=' + waits.length,
+        'reasons=' + JSON.stringify(byReason)
+      );
+    }
 
     return opps;
   }

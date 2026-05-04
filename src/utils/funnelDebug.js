@@ -75,25 +75,32 @@ function buildRows() {
   rows.push({ stage: 'greyZone',          in: c.atrCapPass,        out: c.greyZone });
   rows.push({ stage: 'nonGreyZone',       in: c.atrCapPass,        out: c.nonGreyZone });
 
+  const max0 = n => Math.max(0, n);
+
   // === EXH ===
   rows.push({ stage: 'exhTested',         in: c.nonGreyZone,       out: c.exhTested });
-  // exhTested.out = exhL1Pass + exhL1FailNormal + exhL1FailExtreme (3 buckets exclusifs par row)
+  // Cascade L1 (3 buckets exclusifs par row) : in = restant après les buckets précédents
   rows.push({ stage: 'exhL1Pass',         in: c.exhTested,         out: c.exhL1Pass });
-  rows.push({ stage: 'exhL1FailNormal',   in: c.exhTested,         out: c.exhL1FailNormal });
-  rows.push({ stage: 'exhL1FailExtreme',  in: c.exhTested,         out: c.exhL1FailExtreme });
-  // exhL1Pass.out = exhL2Pass + exhL2Fail (2 buckets exclusifs par row)
+  let exhIn = max0(c.exhTested - c.exhL1Pass);
+  rows.push({ stage: 'exhL1FailNormal',   in: exhIn,               out: c.exhL1FailNormal });
+  exhIn = max0(exhIn - c.exhL1FailNormal);
+  rows.push({ stage: 'exhL1FailExtreme',  in: exhIn,               out: c.exhL1FailExtreme });
+  // Cascade L2 (2 buckets exclusifs par row, à partir de exhL1Pass)
   rows.push({ stage: 'exhL2Pass',         in: c.exhL1Pass,         out: c.exhL2Pass });
-  rows.push({ stage: 'exhL2Fail',         in: c.exhL1Pass,         out: c.exhL2Fail });
+  rows.push({ stage: 'exhL2Fail',         in: max0(c.exhL1Pass - c.exhL2Pass), out: c.exhL2Fail });
 
   // === CONT ===
   // Note : contTested.in = (nonGreyZone en NORMALE_*) + exhL1FailNormal
   // Pas séparable proprement sans nouveau compteur dédié — donc in=out pour ce stage.
   rows.push({ stage: 'contTested',        in: c.contTested,        out: c.contTested });
-  // contTested.out = contValid + contGateH1Fail + contGateICWait + contGateD1Block (4 buckets exclusifs par row, deepest stage reached)
+  // Cascade CONT (4 buckets exclusifs par row, deepest stage reached)
   rows.push({ stage: 'contGateD1Block',   in: c.contTested,        out: c.contGateD1Block });
-  rows.push({ stage: 'contGateICWait',    in: c.contTested,        out: c.contGateICWait });
-  rows.push({ stage: 'contGateH1Fail',    in: c.contTested,        out: c.contGateH1Fail });
-  rows.push({ stage: 'contValid',         in: c.contTested,        out: c.contValid });
+  let contIn = max0(c.contTested - c.contGateD1Block);
+  rows.push({ stage: 'contGateICWait',    in: contIn,              out: c.contGateICWait });
+  contIn = max0(contIn - c.contGateICWait);
+  rows.push({ stage: 'contGateH1Fail',    in: contIn,              out: c.contGateH1Fail });
+  contIn = max0(contIn - c.contGateH1Fail);
+  rows.push({ stage: 'contValid',         in: contIn,              out: c.contValid });
 
   // === Emit V10R ===
   rows.push({ stage: 'v10rEmit',          in: c.exhL2Pass + c.contValid, out: c.v10rEmit });

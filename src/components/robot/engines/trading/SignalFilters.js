@@ -182,26 +182,27 @@ const SignalFilters = (() => {
   }
 
   // =========================================================
-  // GATE 2 BIS — M5 SetupOK pour EXH (dslope amorcé + anti-spike)
+  // GATE 2 BIS — M5 SetupOK pour EXH (anti-spike uniquement)
   //
-  // Confirmation M5 d'un EXH H1 : retournement live amorcé sur M5 (dslope_m5)
-  // ET anti-spike borne haute (slope_m5_s0). RSI M5 reste très permissif —
-  // c'est le timing dslope qui prime, pas le niveau RSI absolu.
+  // Confirmation M5 d'un EXH H1 : anti-spike uniquement.
+  // Pas d'exigence de retournement live sur M5 — on délègue le timing au H1
+  // (L1.3 dslope_live H1). Le M5 ne sert qu'à filtrer les spikes violents
+  // contre-tendance qui invalideraient le setup.
   //
-  //   SELL EXH : rsi_m5 > 35 ET dslope_m5 < -0.5 ET slope_m5_s0 > -7.5
-  //   BUY  EXH : rsi_m5 < 65 ET dslope_m5 > +0.5 ET slope_m5_s0 < +7.5
+  //   SELL EXH : rsi_m5 > 35 ET dslope_m5 > -7.5 ET slope_m5_s0 > -7.5
+  //   BUY  EXH : rsi_m5 < 65 ET dslope_m5 < +7.5 ET slope_m5_s0 < +7.5
   //
-  // Logique miroir L1.3 H1 (dslope_h1_live) : on exige une signature de
-  // retournement aussi sur M5, pas juste l'absence de spike.
+  // Logique : si H1 retourne (dslope_h1_live), on accepte d'entrer même si
+  // M5 est en consolidation ou contre-rebond modéré.
   // =========================================================
   function isM5SetupOK_EXH(rsi_m5, slope_m5, slope_m5_s0, side) {
     if (!Number.isFinite(rsi_m5) || !Number.isFinite(slope_m5) || !Number.isFinite(slope_m5_s0)) return false;
     const dslope_m5 = slope_m5_s0 - slope_m5;
     if (side === 'SELL') {
-      return rsi_m5 > 35 && dslope_m5 < -0.5 && slope_m5_s0 > -7.5;
+      return rsi_m5 > 35 && dslope_m5 > -7.5 && slope_m5_s0 > -7.5;
     }
     // BUY
-    return rsi_m5 < 65 && dslope_m5 > 0.5 && slope_m5_s0 < 7.5;
+    return rsi_m5 < 65 && dslope_m5 < 7.5 && slope_m5_s0 < 7.5;
   }
 
   // =========================================================

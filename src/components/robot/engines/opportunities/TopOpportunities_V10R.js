@@ -175,14 +175,14 @@ const TopOpportunities_V10R = (() => {
   //
   // === NIVEAU 1 — Classification candidat EXH ===
   //   1. RSI dual (rsi instantané + prev3) — uniforme Forte ET Extreme :
-  //        SELL : rsi > 55 ET prevHigh3 > 68
-  //        BUY  : rsi < 45 ET prevLow3  < 32
+  //        SELL : rsi > 55 ET prevHigh3 > 66
+  //        BUY  : rsi < 45 ET prevLow3  < 34
   //   2. slope_h1 (s1) selon zone et side (seuils signés) :
-  //        BUY  Forte   : slope_h1 <= +1.5
-  //        BUY  Extrême : slope_h1 <= -0.5
-  //        SELL Forte   : slope_h1 >= -1.5
-  //        SELL Extrême : slope_h1 >= +0.5
-  //        Note : Forte est PLUS PERMISSIVE que Extrême (inversion volontaire).
+  //        BUY  Forte   : slope_h1 <= +5.5
+  //        BUY  Extrême : slope_h1 <= +3.5
+  //        SELL Forte   : slope_h1 >= -5.5
+  //        SELL Extrême : slope_h1 >= -3.5
+  //        Note : Forte est PLUS PERMISSIVE que Extrême (cap moins strict).
   //   3. règle combinée dslope_h1_live + dsigma classe :
   //        BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
   //        SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {stable, expansion, explosion}
@@ -235,21 +235,21 @@ const TopOpportunities_V10R = (() => {
 
     // L1.1 : RSI dual (uniforme Forte ET Extreme)
     if (side === 'SELL') {
-      if (!(rsi > 55 && rsiPrevHigh3 > 68)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi > 55 && rsiPrevHigh3 > 66)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      if (!(rsi < 45 && rsiPrevLow3 < 32)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi < 45 && rsiPrevLow3 < 34)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
     // L1.2 : slope_h1 par zone ET side (seuils signés)
-    //   BUY  Forte   : slope_h1 <= +1.5
-    //   BUY  Extrême : slope_h1 <= -0.5
-    //   SELL Forte   : slope_h1 >= -1.5
-    //   SELL Extrême : slope_h1 >= +0.5
+    //   BUY  Forte   : slope_h1 <= +5.5
+    //   BUY  Extrême : slope_h1 <= +3.5
+    //   SELL Forte   : slope_h1 >= -5.5
+    //   SELL Extrême : slope_h1 >= -3.5
     if (side === 'SELL') {
-      const minSlope = isExtreme ? 0.5 : -1.5;
+      const minSlope = isExtreme ? -3.5 : -5.5;
       if (slope_h1 < minSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      const maxSlope = isExtreme ? -0.5 : 1.5;
+      const maxSlope = isExtreme ? 3.5 : 5.5;
       if (slope_h1 > maxSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 

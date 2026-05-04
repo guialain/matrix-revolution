@@ -889,11 +889,12 @@ const TopOpportunities_V10R = (() => {
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: 'wait-exh',
             symbol, timestamp: row?.timestamp,
-            zone, zscore_h1_s0: _zscore_h1_s0,
+            zone,
             side: exhSide,
             score: scoreResult.total,
             score_brut: scoreResult.total_brut,
             breakdown: scoreResult.breakdown,
+            ...propagated,
           });
           exhEmitted = true;
         } else {
@@ -1013,11 +1014,12 @@ const TopOpportunities_V10R = (() => {
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: reason,
             symbol, timestamp: row?.timestamp,
-            zone, zscore_h1_s0: _zscore_h1_s0, side: null,
+            zone, side: null,
             score: scoreResult.total,
             score_brut: scoreResult.total_brut,
             breakdown: scoreResult.breakdown,
             reasonD1: _contReasonD1,
+            ...propagated,
           });
         } else if (_exhFailed && contSides.length === 0) {
           // Wait EXH-only — zone EXTREME sans fallback CONT
@@ -1030,10 +1032,11 @@ const TopOpportunities_V10R = (() => {
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: 'wait-exh-only',
             symbol, timestamp: row?.timestamp,
-            zone, zscore_h1_s0: _zscore_h1_s0, side: exhSide,
+            zone, side: exhSide,
             score: scoreResult.total,
             score_brut: scoreResult.total_brut,
             breakdown: scoreResult.breakdown,
+            ...propagated,
           });
         }
         // else : silent (cas !symbol défensif déjà filtré, exhDisabled config rare)

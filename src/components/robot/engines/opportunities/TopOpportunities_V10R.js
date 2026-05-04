@@ -879,12 +879,21 @@ const TopOpportunities_V10R = (() => {
           // L1 OK + L2 fail : push wait-exh (candidat identifié, bloque la bascule CONT)
           funnel.inc('exhL1Pass');
           funnel.inc('exhL2Fail');
+
+          // Score le candidat (données disponibles, même logique que valid EXH)
+          const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
+          const scoringRow = buildScoringRow(row, 'EXHAUSTION', exhSide, intradayLevel, gateD1ForScoring.reason);
+          const scoreResult = scoreOpportunity(scoringRow);
+
           opps.push({
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: 'wait-exh',
             symbol, timestamp: row?.timestamp,
             zone, zscore_h1_s0: _zscore_h1_s0,
-            side: exhSide, score: 0, breakdown: {},
+            side: exhSide,
+            score: scoreResult.total,
+            score_brut: scoreResult.total_brut,
+            breakdown: scoreResult.breakdown,
           });
           exhEmitted = true;
         } else {
@@ -905,10 +914,14 @@ const TopOpportunities_V10R = (() => {
       let _contValidFlag       = false;
       // Deepest stage reached parmi les sides testés (h1 > ic > d1)
       let _contDeepest         = null;
+      let _contDeepestSide     = null;
       let _contReasonD1        = null;
       const _stageRank = { d1: 1, ic: 2, h1: 3 };
-      const _bumpDeepest = (s) => {
-        if (!_contDeepest || _stageRank[s] > _stageRank[_contDeepest]) _contDeepest = s;
+      const _bumpDeepest = (s, side) => {
+        if (!_contDeepest || _stageRank[s] > _stageRank[_contDeepest]) {
+          _contDeepest = s;
+          _contDeepestSide = side;
+        }
       };
 
       if (!exhEmitted && contSides.length > 0) {
@@ -923,21 +936,21 @@ const TopOpportunities_V10R = (() => {
                         : false;
           if (!allowed) {
             _contGateD1BlockFlag = true;
-            _bumpDeepest('d1');
+            _bumpDeepest('d1', side);
             continue;
           }
 
           const gateIC = evaluateGateIC(side, intradayLevel, _dsigma_ratio_h1_pct);
           if (gateIC.mode === 'wait') {
             _contGateICWaitFlag = true;
-            _bumpDeepest('ic');
+            _bumpDeepest('ic', side);
             continue;
           }
 
           const gateH1 = evaluateGateH1(side, gateIC.mode, _slope_h1, _slope_h1_s0, _dslope_h1_live, symbol);
           if (!gateH1.valid) {
             _contGateH1FailFlag = true;
-            _bumpDeepest('h1');
+            _bumpDeepest('h1', side);
             continue;
           }
 
@@ -988,12 +1001,22 @@ const TopOpportunities_V10R = (() => {
           const reason = _contDeepest === 'h1' ? 'wait-cont-h1'
                        : _contDeepest === 'ic' ? 'wait-cont-ic'
                        : 'wait-cont-d1';
+
+          // Score le wait-cont sur le side qui a atteint le deepest stage
+          let scoreResult = { total: 0, total_brut: 0, breakdown: {} };
+          if (_contDeepestSide) {
+            const scoringRow = buildScoringRow(row, 'CONTINUATION', _contDeepestSide, intradayLevel, _contReasonD1);
+            scoreResult = scoreOpportunity(scoringRow);
+          }
+
           opps.push({
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: reason,
             symbol, timestamp: row?.timestamp,
             zone, zscore_h1_s0: _zscore_h1_s0, side: null,
-            score: 0, breakdown: {},
+            score: scoreResult.total,
+            score_brut: scoreResult.total_brut,
+            breakdown: scoreResult.breakdown,
             reasonD1: _contReasonD1,
           });
         } else if (_exhFailed && contSides.length === 0) {

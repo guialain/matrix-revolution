@@ -1,11 +1,13 @@
 // ============================================================================
 // TopOpportunities_V10R.js — H1 ROUTER V10R (zscore-centric, EXH + CONT)
 //
-// Architecture : 5 zones zscore_h1 (3 nommees + grise + 2 extremes)
+// Architecture : 7 zones zscore_h1 (5 nommees + grise + 2 extremes)
 //   z > +2.9          → EXTREME_HAUTE  → SELL EXH only
-//   +0.5 < z <= +2.9  → HAUTE          → SELL EXH | BUY CONT
+//   +1.5 < z <= +2.9  → HAUTE          → SELL EXH | BUY CONT
+//   +0.5 < z <= +1.5  → NORMALE_HAUTE  → SELL EXH | BUY CONT | SELL CONT
 //   -0.5 <= z <= +0.5 → GRISE          → WAIT
-//   -2.9 <= z <  -0.5 → BASSE          → BUY EXH | SELL CONT
+//   -1.5 < z < -0.5   → NORMALE_BASSE  → BUY EXH  | BUY CONT | SELL CONT
+//   -2.9 <= z <= -1.5 → BASSE          → BUY EXH | SELL CONT
 //   z < -2.9          → EXTREME_BASSE  → BUY EXH only
 //
 // EXH : 2 niveaux (L1 candidat + L2 affinage). Si L2 OK → emit valid.
@@ -178,16 +180,15 @@ const TopOpportunities_V10R = (() => {
   //        SELL Forte   : slope_h1 >= -1.5
   //        SELL Extrême : slope_h1 >= +0.5
   //        Note : Forte est PLUS PERMISSIVE que Extrême (inversion volontaire).
-  //   3. dsigma classe (uniforme, pas par zone ni side) :
-  //        Admis  : compression_forte, contraction, explosion
-  //        Bloqué : stable, expansion
+  //   3. règle combinée dslope_h1_live + dsigma classe :
+  //        BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {expansion, explosion}
+  //        SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {expansion, explosion}
+  //        Logique : retournement mesurable sur slope live ET signature
+  //        d'expansion sigma confirment l'épuisement (cap V-shape intégré).
   //   (zscore_h1_s0 déjà filtré par la classification de zone amont — pas re-testé)
   //
   // === NIVEAU 2 — Affinage ===
-  //   1. dslope_h1_live cap V-shape :
-  //        SELL : dslope ∈ ]-7.5, -1.5]
-  //        BUY  : dslope ∈ [+1.5, +7.5[
-  //   2. Matrice IC × dsigma_classe par zone :
+  //   1. Matrice IC × dsigma_classe par zone :
   //        Stable bloque toujours.
   //        Forte   : SOFT/STRONG/EXPLOSIVE_(DOWN|UP) admis. SOFT exige contraction.
   //        Extreme : seul STRONG/EXPLOSIVE admis. Plus permissif sur dsigma.
@@ -199,8 +200,8 @@ const TopOpportunities_V10R = (() => {
   //
   // V-shape : marqueur informatif — slope_h1 fortement dans la zone "violente"
   //           (|slope| >= 2.7 Forte / >= 3.5 Extrême) + dslope dans le sens du
-  //           retournement. N'est plus garanti par construction depuis le passage
-  //           de L1.2 à des seuils signés permissifs.
+  //           retournement (>=0.5 BUY / <=-0.5 SELL, alignées avec L1.3).
+  //           N'est plus garanti par construction depuis L1.2 signé.
   // ============================================================================
   function evaluateExhRoute(routeName, side, row, intradayLevel) {
     const slope_h1 = num(row?.slope_h1);
@@ -219,7 +220,8 @@ const TopOpportunities_V10R = (() => {
     if (rsi === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
 
     const isExtreme = routeName === 'extreme_haute_SELL_EXH' || routeName === 'extreme_basse_BUY_EXH';
-    const isForte   = routeName === 'haute_SELL_EXH'         || routeName === 'basse_BUY_EXH';
+    const isForte   = routeName === 'haute_SELL_EXH'         || routeName === 'basse_BUY_EXH'
+                  || routeName === 'normale_haute_SELL_EXH' || routeName === 'normale_basse_BUY_EXH';
     if (!isExtreme && !isForte) return { valid: false, vshape: false, level: 'L1_FAIL' };
 
     // ====================================
@@ -246,11 +248,24 @@ const TopOpportunities_V10R = (() => {
       if (slope_h1 > maxSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
-    // L1.3 : dsigma classe (uniforme, admis = compression_forte | contraction | explosion)
+    // L1.3 : règle combinée dslope_h1_live + dsigma classe
+    //   BUY  : dslope_live ∈ [+0.5, +7.5[ ET dsigma ∈ {expansion, explosion}
+    //   SELL : dslope_live ∈ ]-7.5, -0.5] ET dsigma ∈ {expansion, explosion}
+    //   (cap V-shape intégré ici — ancien L2.1 supprimé)
     const dsigmaLevel = classifyDsigmaForExh(dsigma);
     if (dsigmaLevel === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
-    if (dsigmaLevel !== 'compression_forte' && dsigmaLevel !== 'contraction' && dsigmaLevel !== 'explosion') {
-      return { valid: false, vshape: false, level: 'L1_FAIL' };
+
+    const dslope_live = slope_s0 - slope_h1;
+    const dsigmaOk = dsigmaLevel === 'expansion' || dsigmaLevel === 'explosion';
+
+    if (side === 'BUY') {
+      if (!(dslope_live >= 0.5 && dslope_live < 7.5 && dsigmaOk)) {
+        return { valid: false, vshape: false, level: 'L1_FAIL' };
+      }
+    } else {
+      if (!(dslope_live > -7.5 && dslope_live <= -0.5 && dsigmaOk)) {
+        return { valid: false, vshape: false, level: 'L1_FAIL' };
+      }
     }
 
     // === À partir d'ici : L1 OK ===
@@ -259,20 +274,7 @@ const TopOpportunities_V10R = (() => {
     // NIVEAU 2 — Affinage
     // ====================================
 
-    const dslope_live = slope_s0 - slope_h1;
-
-    // L2.1 : dslope_h1_live cap V-shape
-    if (side === 'SELL') {
-      if (!(dslope_live > -7.5 && dslope_live <= -1.5)) {
-        return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
-      }
-    } else {
-      if (!(dslope_live >= 1.5 && dslope_live < 7.5)) {
-        return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
-      }
-    }
-
-    // L2.2 : Matrice IC × dsigma classe (par zone)
+    // L2.1 : Matrice IC × dsigma classe (par zone)
     let matrix = null;
     if (side === 'SELL') {
       matrix = isExtreme ? EXH_MATRIX_EXTREME_SELL : EXH_MATRIX_FORTE_SELL;
@@ -285,10 +287,10 @@ const TopOpportunities_V10R = (() => {
     if (icRow[dsigmaLevel] !== true) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
 
     // V-shape : marqueur strict (slope dans la zone violente + dslope retournement).
-    // Indépendant de L1.2 désormais (qui utilise des seuils signés permissifs).
+    // Bornes dslope alignées sur L1.3 (>=0.5 BUY / <=-0.5 SELL).
     const vshapeMag = isExtreme ? 3.5 : 2.7;
-    const vshape = (side === 'SELL' && slope_h1 >=  vshapeMag && dslope_live <= -1.5)
-                || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  1.5);
+    const vshape = (side === 'SELL' && slope_h1 >=  vshapeMag && dslope_live <= -0.5)
+                || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  0.5);
 
     return { valid: true, vshape, level: 'L2_OK' };
   }
@@ -755,6 +757,12 @@ const TopOpportunities_V10R = (() => {
       } else if (zone === 'HAUTE') {
         exhRoute = 'haute_SELL_EXH';   exhSide = 'SELL';
         contSides.push('BUY');
+      } else if (zone === 'NORMALE_HAUTE') {
+        exhRoute = 'normale_haute_SELL_EXH'; exhSide = 'SELL';
+        contSides.push('BUY', 'SELL');
+      } else if (zone === 'NORMALE_BASSE') {
+        exhRoute = 'normale_basse_BUY_EXH';  exhSide = 'BUY';
+        contSides.push('BUY', 'SELL');
       } else if (zone === 'BASSE') {
         exhRoute = 'basse_BUY_EXH';    exhSide = 'BUY';
         contSides.push('SELL');

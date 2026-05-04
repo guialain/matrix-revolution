@@ -172,9 +172,12 @@ const TopOpportunities_V10R = (() => {
   //   1. RSI dual (rsi instantané + prev3) — uniforme Forte ET Extreme :
   //        SELL : rsi > 55 ET prevHigh3 > 68
   //        BUY  : rsi < 45 ET prevLow3  < 32
-  //   2. slope_h1 (s1) selon zone :
-  //        Forte (BASSE/HAUTE)   : SELL >= +2.7 / BUY <= -2.7
-  //        Extreme (z |.| > 2.9) : SELL >= +3.5 / BUY <= -3.5
+  //   2. slope_h1 (s1) selon zone et side (seuils signés) :
+  //        BUY  Forte   : slope_h1 <= +1.5
+  //        BUY  Extrême : slope_h1 <= -0.5
+  //        SELL Forte   : slope_h1 >= -1.5
+  //        SELL Extrême : slope_h1 >= +0.5
+  //        Note : Forte est PLUS PERMISSIVE que Extrême (inversion volontaire).
   //   3. dsigma classe (uniforme, pas par zone ni side) :
   //        Admis  : compression_forte, contraction, explosion
   //        Bloqué : stable, expansion
@@ -194,8 +197,10 @@ const TopOpportunities_V10R = (() => {
   //   { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true }        — L1 OK + L2 fail
   //   { valid: false, vshape: false, level: 'L1_FAIL' }                            — L1 fail (any reason)
   //
-  // V-shape : garanti par construction (slope dans la zone "violente"
-  //           + dslope dans le sens du retournement).
+  // V-shape : marqueur informatif — slope_h1 fortement dans la zone "violente"
+  //           (|slope| >= 2.7 Forte / >= 3.5 Extrême) + dslope dans le sens du
+  //           retournement. N'est plus garanti par construction depuis le passage
+  //           de L1.2 à des seuils signés permissifs.
   // ============================================================================
   function evaluateExhRoute(routeName, side, row, intradayLevel) {
     const slope_h1 = num(row?.slope_h1);
@@ -228,12 +233,17 @@ const TopOpportunities_V10R = (() => {
       if (!(rsi < 45 && rsiPrevLow3 < 32)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
-    // L1.2 : slope_h1 par zone
-    const slopeThreshold = isExtreme ? 3.5 : 2.7;
+    // L1.2 : slope_h1 par zone ET side (seuils signés)
+    //   BUY  Forte   : slope_h1 <= +1.5
+    //   BUY  Extrême : slope_h1 <= -0.5
+    //   SELL Forte   : slope_h1 >= -1.5
+    //   SELL Extrême : slope_h1 >= +0.5
     if (side === 'SELL') {
-      if (slope_h1 < slopeThreshold) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      const minSlope = isExtreme ? 0.5 : -1.5;
+      if (slope_h1 < minSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      if (slope_h1 > -slopeThreshold) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      const maxSlope = isExtreme ? -0.5 : 1.5;
+      if (slope_h1 > maxSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
     // L1.3 : dsigma classe (uniforme, admis = compression_forte | contraction | explosion)
@@ -274,9 +284,11 @@ const TopOpportunities_V10R = (() => {
     if (!icRow) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
     if (icRow[dsigmaLevel] !== true) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
 
-    // V-shape : garanti par les filtres durs
-    const vshape = (side === 'SELL' && slope_h1 >= slopeThreshold && dslope_live <= -1.5)
-                || (side === 'BUY'  && slope_h1 <= -slopeThreshold && dslope_live >= 1.5);
+    // V-shape : marqueur strict (slope dans la zone violente + dslope retournement).
+    // Indépendant de L1.2 désormais (qui utilise des seuils signés permissifs).
+    const vshapeMag = isExtreme ? 3.5 : 2.7;
+    const vshape = (side === 'SELL' && slope_h1 >=  vshapeMag && dslope_live <= -1.5)
+                || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  1.5);
 
     return { valid: true, vshape, level: 'L2_OK' };
   }

@@ -691,7 +691,7 @@ const TopOpportunities_V10R = (() => {
       // Filtre amont 3+4 : spike H1 ou IC → emit WAIT + skip
       const _spike = detectSpike(_slope_h1_s0, intradayLevel);
       if (_spike.isSpike) {
-        funnel.inc('spikeWait');
+        funnel.inc('spikeBlock');
         opps.push({
           type:            'WAIT',
           waitReason:      'wait-spike',
@@ -721,7 +721,7 @@ const TopOpportunities_V10R = (() => {
 
       // Zone grise → WAIT
       if (zone === 'GRISE' || zone === 'UNKNOWN') {
-        funnel.inc('greyZoneWait');
+        funnel.inc('greyZone');
         opps.push({
           type:        null,
           mode:        null,
@@ -827,7 +827,8 @@ const TopOpportunities_V10R = (() => {
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);
         if (exhResult.valid) {
           // L2_OK : push valid EXH (logique inchangée)
-          funnel.inc('exhValid');
+          funnel.inc('exhL1Pass');
+          funnel.inc('exhL2Pass');
           if (riskCfg.exhaustionEnabled !== false) {
             // Récupérer reasonD1 pour le scoring (sans bloquer)
             const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
@@ -866,6 +867,8 @@ const TopOpportunities_V10R = (() => {
           }
         } else if (exhResult.candidateExh) {
           // L1 OK + L2 fail : push wait-exh (candidat identifié, bloque la bascule CONT)
+          funnel.inc('exhL1Pass');
+          funnel.inc('exhL2Fail');
           opps.push({
             type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
             engine: 'V10R', isWait: true, waitReason: 'wait-exh',
@@ -875,7 +878,9 @@ const TopOpportunities_V10R = (() => {
           });
           exhEmitted = true;
         } else {
-          // L1 fail : zone EXTREME → wait-exh-only via post-loop ; HAUTE/BASSE → bascule CONT
+          // L1 fail : split selon zone (EXTREME=no CONT fallback, HAUTE/BASSE=bascule CONT)
+          if (contSides.length === 0) funnel.inc('exhL1FailExtreme');
+          else                         funnel.inc('exhL1FailNormal');
           _exhFailed = true;
         }
       }
@@ -994,12 +999,15 @@ const TopOpportunities_V10R = (() => {
         // else : silent (cas !symbol défensif déjà filtré, exhDisabled config rare)
       }
 
-      // Flush des flags CONT (1× par row, pas par side)
-      if (_contTestedFlag)      funnel.inc('contTested');
-      if (_contGateD1BlockFlag) funnel.inc('contGateD1Block');
-      if (_contGateICWaitFlag)  funnel.inc('contGateICWait');
-      if (_contGateH1FailFlag)  funnel.inc('contGateH1Fail');
-      if (_contValidFlag)       funnel.inc('contValid');
+      // Flush des flags CONT (1× par row, deepest stage reached prime)
+      // contTested = contValid + contGateH1Fail + contGateICWait + contGateD1Block (4 buckets exclusifs)
+      if (_contTestedFlag) {
+        funnel.inc('contTested');
+        if      (_contValidFlag)        funnel.inc('contValid');
+        else if (_contDeepest === 'h1') funnel.inc('contGateH1Fail');
+        else if (_contDeepest === 'ic') funnel.inc('contGateICWait');
+        else if (_contDeepest === 'd1') funnel.inc('contGateD1Block');
+      }
     }
 
     // Tri : score desc, puis timestamp desc

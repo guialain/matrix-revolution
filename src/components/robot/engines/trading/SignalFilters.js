@@ -210,12 +210,14 @@ const SignalFilters = (() => {
       // 1. Weekend
       if (isWeekendRisk()) {
         waitOpportunities.push({ ...opp, state: "WAIT_WEEKEND", wait_reason: "WEEKEND", is_vshape_m5 });
+        if (isTradable) funnel.inc('waitOut');
         continue;
       }
 
       // 2. Trading hours
       if (isOutsideTradingHours()) {
         waitOpportunities.push({ ...opp, state: "WAIT_HOURS", wait_reason: "OUTSIDE_HOURS", is_vshape_m5 });
+        if (isTradable) funnel.inc('waitOut');
         continue;
       }
 
@@ -223,6 +225,7 @@ const SignalFilters = (() => {
       const regime = getRegime(opp);
       if (isBlockedVolatility(regime)) {
         waitOpportunities.push({ ...opp, state: `WAIT_VOL_${regime}`, wait_reason: `VOLATILITY_${regime?.toUpperCase()}`, is_vshape_m5 });
+        if (isTradable) funnel.inc('waitOut');
         continue;
       }
 
@@ -232,17 +235,19 @@ const SignalFilters = (() => {
       // 5. M5 Overextended — 2-of-3 sur slope/zscore/rsi
       if (isM5Overextended(opp, side, mode)) {
         waitOpportunities.push({ ...opp, state: "WAIT_M5_OVEREXTENDED", wait_reason: "M5_GATE1", m5Level: mode, is_vshape_m5 });
+        if (isTradable) funnel.inc('waitOut');
         continue;
       }
-      if (isTradable) funnel.inc('gate1Pass');
+      if (isTradable) funnel.inc('m5OverextPass');
 
       // 6. M5 SetupOK — CONT vs V-shape, 3 conditions AND
       if (!isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode)) {
         const wait_reason = is_vshape_m5 ? "M5_GATE2_VSHAPE" : "M5_GATE2_CONT";
         waitOpportunities.push({ ...opp, state: "WAIT_M5_SETUP", wait_reason, m5Level: mode, is_vshape_m5 });
+        if (isTradable) funnel.inc('waitOut');
         continue;
       }
-      if (isTradable) funnel.inc('gate2Pass');
+      if (isTradable) funnel.inc('m5SetupPass');
 
       validOpportunities.push({
         ...opp,
@@ -253,8 +258,6 @@ const SignalFilters = (() => {
       });
       if (isTradable) funnel.inc('validOut');
     }
-
-    funnel.inc('waitOut', waitOpportunities.length);
 
     return { validOpportunities, waitOpportunities };
   }

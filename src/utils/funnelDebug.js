@@ -9,28 +9,32 @@
 // ============================================================================
 
 export const STAGES = [
-  // === Pipeline V10R amont (TopOpportunities_V10R) ===
-  'marketWatchTotal',     // rows entrants
-  'hourGatePass',         // après filtre GlobalMarketHours
-  'atrCapPass',           // après filtre ATR cap (volatility eligibility)
-  'spikeWait',            // WAIT spike émis (H1 ou IC)
-  'greyZoneWait',         // WAIT zone grise émis
-  'nonGreyZone',          // rows en zone non-grise (entrée routing)
-  'exhTested',            // EXH tenté (zone Forte ou Extreme)
-  'exhValid',             // EXH validé par evaluateExhRoute
-  'contTested',           // CONT testé pour un side
-  'contGateD1Block',      // bloqué par Gate D1
-  'contGateICWait',       // bloqué par Gate IC (mode 'wait')
-  'contGateH1Fail',       // bloqué par Gate H1
-  'contValid',            // CONT validé (avant emit)
-  'v10rEmit',             // émission finale par V10R (par opp pushée)
+  // === Pipeline V10R amont ===
+  'marketWatchTotal',
+  'hourGatePass',
+  'atrCapPass',
+  'spikeBlock',           // wait-spike émis
+  'greyZone',             // wait-grey émis
+  'nonGreyZone',          // entrée routing EXH/CONT
+  'exhTested',            // EXH testé (zone HAUTE/BASSE/EXTREME)
+  'exhL1Pass',            // L1 OK (= L2_OK ou L2_FAIL)
+  'exhL1FailNormal',      // L1 fail en zone HAUTE/BASSE → bascule CONT
+  'exhL1FailExtreme',     // L1 fail en zone EXTREME → wait-exh-only
+  'exhL2Pass',            // L2 OK = valid EXH émise
+  'exhL2Fail',            // L1 OK + L2 fail = wait-exh
+  'contTested',           // rows entrées dans la branche CONT (1 par row)
+  'contGateD1Block',      // deepest stage reached = D1
+  'contGateICWait',       // deepest stage reached = IC
+  'contGateH1Fail',       // deepest stage reached = H1
+  'contValid',            // au moins 1 side validé = valid CONT émise
+  'v10rEmit',             // total opps V10R émises (= exhL2Pass + contValid)
 
-  // === Pipeline aval (RobotCore + SignalFilters) ===
+  // === Pipeline aval RobotCore + SignalFilters ===
   'eligibilityIn',
   'eligibilityOut',
   'signalFiltersIn',
-  'gate1Pass',
-  'gate2Pass',
+  'm5OverextPass',        // Gate 1 M5 overextended
+  'm5SetupPass',          // Gate 2 M5 setup
   'validOut',
   'waitOut',
 ];
@@ -59,36 +63,49 @@ export function inc(key, n = 1) {
 
 function buildRows() {
   const c = _f;
-  const clamp0 = n => Math.max(0, n);
   const rows = [];
 
   // === Pipeline V10R amont ===
   rows.push({ stage: 'marketWatchTotal',  in: c.marketWatchTotal,  out: c.marketWatchTotal });
   rows.push({ stage: 'hourGatePass',      in: c.marketWatchTotal,  out: c.hourGatePass });
   rows.push({ stage: 'atrCapPass',        in: c.hourGatePass,      out: c.atrCapPass });
-  rows.push({ stage: 'spikeWait',         in: c.atrCapPass,        out: c.spikeWait });
-  rows.push({ stage: 'greyZoneWait',      in: c.atrCapPass,        out: c.greyZoneWait });
+
+  // 3 buckets exclusifs après atrCapPass
+  rows.push({ stage: 'spikeBlock',        in: c.atrCapPass,        out: c.spikeBlock });
+  rows.push({ stage: 'greyZone',          in: c.atrCapPass,        out: c.greyZone });
   rows.push({ stage: 'nonGreyZone',       in: c.atrCapPass,        out: c.nonGreyZone });
 
+  // === EXH ===
   rows.push({ stage: 'exhTested',         in: c.nonGreyZone,       out: c.exhTested });
-  rows.push({ stage: 'exhValid',          in: c.exhTested,         out: c.exhValid });
+  // exhTested.out = exhL1Pass + exhL1FailNormal + exhL1FailExtreme (3 buckets exclusifs par row)
+  rows.push({ stage: 'exhL1Pass',         in: c.exhTested,         out: c.exhL1Pass });
+  rows.push({ stage: 'exhL1FailNormal',   in: c.exhTested,         out: c.exhL1FailNormal });
+  rows.push({ stage: 'exhL1FailExtreme',  in: c.exhTested,         out: c.exhL1FailExtreme });
+  // exhL1Pass.out = exhL2Pass + exhL2Fail (2 buckets exclusifs par row)
+  rows.push({ stage: 'exhL2Pass',         in: c.exhL1Pass,         out: c.exhL2Pass });
+  rows.push({ stage: 'exhL2Fail',         in: c.exhL1Pass,         out: c.exhL2Fail });
 
-  rows.push({ stage: 'contTested',        in: c.nonGreyZone,       out: c.contTested });
-  rows.push({ stage: 'contGateD1Block',   in: c.contTested,                                                                  out: c.contGateD1Block });
-  rows.push({ stage: 'contGateICWait',    in: clamp0(c.contTested - c.contGateD1Block),                                      out: c.contGateICWait });
-  rows.push({ stage: 'contGateH1Fail',    in: clamp0(c.contTested - c.contGateD1Block - c.contGateICWait),                   out: c.contGateH1Fail });
-  rows.push({ stage: 'contValid',         in: clamp0(c.contTested - c.contGateD1Block - c.contGateICWait - c.contGateH1Fail), out: c.contValid });
+  // === CONT ===
+  // Note : contTested.in = (nonGreyZone en NORMALE_*) + exhL1FailNormal
+  // Pas séparable proprement sans nouveau compteur dédié — donc in=out pour ce stage.
+  rows.push({ stage: 'contTested',        in: c.contTested,        out: c.contTested });
+  // contTested.out = contValid + contGateH1Fail + contGateICWait + contGateD1Block (4 buckets exclusifs par row, deepest stage reached)
+  rows.push({ stage: 'contGateD1Block',   in: c.contTested,        out: c.contGateD1Block });
+  rows.push({ stage: 'contGateICWait',    in: c.contTested,        out: c.contGateICWait });
+  rows.push({ stage: 'contGateH1Fail',    in: c.contTested,        out: c.contGateH1Fail });
+  rows.push({ stage: 'contValid',         in: c.contTested,        out: c.contValid });
 
-  rows.push({ stage: 'v10rEmit',          in: c.exhValid + c.contValid, out: c.v10rEmit });
+  // === Emit V10R ===
+  rows.push({ stage: 'v10rEmit',          in: c.exhL2Pass + c.contValid, out: c.v10rEmit });
 
-  // === Pipeline aval RobotCore + SignalFilters ===
-  rows.push({ stage: 'eligibilityIn',     in: c.v10rEmit,         out: c.eligibilityIn });
-  rows.push({ stage: 'eligibilityOut',    in: c.eligibilityIn,    out: c.eligibilityOut });
-  rows.push({ stage: 'signalFiltersIn',   in: c.eligibilityOut,   out: c.signalFiltersIn });
-  rows.push({ stage: 'gate1Pass',         in: c.signalFiltersIn,  out: c.gate1Pass });
-  rows.push({ stage: 'gate2Pass',         in: c.gate1Pass,        out: c.gate2Pass });
-  rows.push({ stage: 'validOut',          in: c.gate2Pass,        out: c.validOut });
-  rows.push({ stage: 'waitOut',           in: c.signalFiltersIn,  out: c.waitOut });
+  // === Pipeline aval ===
+  rows.push({ stage: 'eligibilityIn',     in: c.v10rEmit,          out: c.eligibilityIn });
+  rows.push({ stage: 'eligibilityOut',    in: c.eligibilityIn,     out: c.eligibilityOut });
+  rows.push({ stage: 'signalFiltersIn',   in: c.eligibilityOut,    out: c.signalFiltersIn });
+  rows.push({ stage: 'm5OverextPass',     in: c.signalFiltersIn,   out: c.m5OverextPass });
+  rows.push({ stage: 'm5SetupPass',       in: c.m5OverextPass,     out: c.m5SetupPass });
+  rows.push({ stage: 'validOut',          in: c.m5SetupPass,       out: c.validOut });
+  rows.push({ stage: 'waitOut',           in: c.signalFiltersIn,   out: c.waitOut });
 
   return rows;
 }
@@ -98,15 +115,24 @@ export function dump() {
   const f = _f;
   const summary =
     `mw=${f.marketWatchTotal} hour=${f.hourGatePass} atr=${f.atrCapPass} ` +
-    `| spk=${f.spikeWait} grey=${f.greyZoneWait} nonG=${f.nonGreyZone} ` +
-    `| exh=${f.exhTested}/${f.exhValid} ` +
-    `| cont=${f.contTested} d1Bk=${f.contGateD1Block} icW=${f.contGateICWait} h1F=${f.contGateH1Fail} contOk=${f.contValid} ` +
-    `| EMIT=${f.v10rEmit} ` +
-    `| elig=${f.eligibilityOut} g1=${f.gate1Pass} g2=${f.gate2Pass} VALID=${f.validOut} WAIT=${f.waitOut}`;
+    `| spk=${f.spikeBlock} grey=${f.greyZone} nonG=${f.nonGreyZone} ` +
+    `| EXH t=${f.exhTested} L1ok=${f.exhL1Pass}(N=${f.exhL1FailNormal}/E=${f.exhL1FailExtreme}) L2=${f.exhL2Pass}/${f.exhL2Fail} ` +
+    `| CONT t=${f.contTested} d1=${f.contGateD1Block} ic=${f.contGateICWait} h1=${f.contGateH1Fail} ok=${f.contValid} ` +
+    `| EMIT=${f.v10rEmit} elig=${f.eligibilityOut} m5o=${f.m5OverextPass} m5s=${f.m5SetupPass} ` +
+    `VALID=${f.validOut} WAIT=${f.waitOut}`;
   // eslint-disable-next-line no-console
   console.log('%c[funnel]', 'background:#222;color:#bada55;padding:2px 6px;border-radius:3px;font-weight:bold', summary);
   // eslint-disable-next-line no-console
   console.table(buildRows());
+
+  // Sanity check : signalFiltersIn doit égaler validOut + waitOut (rows perdues = bug)
+  if (Math.abs(f.signalFiltersIn - f.validOut - f.waitOut) > 0) {
+    // eslint-disable-next-line no-console
+    console.warn('[funnel] signalFiltersIn != validOut + waitOut', {
+      in: f.signalFiltersIn, valid: f.validOut, wait: f.waitOut,
+      delta: f.signalFiltersIn - f.validOut - f.waitOut,
+    });
+  }
 }
 
 export function snapshot() {

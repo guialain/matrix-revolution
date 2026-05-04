@@ -843,11 +843,18 @@ app.post("/api/signals/publish", (req, res) => {
   const existingWait  = signalsStore[key].waitOpportunities;
 
   // Merge existing + incoming, dedupe by symbol+side (incoming wins),
-  // preserve original emittedAt, keep fresh (<30s).
-  // Rationale: useRobotCore publish is throttled per-symbol (15s), so each
-  // POST contains only 1-2 new signals. Replacing the store would evict
-  // signals whose TTL hasn't expired.
-  function mergeAndFilter(existing, incoming) {
+  // keep fresh (<30s).
+  //
+  // emittedAt strategy:
+  //   - validOpportunities (refreshOnRePost=false) : preserve original emittedAt.
+  //     Un VALID est un événement instantané — son TTL court à partir de la
+  //     première détection. Republier le même VALID ne reset pas le TTL.
+  //   - waitOpportunities (refreshOnRePost=true) : refresh emittedAt à chaque
+  //     republication. Un WAIT est par nature persistant tant que la condition
+  //     d'attente dure ; tant que le client republie (même via throttle 5s),
+  //     le wait reste visible (TTL glissant 30s).
+  function mergeAndFilter(existing, incoming, opts = {}) {
+    const refreshOnRePost = opts.refreshOnRePost === true;
     const map = new Map();
     for (const op of existing ?? []) {
       map.set(`${op.symbol}_${op.side}`, op);
@@ -857,14 +864,16 @@ app.post("/api/signals/publish", (req, res) => {
       const prev = map.get(k);
       map.set(k, {
         ...op,
-        emittedAt: prev?.emittedAt ?? op.emittedAt ?? now
+        emittedAt: refreshOnRePost
+          ? (op.emittedAt ?? now)
+          : (prev?.emittedAt ?? op.emittedAt ?? now)
       });
     }
     return [...map.values()].filter(op => op.emittedAt && (now - op.emittedAt) < 30000);
   }
 
-  const fresh     = mergeAndFilter(existingValid, validOpportunities);
-  const freshWait = mergeAndFilter(existingWait,  waitOpportunities);
+  const fresh     = mergeAndFilter(existingValid, validOpportunities);                          // emittedAt initial préservé
+  const freshWait = mergeAndFilter(existingWait,  waitOpportunities, { refreshOnRePost: true }); // TTL glissant
 
   signalsStore[key].validOpportunities = fresh;
   signalsStore[key].waitOpportunities = freshWait;

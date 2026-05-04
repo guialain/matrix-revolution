@@ -635,7 +635,15 @@ const TopOpportunities_V10R = (() => {
 
       // Filtre amont 1 : gate horaire
       const marketKey = resolveMarket(row?.assetclass);
-      if (!GlobalMarketHours.check(marketKey, new Date(), symbol).allowed) continue;
+      if (!GlobalMarketHours.check(marketKey, new Date(), symbol).allowed) {
+        opps.push({
+          type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+          engine: 'V10R', isWait: true, waitReason: 'wait-hours',
+          symbol, timestamp: row?.timestamp,
+          zone: null, zscore_h1_s0: null, side: null, score: 0, breakdown: {},
+        });
+        continue;
+      }
       funnel.inc('hourGatePass');
 
       const riskCfg  = getRiskConfig(symbol);
@@ -644,7 +652,16 @@ const TopOpportunities_V10R = (() => {
 
       // Filtre amont 2 : ATR cap (> 4× cap)
       const atrH1 = num(row?.atr_h1);
-      if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) continue;
+      if (atrH1Cap > 0 && atrH1 !== null && atrH1 > 4 * atrH1Cap) {
+        opps.push({
+          type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+          engine: 'V10R', isWait: true, waitReason: 'wait-atr',
+          symbol, timestamp: row?.timestamp,
+          zone: null, zscore_h1_s0: null, side: null, score: 0, breakdown: {},
+          atr_h1: atrH1, atr_cap: atrH1Cap,
+        });
+        continue;
+      }
       funnel.inc('atrCapPass');
 
       const intra         = num(row?.intraday_change);
@@ -662,7 +679,7 @@ const TopOpportunities_V10R = (() => {
         funnel.inc('spikeWait');
         opps.push({
           type:            'WAIT',
-          waitReason:      'spike',
+          waitReason:      'wait-spike',
           engine:          'V10R',
           symbol,
           timestamp:       row?.timestamp,
@@ -697,6 +714,8 @@ const TopOpportunities_V10R = (() => {
           route:       'WAIT',
           signalPhase: 'WAIT',
           engine:      'V10R',
+          isWait:      true,
+          waitReason:  'wait-grey',
           index:       i,
           timestamp:   row?.timestamp,
           symbol,
@@ -704,7 +723,6 @@ const TopOpportunities_V10R = (() => {
           signalType:  null,
           score:       0,
           breakdown:   {},
-          isWait:      true,
           zone,
           zscore_h1_s0: _zscore_h1_s0,
         });
@@ -788,6 +806,7 @@ const TopOpportunities_V10R = (() => {
 
       // ====== 1. Test EXH (priorité, exclusif) ======
       let exhEmitted = false;
+      let _exhFailed = false;
       if (exhRoute !== null) {
         funnel.inc('exhTested');
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);
@@ -829,6 +848,8 @@ const TopOpportunities_V10R = (() => {
             funnel.inc('v10rEmit');
             exhEmitted = true;
           }
+        } else {
+          _exhFailed = true;
         }
       }
 
@@ -840,9 +861,17 @@ const TopOpportunities_V10R = (() => {
       let _contGateICWaitFlag  = false;
       let _contGateH1FailFlag  = false;
       let _contValidFlag       = false;
+      // Deepest stage reached parmi les sides testés (h1 > ic > d1)
+      let _contDeepest         = null;
+      let _contReasonD1        = null;
+      const _stageRank = { d1: 1, ic: 2, h1: 3 };
+      const _bumpDeepest = (s) => {
+        if (!_contDeepest || _stageRank[s] > _stageRank[_contDeepest]) _contDeepest = s;
+      };
 
       if (!exhEmitted && contSides.length > 0) {
         const gateD1 = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
+        _contReasonD1 = gateD1.reason;
 
         for (const side of contSides) {
           _contTestedFlag = true;
@@ -852,18 +881,21 @@ const TopOpportunities_V10R = (() => {
                         : false;
           if (!allowed) {
             _contGateD1BlockFlag = true;
+            _bumpDeepest('d1');
             continue;
           }
 
           const gateIC = evaluateGateIC(side, intradayLevel, _dsigma_ratio_h1_pct);
           if (gateIC.mode === 'wait') {
             _contGateICWaitFlag = true;
+            _bumpDeepest('ic');
             continue;
           }
 
           const gateH1 = evaluateGateH1(side, gateIC.mode, _slope_h1, _slope_h1_s0, _dslope_h1_live, symbol);
           if (!gateH1.valid) {
             _contGateH1FailFlag = true;
+            _bumpDeepest('h1');
             continue;
           }
 
@@ -905,6 +937,34 @@ const TopOpportunities_V10R = (() => {
           });
           funnel.inc('v10rEmit');
         }
+      }
+
+      // === Décision du wait à exposer (1 par row max, valid > all wait) ===
+      if (!exhEmitted && !_contValidFlag) {
+        if (_contTestedFlag && _contDeepest) {
+          // Wait CONT — deepest stage reached prime (h1 > ic > d1)
+          const reason = _contDeepest === 'h1' ? 'wait-cont-h1'
+                       : _contDeepest === 'ic' ? 'wait-cont-ic'
+                       : 'wait-cont-d1';
+          opps.push({
+            type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+            engine: 'V10R', isWait: true, waitReason: reason,
+            symbol, timestamp: row?.timestamp,
+            zone, zscore_h1_s0: _zscore_h1_s0, side: null,
+            score: 0, breakdown: {},
+            reasonD1: _contReasonD1,
+          });
+        } else if (_exhFailed && contSides.length === 0) {
+          // Wait EXH-only — zone EXTREME sans fallback CONT
+          opps.push({
+            type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+            engine: 'V10R', isWait: true, waitReason: 'wait-exh-only',
+            symbol, timestamp: row?.timestamp,
+            zone, zscore_h1_s0: _zscore_h1_s0, side: exhSide,
+            score: 0, breakdown: {},
+          });
+        }
+        // else : silent (cas !symbol défensif déjà filtré, exhDisabled config rare)
       }
 
       // Flush des flags CONT (1× par row, pas par side)

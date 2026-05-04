@@ -175,8 +175,8 @@ const TopOpportunities_V10R = (() => {
   //
   // === NIVEAU 1 — Classification candidat EXH ===
   //   1. RSI dual (rsi instantané + prev3) — uniforme Forte ET Extreme :
-  //        SELL : rsi > 55 ET prevHigh3 > 66
-  //        BUY  : rsi < 45 ET prevLow3  < 34
+  //        SELL : rsi > 55 ET prevHigh3 > 63
+  //        BUY  : rsi < 45 ET prevLow3  < 37
   //   2. slope_h1 (s1) selon zone et side (seuils signés) :
   //        BUY  Forte   : slope_h1 <= +5.5
   //        BUY  Extrême : slope_h1 <= +3.5
@@ -235,9 +235,9 @@ const TopOpportunities_V10R = (() => {
 
     // L1.1 : RSI dual (uniforme Forte ET Extreme)
     if (side === 'SELL') {
-      if (!(rsi > 55 && rsiPrevHigh3 > 66)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi > 55 && rsiPrevHigh3 > 63)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      if (!(rsi < 45 && rsiPrevLow3 < 34)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi < 45 && rsiPrevLow3 < 37)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
     // L1.2 : slope_h1 par zone ET side (seuils signés)

@@ -167,3 +167,21 @@
   width: 28px;
   text-align: right;
 }
+
+/* ─── Card dimmée (wait-m5) — opacité réduite + point orange top-right ──── */
+/* Cohérent avec .zc-chip-dim / .zc-chip-dot dans robotneo.css */
+.neo-op-card-dim {
+  position: relative;
+  opacity: 0.55;
+}
+
+.neo-op-card-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.8);
+}

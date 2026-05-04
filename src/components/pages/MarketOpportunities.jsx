@@ -51,8 +51,9 @@ export default function MarketOpportunities() {
     );
   }
 
-  const topOpportunities = core?.topOpportunities ?? { list: [], blocked: [] };
-  const waitOpportunities = core?.waitOpportunities ?? [];
+  const topOpportunities   = core?.topOpportunities ?? { list: [], blocked: [] };
+  const validOpportunities = core?.validOpportunities ?? [];
+  const waitOpportunities  = core?.waitOpportunities ?? [];
 
   return (
     <div className="mo-page">
@@ -70,7 +71,10 @@ export default function MarketOpportunities() {
 
       {/* ====== RIGHT (40%) — TOP OPPORTUNITIES ====== */}
       <section className="mo-section mo-opportunities">
-        <TopOpportunities opportunities={topOpportunities} />
+        <TopOpportunities
+          validOpportunities={validOpportunities}
+          waitOpportunities={waitOpportunities}
+        />
       </section>
 
     </div>

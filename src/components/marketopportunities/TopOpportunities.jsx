@@ -50,7 +50,7 @@ function BreakdownBar({ label, value, max }) {
 
 /* ─── NeoOpportunityLine ──────────────────────────────────────────────────── */
 
-function NeoOpportunityLine({ op }) {
+function NeoOpportunityLine({ op, dim = false }) {
   if (!op) return null;
 
   const type      = String(op.type ?? "").toUpperCase();
@@ -60,7 +60,8 @@ function NeoOpportunityLine({ op }) {
   const typeShort = type === "CONTINUATION" ? "CONT" : type === "EXHAUSTION" ? "EXH" : type;
 
   return (
-    <div className="neo-op-card">
+    <div className={`neo-op-card ${dim ? 'neo-op-card-dim' : ''}`}>
+      {dim && <span className="neo-op-card-dot" />}
       <div className="neo-op-row">
         <span className="neo-op-symbol">{op.symbol}</span>
         <span className={`neo-op-side ${(op.side ?? "").toLowerCase()}`}>
@@ -98,22 +99,29 @@ function NeoOpportunityLine({ op }) {
 
 /* ─── TopOpportunities ────────────────────────────────────────────────────── */
 
-export default function TopOpportunities({ opportunities }) {
-  const list = opportunities?.list ?? [];
-  const tradable = list.filter(op =>
-    !op?.isWait && op?.route !== "WAIT" && op?.type !== "WAIT"
-  );
+const M5_WAIT_STATES = new Set(['WAIT_M5_OVEREXTENDED', 'WAIT_M5_SETUP']);
+
+export default function TopOpportunities({ validOpportunities = [], waitOpportunities = [] }) {
+  const valids = [...validOpportunities].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  const waitsM5 = waitOpportunities
+    .filter(op => M5_WAIT_STATES.has(op.state))
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+
+  const display = [
+    ...valids.map(op => ({ op, dim: false })),
+    ...waitsM5.map(op => ({ op, dim: true })),
+  ];
 
   return (
     <>
       <div className="neo-title neo-title-section">TOP OPPORTUNITIES</div>
 
-      {!tradable.length ? (
+      {!display.length ? (
         <div className="neo-muted">No exploitable opportunities</div>
       ) : (
         <div className="neo-op-list">
-          {tradable.slice(0, 6).map((op, i) => (
-            <NeoOpportunityLine key={i} op={op} />
+          {display.slice(0, 6).map(({ op, dim }, i) => (
+            <NeoOpportunityLine key={i} op={op} dim={dim} />
           ))}
         </div>
       )}

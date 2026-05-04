@@ -172,8 +172,8 @@ const TopOpportunities_V10R = (() => {
   //
   // === NIVEAU 1 — Classification candidat EXH ===
   //   1. RSI dual (rsi instantané + prev3) — uniforme Forte ET Extreme :
-  //        SELL : rsi > 65 ET prevHigh3 > 70
-  //        BUY  : rsi < 35 ET prevLow3  < 30
+  //        SELL : rsi > 55 ET prevHigh3 > 68
+  //        BUY  : rsi < 45 ET prevLow3  < 32
   //   2. slope_h1 (s1) selon zone :
   //        Forte (BASSE/HAUTE)   : SELL >= +2.7 / BUY <= -2.7
   //        Extreme (z |.| > 2.9) : SELL >= +3.5 / BUY <= -3.5
@@ -225,9 +225,9 @@ const TopOpportunities_V10R = (() => {
 
     // L1.1 : RSI dual (uniforme Forte ET Extreme)
     if (side === 'SELL') {
-      if (!(rsi > 65 && rsiPrevHigh3 > 70)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi > 55 && rsiPrevHigh3 > 68)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     } else {
-      if (!(rsi < 35 && rsiPrevLow3 < 30)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi < 45 && rsiPrevLow3 < 32)) return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
 
     // L1.2 : slope_h1 par zone

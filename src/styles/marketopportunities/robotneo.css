@@ -215,6 +215,46 @@
   color: #ef4444;
 }
 
+/* Chip dimmé (wait-cont-*) — opacité réduite + point orange top-right */
+.zc-chip-dim {
+  position: relative;
+  opacity: 0.55;
+}
+
+.zc-chip-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.8);
+}
+
+/* Chip BLOCKED — pas de Heat Strip, tag textuel */
+.zc-chip-blocked {
+  opacity: 0.85;
+}
+
+.zc-chip-blocked .zc-chip-bar { display: none; }
+
+.zc-chip-tag {
+  font-size: 0.58rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Bordures BLOCKED par waitReason */
+.zc-blk-spike  { border-color: rgba(226, 75, 74, 0.55); }
+.zc-blk-hours  { border-color: rgba(150, 150, 150, 0.4); }
+.zc-blk-atr    { border-color: rgba(239, 159, 39, 0.55); }
+.zc-blk-exh    { border-color: rgba(127, 119, 221, 0.55); }
+
+/* Section BLOCKED — titre neutre */
+.zc-blocked .zc-section-title { color: #888; }
+
 .zc-empty {
   color: #555;
   font-family: 'Courier New', monospace;

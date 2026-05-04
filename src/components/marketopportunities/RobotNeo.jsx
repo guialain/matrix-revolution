@@ -51,7 +51,7 @@ function WaitSection({ opportunities }) {
 
 /* ─── RobotNeo ────────────────────────────────────────────────────────────── */
 
-export default function RobotNeo({ waitOpportunities, marketWatch }) {
+export default function RobotNeo({ waitOpportunities, topOpportunities }) {
   return (
     <div className="rc-container">
       <section className="mo-section rc-robot">
@@ -59,7 +59,7 @@ export default function RobotNeo({ waitOpportunities, marketWatch }) {
       </section>
 
       <WaitSection opportunities={waitOpportunities} />
-      <ZoneClassification marketWatch={marketWatch} />
+      <ZoneClassification topOpportunities={topOpportunities} />
     </div>
   );
 }

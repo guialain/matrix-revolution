@@ -65,7 +65,7 @@ export default function MarketOpportunities() {
       {/* ====== CENTER (20%) — Robot + Wait + Zone Classification ====== */}
       <RobotNeo
         waitOpportunities={waitOpportunities}
-        marketWatch={snapshot?.marketWatch ?? []}
+        topOpportunities={topOpportunities}
       />
 
       {/* ====== RIGHT (40%) — TOP OPPORTUNITIES ====== */}

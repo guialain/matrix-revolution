@@ -10,8 +10,16 @@
 //   -2.9 <= z <= -1.5 → BASSE          → BUY EXH | SELL CONT
 //   z < -2.9          → EXTREME_BASSE  → BUY EXH only
 //
-// EXH : exclusif. Si valide pour la zone, CONT n'est pas testé sur la row.
+// EXH : 2 niveaux (L1 candidat + L2 affinage). Si L2 OK → emit valid.
+//       Si L1 OK + L2 fail → push wait-exh (candidat identifié).
+//       Si L1 fail + EXTREME → wait-exh-only. Si L1 fail + HAUTE/BASSE → bascule CONT.
 // CONT : cascade evaluateGateD1 → evaluateGateIC → evaluateGateH1.
+//
+// waitReasons exposés :
+//   wait-grey, wait-spike, wait-hours, wait-atr   (filtres globaux amont)
+//   wait-exh         (candidat EXH L1 OK mais L2 fail)
+//   wait-exh-only    (L1 fail en zone EXTREME, sans fallback CONT)
+//   wait-cont-d1, wait-cont-ic, wait-cont-h1     (gates CONT, deepest stage reached)
 // ============================================================================
 
 import { getRiskConfig } from "../config/RiskConfig.js";
@@ -158,37 +166,37 @@ const TopOpportunities_V10R = (() => {
   }
 
   // ============================================================================
-  // 2. evaluateExhRoute — verifie tous les filtres pour une route EXH donnee.
+  // 2. evaluateExhRoute — vérifie tous les filtres pour une route EXH donnée.
   //
-  // Routes possibles :
-  //   extreme_haute_SELL_EXH (z > +2.9)
-  //   haute_SELL_EXH         (+1.5 < z <= +2.9)
-  //   basse_BUY_EXH          (-2.9 <= z < -1.5)
-  //   extreme_basse_BUY_EXH  (z < -2.9)
+  // Architecture 2 niveaux (early-return au premier fail dans chaque niveau) :
   //
-  // Filtres (4 en AND strict) :
-  //   1. dslope_h1_live :
-  //      SELL : ]-7.5, -1.5]
-  //      BUY  : [+1.5, +7.5[
-  //
+  // === NIVEAU 1 — Classification candidat EXH ===
+  //   1. RSI dual (rsi instantané + prev3) selon zone :
+  //        SELL Forte    : rsi > 65 ET prevHigh3 > 70
+  //        SELL Extreme  : rsi > 68 ET prevHigh3 > 72
+  //        BUY  Forte    : rsi < 35 ET prevLow3  < 30
+  //        BUY  Extreme  : rsi < 32 ET prevLow3  < 28
   //   2. slope_h1 (s1) selon zone :
-  //      Forte (BASSE/HAUTE)   : SELL >= +2.7 / BUY <= -2.7
-  //      Extreme (z |.| > 2.9) : SELL >= +3.5 / BUY <= -3.5
+  //        Forte (BASSE/HAUTE)   : SELL >= +2.7 / BUY <= -2.7
+  //        Extreme (z |.| > 2.9) : SELL >= +3.5 / BUY <= -3.5
+  //   3. dsigma classe (uniforme, pas par zone ni side) :
+  //        Admis  : compression_forte, contraction, explosion
+  //        Bloqué : stable, expansion
+  //   (zscore_h1_s0 déjà filtré par la classification de zone amont — pas re-testé)
   //
-  //   3. RSI dual (rsi instantane + prev3) selon zone :
-  //      SELL Forte    : rsi > 65 ET prevHigh3 > 70
-  //      SELL Extreme  : rsi > 68 ET prevHigh3 > 72
-  //      BUY  Forte    : rsi < 35 ET prevLow3  < 30
-  //      BUY  Extreme  : rsi < 32 ET prevLow3  < 28
+  // === NIVEAU 2 — Affinage ===
+  //   1. dslope_h1_live cap V-shape :
+  //        SELL : dslope ∈ ]-7.5, -1.5]
+  //        BUY  : dslope ∈ [+1.5, +7.5[
+  //   2. Matrice IC × dsigma_classe par zone :
+  //        Stable bloque toujours.
+  //        Forte   : SOFT/STRONG/EXPLOSIVE_(DOWN|UP) admis. SOFT exige contraction.
+  //        Extreme : seul STRONG/EXPLOSIVE admis. Plus permissif sur dsigma.
   //
-  //   4. IC × dsigma (matrice par zone) :
-  //      Stable bloque toujours (incoherence : mouvement IC sans signature sigma).
-  //      Forte : SOFT/STRONG/EXPLOSIVE_(DOWN|UP) admis. SOFT exige contraction nette.
-  //      Extreme : seul STRONG/EXPLOSIVE admis. Plus permissif sur dsigma.
-  //
-  // Filtres SUPPRIMES vs version precedente :
-  //   - dz_h1 (ambiguite semantique : dz>0 peut indiquer EXH en cours ou EXH demarre)
-  //   - dsigma absolu [-25, -10] (remplace par matrice IC × dsigma binaire)
+  // === RETOURS ===
+  //   { valid: true,  vshape, level: 'L2_OK' }                                     — tous OK
+  //   { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true }        — L1 OK + L2 fail
+  //   { valid: false, vshape: false, level: 'L1_FAIL' }                            — L1 fail (any reason)
   //
   // V-shape : garanti par construction (slope dans la zone "violente"
   //           + dslope dans le sens du retournement).
@@ -201,65 +209,72 @@ const TopOpportunities_V10R = (() => {
     const rsiPrevLow3  = num(row?.rsi_h1_previouslow3);
     const dsigma   = num(row?.dsigma_ratio_h1_pct);
 
-    // Garde-fous null (slope, dslope calculs, dsigma)
+    // Garde-fous null
     if (slope_h1 === null || slope_s0 === null || dsigma === null) {
-      return { valid: false, vshape: false };
+      return { valid: false, vshape: false, level: 'L1_FAIL' };
     }
-    if (side === 'SELL' && rsiPrevHigh3 === null) return { valid: false, vshape: false };
-    if (side === 'BUY'  && rsiPrevLow3  === null) return { valid: false, vshape: false };
-    if (rsi === null) return { valid: false, vshape: false };
+    if (side === 'SELL' && rsiPrevHigh3 === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (side === 'BUY'  && rsiPrevLow3  === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (rsi === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+
+    const isExtreme = routeName === 'extreme_haute_SELL_EXH' || routeName === 'extreme_basse_BUY_EXH';
+    const isForte   = routeName === 'haute_SELL_EXH'         || routeName === 'basse_BUY_EXH';
+    if (!isExtreme && !isForte) return { valid: false, vshape: false, level: 'L1_FAIL' };
+
+    // ====================================
+    // NIVEAU 1 — Classification candidat EXH
+    // ====================================
+
+    // L1.1 : RSI dual (par zone)
+    if (side === 'SELL') {
+      if (isExtreme) {
+        if (!(rsi > 68 && rsiPrevHigh3 > 72)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      } else {
+        if (!(rsi > 65 && rsiPrevHigh3 > 70)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      }
+    } else {
+      if (isExtreme) {
+        if (!(rsi < 32 && rsiPrevLow3 < 28)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      } else {
+        if (!(rsi < 35 && rsiPrevLow3 < 30)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      }
+    }
+
+    // L1.2 : slope_h1 par zone
+    const slopeThreshold = isExtreme ? 3.5 : 2.7;
+    if (side === 'SELL') {
+      if (slope_h1 < slopeThreshold) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    } else {
+      if (slope_h1 > -slopeThreshold) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    }
+
+    // L1.3 : dsigma classe (uniforme, admis = compression_forte | contraction | explosion)
+    const dsigmaLevel = classifyDsigmaForExh(dsigma);
+    if (dsigmaLevel === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (dsigmaLevel !== 'compression_forte' && dsigmaLevel !== 'contraction' && dsigmaLevel !== 'explosion') {
+      return { valid: false, vshape: false, level: 'L1_FAIL' };
+    }
+
+    // === À partir d'ici : L1 OK ===
+
+    // ====================================
+    // NIVEAU 2 — Affinage
+    // ====================================
 
     const dslope_live = slope_s0 - slope_h1;
 
-    // Determine si zone extreme ou forte selon le routeName
-    const isExtreme = routeName === 'extreme_haute_SELL_EXH' || routeName === 'extreme_basse_BUY_EXH';
-    const isForte   = routeName === 'haute_SELL_EXH'         || routeName === 'basse_BUY_EXH';
-    if (!isExtreme && !isForte) return { valid: false, vshape: false };
-
-    // ====================================
-    // Filtre 1 : dslope_h1_live (cap V-shape)
-    // ====================================
+    // L2.1 : dslope_h1_live cap V-shape
     if (side === 'SELL') {
-      if (!(dslope_live > -7.5 && dslope_live <= -1.5)) return { valid: false, vshape: false };
-    } else {
-      if (!(dslope_live >= 1.5 && dslope_live < 7.5)) return { valid: false, vshape: false };
-    }
-
-    // ====================================
-    // Filtre 2 : slope_h1 (s1) selon zone
-    //   Forte   : SELL >= +2.7 / BUY <= -2.7
-    //   Extreme : SELL >= +3.5 / BUY <= -3.5
-    // ====================================
-    const slopeThreshold = isExtreme ? 3.5 : 2.7;
-    if (side === 'SELL') {
-      if (slope_h1 < slopeThreshold) return { valid: false, vshape: false };
-    } else {
-      if (slope_h1 > -slopeThreshold) return { valid: false, vshape: false };
-    }
-
-    // ====================================
-    // Filtre 3 : RSI dual (selon zone)
-    // ====================================
-    if (side === 'SELL') {
-      if (isExtreme) {
-        if (!(rsi > 68 && rsiPrevHigh3 > 72)) return { valid: false, vshape: false };
-      } else {
-        if (!(rsi > 65 && rsiPrevHigh3 > 70)) return { valid: false, vshape: false };
+      if (!(dslope_live > -7.5 && dslope_live <= -1.5)) {
+        return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
       }
     } else {
-      if (isExtreme) {
-        if (!(rsi < 32 && rsiPrevLow3 < 28)) return { valid: false, vshape: false };
-      } else {
-        if (!(rsi < 35 && rsiPrevLow3 < 30)) return { valid: false, vshape: false };
+      if (!(dslope_live >= 1.5 && dslope_live < 7.5)) {
+        return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
       }
     }
 
-    // ====================================
-    // Filtre 4 : Matrice IC × dsigma (par zone)
-    // ====================================
-    const dsigmaLevel = classifyDsigmaForExh(dsigma);
-    if (dsigmaLevel === null) return { valid: false, vshape: false };
-
+    // L2.2 : Matrice IC × dsigma classe (par zone)
     let matrix = null;
     if (side === 'SELL') {
       matrix = isExtreme ? EXH_MATRIX_EXTREME_SELL : EXH_MATRIX_FORTE_SELL;
@@ -268,14 +283,14 @@ const TopOpportunities_V10R = (() => {
     }
 
     const icRow = matrix[intradayLevel];
-    if (!icRow) return { valid: false, vshape: false };
-    if (icRow[dsigmaLevel] !== true) return { valid: false, vshape: false };
+    if (!icRow) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
+    if (icRow[dsigmaLevel] !== true) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
 
     // V-shape : garanti par les filtres durs
     const vshape = (side === 'SELL' && slope_h1 >= slopeThreshold && dslope_live <= -1.5)
                 || (side === 'BUY'  && slope_h1 <= -slopeThreshold && dslope_live >= 1.5);
 
-    return { valid: true, vshape };
+    return { valid: true, vshape, level: 'L2_OK' };
   }
 
   // ============================================================================
@@ -804,13 +819,14 @@ const TopOpportunities_V10R = (() => {
         range_ratio_h1: num(row?.range_ratio_h1),
       };
 
-      // ====== 1. Test EXH (priorité, exclusif) ======
+      // ====== 1. Test EXH (2 niveaux : L1 candidat + L2 affinage) ======
       let exhEmitted = false;
       let _exhFailed = false;
       if (exhRoute !== null) {
         funnel.inc('exhTested');
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);
         if (exhResult.valid) {
+          // L2_OK : push valid EXH (logique inchangée)
           funnel.inc('exhValid');
           if (riskCfg.exhaustionEnabled !== false) {
             // Récupérer reasonD1 pour le scoring (sans bloquer)
@@ -848,7 +864,18 @@ const TopOpportunities_V10R = (() => {
             funnel.inc('v10rEmit');
             exhEmitted = true;
           }
+        } else if (exhResult.candidateExh) {
+          // L1 OK + L2 fail : push wait-exh (candidat identifié, bloque la bascule CONT)
+          opps.push({
+            type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+            engine: 'V10R', isWait: true, waitReason: 'wait-exh',
+            symbol, timestamp: row?.timestamp,
+            zone, zscore_h1_s0: _zscore_h1_s0,
+            side: exhSide, score: 0, breakdown: {},
+          });
+          exhEmitted = true;
         } else {
+          // L1 fail : zone EXTREME → wait-exh-only via post-loop ; HAUTE/BASSE → bascule CONT
           _exhFailed = true;
         }
       }
@@ -983,6 +1010,12 @@ const TopOpportunities_V10R = (() => {
     });
 
     opps = applyDedupeAndSpacing(opps, TOP_CFG);
+
+    console.log('[V10R-OUT]',
+      'total=' + opps.length,
+      'waits=' + opps.filter(o => o.waitReason).length,
+      'reasons=' + JSON.stringify(opps.filter(o => o.waitReason).reduce((acc, o) => { acc[o.waitReason] = (acc[o.waitReason] || 0) + 1; return acc; }, {}))
+    );
 
     return opps;
   }

@@ -52,7 +52,6 @@ const TopOpportunities_V10R = (() => {
   // Gate D1 — seuils et sets IC pour tie-breaker (utilisés par evaluateGateD1)
   const GATE_D1_SLOPE_THRESHOLD       = 0.3;
   const GATE_D1_DSLOPE_THRESHOLD      = 0.3;  // unifié — CAS aligned/opposed ET CAS early
-  const GATE_D1_S0_CONFIRM_THRESHOLD  = 0.5;  // seuil de confirmation live pour le tie-breaker
 
   const IC_BULLISH_FOR_TIEBREAKER = new Set(['SOFT_UP',   'STRONG_UP',   'EXPLOSIVE_UP']);
   const IC_BEARISH_FOR_TIEBREAKER = new Set(['SOFT_DOWN', 'STRONG_DOWN', 'EXPLOSIVE_DOWN']);
@@ -316,15 +315,12 @@ const TopOpportunities_V10R = (() => {
   //   - Cas alignes (slope et dslope meme sens) -> autorise le sens
   //   - Cas early-trend (slope flat + dslope clairement directionnel) -> autorise le sens du dslope
   //   - Cas opposes (slope et dslope sens contraires) :
-  //       Si IC va dans le sens du dslope ET slope_d1_s0 confirme le retournement
-  //       (au-dela de +/-0.5 dans le sens du dslope) -> autorise le sens du dslope
-  //       Sinon -> bloque (retrace technique probable, pas un vrai retournement)
+  //       Si IC va dans le sens du dslope -> autorise le sens du dslope
+  //       (dslope_d1_live > 0.3 confirme déjà l'amplitude du retournement,
+  //        pas besoin de check absolu sur slope_d1_s0 — sur un trend D1
+  //        profond, la live mettrait trop de temps à traverser zéro)
+  //       Sinon -> bloque (sans confirmation IC, pas de validation contre-tendance)
   //   - Cas flat x flat -> bloque
-  //
-  // Le critere slope_d1_s0 dans les cas opposes evite de valider un trade
-  // contra-tendance pendant un simple retrace technique d'une tendance D1
-  // qui tient encore. Si slope_d1_s0 reste dans la zone de la tendance D1
-  // stable, on n'autorise pas le retournement meme si IC le suggere.
   //
   // Ne s'applique PAS aux routes EXH (qui ont leur propre logique).
   // ============================================================================
@@ -343,9 +339,8 @@ const TopOpportunities_V10R = (() => {
     // CAS 1 : slope haussier
     if (S >= TS) {
       if (D >= -TD) return { buyAllowed: true, sellAllowed: false, reason: 'aligned_up' };
-      // Cas oppose : tie-breaker IC + confirmation slope_d1_s0 live
-      if (IC_BEARISH_FOR_TIEBREAKER.has(intradayLevel)
-          && slope_d1_s0 <= -GATE_D1_S0_CONFIRM_THRESHOLD) {
+      // Cas oppose : tie-breaker IC seul (dslope_d1_live < -TD déjà confirmé)
+      if (IC_BEARISH_FOR_TIEBREAKER.has(intradayLevel)) {
         return { buyAllowed: false, sellAllowed: true, reason: 'opposed_buy_to_sell' };
       }
       return { buyAllowed: false, sellAllowed: false, reason: 'opposed_blocked' };
@@ -354,9 +349,8 @@ const TopOpportunities_V10R = (() => {
     // CAS 2 : slope baissier
     if (S <= -TS) {
       if (D <= TD) return { buyAllowed: false, sellAllowed: true, reason: 'aligned_down' };
-      // Cas oppose : tie-breaker IC + confirmation slope_d1_s0 live
-      if (IC_BULLISH_FOR_TIEBREAKER.has(intradayLevel)
-          && slope_d1_s0 >= GATE_D1_S0_CONFIRM_THRESHOLD) {
+      // Cas oppose : tie-breaker IC seul (dslope_d1_live > +TD déjà confirmé)
+      if (IC_BULLISH_FOR_TIEBREAKER.has(intradayLevel)) {
         return { buyAllowed: true, sellAllowed: false, reason: 'opposed_sell_to_buy' };
       }
       return { buyAllowed: false, sellAllowed: false, reason: 'opposed_blocked' };

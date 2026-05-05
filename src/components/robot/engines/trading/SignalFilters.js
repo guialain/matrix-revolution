@@ -219,6 +219,14 @@ const SignalFilters = (() => {
     for (const opp of opps) {
       const side = opp?.side;
       if (!side) continue;
+
+      // Skip waits V10R : ils sont déjà des waits par nature, pas à passer dans les gates M5
+      if (opp?.isWait || opp?.route === 'WAIT' || opp?.type === 'WAIT') {
+        // Préserver dans waitOpportunities pour que core.waitOpportunities côté UI les voit
+        waitOpportunities.push({ ...opp });
+        continue;
+      }
+
       const isTradable = !opp?.isWait && opp?.route !== 'WAIT' && opp?.type !== 'WAIT';
 
       // Pre-calc M5 V-shape detection (sert pour wait_reason + payload)

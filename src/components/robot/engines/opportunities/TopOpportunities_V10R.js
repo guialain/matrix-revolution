@@ -253,8 +253,8 @@ const TopOpportunities_V10R = (() => {
     }
 
     // L1.3 : règle combinée dslope_h1_live + dsigma classe
-    //   BUY  : dslope_live ∈ [+1.0, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
-    //   SELL : dslope_live ∈ ]-7.5, -1.0] ET dsigma ∈ {stable, expansion, explosion}
+    //   BUY  : dslope_live ∈ [+1.5, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
+    //   SELL : dslope_live ∈ ]-7.5, -1.5] ET dsigma ∈ {stable, expansion, explosion}
     //   (cap V-shape intégré ici — ancien L2.1 supprimé)
     //   Stable admis : sigma rolling pas encore impactée par le retournement amorcé.
     const dsigmaLevel = classifyDsigmaForExh(dsigma);
@@ -264,14 +264,20 @@ const TopOpportunities_V10R = (() => {
     const dsigmaOk = dsigmaLevel === 'stable' || dsigmaLevel === 'expansion' || dsigmaLevel === 'explosion';
 
     if (side === 'BUY') {
-      if (!(dslope_live >= 1.0 && dslope_live < 7.5 && dsigmaOk)) {
+      if (!(dslope_live >= 1.5 && dslope_live < 7.5 && dsigmaOk)) {
         return { valid: false, vshape: false, level: 'L1_FAIL' };
       }
     } else {
-      if (!(dslope_live > -7.5 && dslope_live <= -1.0 && dsigmaOk)) {
+      if (!(dslope_live > -7.5 && dslope_live <= -1.5 && dsigmaOk)) {
         return { valid: false, vshape: false, level: 'L1_FAIL' };
       }
     }
+
+    // L1.4 : cap dur slope_h1_s0 (live encore trop fort dans le sens contraire au trade)
+    //   SELL : slope_h1_s0 <= +1.5  (live encore trop haussier → pas la peine de SELL)
+    //   BUY  : slope_h1_s0 >= -1.5  (live encore trop baissier → pas la peine de BUY)
+    if (side === 'SELL' && slope_s0 > 1.5)  return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (side === 'BUY'  && slope_s0 < -1.5) return { valid: false, vshape: false, level: 'L1_FAIL' };
 
     // === À partir d'ici : L1 OK ===
 
@@ -292,10 +298,10 @@ const TopOpportunities_V10R = (() => {
     if (icRow[dsigmaLevel] !== true) return { valid: false, vshape: false, level: 'L2_FAIL', candidateExh: true };
 
     // V-shape : marqueur strict (slope dans la zone violente + dslope retournement).
-    // Bornes dslope alignées sur L1.3 (>=1.0 BUY / <=-1.0 SELL).
+    // Bornes dslope alignées sur L1.3 (>=1.5 BUY / <=-1.5 SELL).
     const vshapeMag = isExtreme ? 3.5 : 2.7;
-    const vshape = (side === 'SELL' && slope_h1 >=  vshapeMag && dslope_live <= -1.0)
-                || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  1.0);
+    const vshape = (side === 'SELL' && slope_h1 >=  vshapeMag && dslope_live <= -1.5)
+                || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  1.5);
 
     return { valid: true, vshape, level: 'L2_OK' };
   }

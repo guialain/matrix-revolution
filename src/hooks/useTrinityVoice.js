@@ -20,6 +20,8 @@ export default function useTrinityVoice({ valid = 0, wait = 0, topValid, muted =
     const speak = (text) => {
       if (muted) return;
       if (now - lastSpoken.current < 8000) return;
+      // Priorité LiveAIAnalysis : ne pas couper Claude en cours de parole
+      if (window.__aiVoiceSpeaking) return;
 
       lastSpoken.current = now;
       window.speechSynthesis.cancel();

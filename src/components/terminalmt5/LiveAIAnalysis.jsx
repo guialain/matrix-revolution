@@ -36,6 +36,10 @@ function speak(text) {
   msg.rate   = 1.0;
   msg.pitch  = 0.78;
   msg.volume = 1.0;
+  // Priorité AI : flag global pour empêcher Trinity Voice de couper Claude
+  msg.onstart = () => { window.__aiVoiceSpeaking = true; };
+  msg.onend   = () => { window.__aiVoiceSpeaking = false; };
+  msg.onerror = () => { window.__aiVoiceSpeaking = false; };
   window.speechSynthesis.speak(msg);
 }
 

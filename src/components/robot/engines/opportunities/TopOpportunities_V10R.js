@@ -51,7 +51,8 @@ const TopOpportunities_V10R = (() => {
 
   // Gate D1 — seuils et sets IC pour tie-breaker (utilisés par evaluateGateD1)
   const GATE_D1_SLOPE_THRESHOLD       = 0.3;
-  const GATE_D1_DSLOPE_THRESHOLD      = 0.5;
+  const GATE_D1_DSLOPE_THRESHOLD      = 0.5;  // CAS aligned/opposed (slope D1 directionnel)
+  const GATE_D1_DSLOPE_EARLY          = 0.3;  // CAS early (slope D1 flat) — plus permissif
   const GATE_D1_S0_CONFIRM_THRESHOLD  = 0.5;  // seuil de confirmation live pour le tie-breaker
 
   const IC_BULLISH_FOR_TIEBREAKER = new Set(['SOFT_UP',   'STRONG_UP',   'EXPLOSIVE_UP']);
@@ -362,9 +363,10 @@ const TopOpportunities_V10R = (() => {
       return { buyAllowed: false, sellAllowed: false, reason: 'opposed_blocked' };
     }
 
-    // CAS 3 : slope flat
-    if (D >  TD) return { buyAllowed: true,  sellAllowed: false, reason: 'early_up' };
-    if (D < -TD) return { buyAllowed: false, sellAllowed: true,  reason: 'early_down' };
+    // CAS 3 : slope flat — seuil dslope plus permissif (early-trend bascule rapide)
+    const TDE = GATE_D1_DSLOPE_EARLY;
+    if (D >  TDE) return { buyAllowed: true,  sellAllowed: false, reason: 'early_up' };
+    if (D < -TDE) return { buyAllowed: false, sellAllowed: true,  reason: 'early_down' };
     return { buyAllowed: false, sellAllowed: false, reason: 'flat_flat' };
   }
 

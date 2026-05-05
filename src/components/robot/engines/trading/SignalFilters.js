@@ -26,10 +26,10 @@ const SignalFilters = (() => {
   // 4 modes alignes V8R
   // =========================================================
   const GATE1_THRESHOLDS = {
-    strict:  { slopeAbs: 3.5, zscoreAbs: 1.6, rsi: 65 },
-    normal:  { slopeAbs: 4.5, zscoreAbs: 1.9, rsi: 68 },
-    soft:    { slopeAbs: 5.5, zscoreAbs: 2.2, rsi: 70 },
-    relaxed: { slopeAbs: 6.5, zscoreAbs: 2.5, rsi: 72 },
+    strict:  { slopeAbs: 3.5, zscoreAbs: 1.5, rsi: 62 },
+    normal:  { slopeAbs: 4.5, zscoreAbs: 1.8, rsi: 65 },
+    soft:    { slopeAbs: 5.5, zscoreAbs: 2.0, rsi: 68 },
+    relaxed: { slopeAbs: 6.5, zscoreAbs: 2.2, rsi: 70 },
   };
 
   // =========================================================

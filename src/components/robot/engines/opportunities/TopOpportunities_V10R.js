@@ -274,10 +274,10 @@ const TopOpportunities_V10R = (() => {
     }
 
     // L1.4 : cap dur slope_h1_s0 (live encore trop fort dans le sens contraire au trade)
-    //   SELL : slope_h1_s0 <= +1.5  (live encore trop haussier → pas la peine de SELL)
-    //   BUY  : slope_h1_s0 >= -1.5  (live encore trop baissier → pas la peine de BUY)
-    if (side === 'SELL' && slope_s0 > 1.5)  return { valid: false, vshape: false, level: 'L1_FAIL' };
-    if (side === 'BUY'  && slope_s0 < -1.5) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    //   SELL : slope_h1_s0 <= +0.5  (live encore trop haussier → pas la peine de SELL)
+    //   BUY  : slope_h1_s0 >= -0.5  (live encore trop baissier → pas la peine de BUY)
+    if (side === 'SELL' && slope_s0 > 0.5)  return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (side === 'BUY'  && slope_s0 < -0.5) return { valid: false, vshape: false, level: 'L1_FAIL' };
 
     // === À partir d'ici : L1 OK ===
 

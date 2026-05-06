@@ -163,7 +163,7 @@ export const RISK_CONFIG = {
     volume_min: 0.0001, volume_max: 100, volume_step: 0.0001,
   },
   BTCJPY: {
-    atrH1Cap: 1100, maxHoldH: 96, exhaustionEnabled: true,
+    atrH1Cap: 175000, maxHoldH: 96, exhaustionEnabled: true,
     spread: 5000,
     targetLeveragePerTrade: 0.65,
     contractSize: 10, refPrice: 11282266, baseToEUR: 0.006,

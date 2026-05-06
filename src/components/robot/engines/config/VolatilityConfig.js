@@ -22,6 +22,7 @@ export const VOLATILITY_CONFIG = {
   // CRYPTO
   BTCEUR:      { lowMax: 0.001308, medMax: 0.003102, highMax: 0.005325 },
   BTCUSD:      { lowMax: 0.001383, medMax: 0.003352, highMax: 0.005554 },
+  BTCJPY:      { lowMax: 0.001431, medMax: 0.003403, highMax: 0.005567 },
   ETHUSD:      { lowMax: 0.001883, medMax: 0.004443, highMax: 0.007501 },
   // METAL
   GOLD:        { lowMax: 0.000280, medMax: 0.002920, highMax: 0.004457 },

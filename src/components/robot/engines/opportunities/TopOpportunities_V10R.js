@@ -550,17 +550,18 @@ const TopOpportunities_V10R = (() => {
   }
 
   // ============================================================================
-  // 3. detectSpike — copié de V8R (H1 prioritaire, fallback IC)
+  // 3. detectSpike — H1 only (slope_h1_s0)
+  //    IC fallback supprimé : le spike H1 capte la pente live extrême,
+  //    l'IC SPIKE_UP/DOWN était redondant et bloquait les EXH légitimes
+  //    sur retournement de spike (BUY EXH après sell-off, SELL EXH après rally).
   // ============================================================================
   const SPIKE_H1_THRESHOLD = 8;
 
-  function detectSpike(slope_h1_s0, intradayLevel) {
+  function detectSpike(slope_h1_s0) {
     if (slope_h1_s0 !== null) {
       if (slope_h1_s0 >=  SPIKE_H1_THRESHOLD) return { isSpike: true, direction: 'up',   source: 'h1' };
       if (slope_h1_s0 <= -SPIKE_H1_THRESHOLD) return { isSpike: true, direction: 'down', source: 'h1' };
     }
-    if (intradayLevel === 'SPIKE_UP')   return { isSpike: true, direction: 'up',   source: 'ic' };
-    if (intradayLevel === 'SPIKE_DOWN') return { isSpike: true, direction: 'down', source: 'ic' };
     return { isSpike: false, direction: null, source: null };
   }
 
@@ -697,24 +698,12 @@ const TopOpportunities_V10R = (() => {
         ? _slope_h1_s0 - _slope_h1
         : null;
 
-      // Filtre amont 3+4 : spike H1 ou IC → emit WAIT + skip
-      const _spike = detectSpike(_slope_h1_s0, intradayLevel);
-      if (_spike.isSpike) {
-        funnel.inc('spikeBlock');
-        opps.push({
-          type:            'WAIT',
-          waitReason:      'wait-spike',
-          engine:          'V10R',
-          symbol,
-          timestamp:       row?.timestamp,
-          slope_h1_s0:     _slope_h1_s0,
-          intradayLevel,
-          spike_direction: _spike.direction,
-          spike_source:    _spike.source,
-          blocked_side:    _spike.direction === 'up' ? 'BUY' : 'SELL',
-        });
-        continue;
-      }
+      // Détection spike H1 — ne bloque PAS l'évaluation EXH (capter retour sur spike).
+      // Si spike : CONT cascade désactivée, EXH évaluée normalement, fallback wait-spike
+      // si EXH n'émet pas (cf. dispatch CONT et wait emission plus bas).
+      const _spike = detectSpike(_slope_h1_s0);
+      const _spikeBlockCont = _spike.isSpike;
+      if (_spike.isSpike) funnel.inc('spikeDetected');
 
       // Données D1 + dsigma pour les gates CONT
       const _slope_d1       = num(row?.slope_d1);
@@ -951,7 +940,7 @@ const TopOpportunities_V10R = (() => {
         }
       };
 
-      if (!exhEmitted && contSides.length > 0) {
+      if (!exhEmitted && contSides.length > 0 && !_spikeBlockCont) {
         const gateD1 = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
         _contReasonD1 = gateD1.reason;
 
@@ -1036,7 +1025,22 @@ const TopOpportunities_V10R = (() => {
 
       // === Décision du wait à exposer (1 par row max, valid > all wait) ===
       if (!exhEmitted && !_contValidFlag) {
-        if ((_contBuy_tested || _contSell_tested) && _contDeepest) {
+        if (_spikeBlockCont) {
+          // Spike actif et aucune EXH n'a émis → wait-spike (cascade CONT n'a pas tourné)
+          funnel.inc('spikeBlock');
+          opps.push({
+            type:            'WAIT',
+            waitReason:      'wait-spike',
+            engine:          'V10R',
+            symbol,
+            timestamp:       row?.timestamp,
+            slope_h1_s0:     _slope_h1_s0,
+            intradayLevel,
+            spike_direction: _spike.direction,
+            spike_source:    _spike.source,
+            blocked_side:    _spike.direction === 'up' ? 'BUY' : 'SELL',
+          });
+        } else if ((_contBuy_tested || _contSell_tested) && _contDeepest) {
           // Wait CONT — deepest stage reached prime (h1 > ic > d1)
           const reason = _contDeepest === 'h1' ? 'wait-cont-h1'
                        : _contDeepest === 'ic' ? 'wait-cont-ic'

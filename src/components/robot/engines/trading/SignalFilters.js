@@ -273,11 +273,12 @@ const SignalFilters = (() => {
       if (isTradable) funnel.inc('m5OverextPass');
 
       // 6. M5 SetupOK — branchement par type
-      //    EXH (valid + wait-exh + wait-exh-only) → isM5SetupOK_EXH (climax/capitulation)
-      //    Tout le reste                          → isM5SetupOK CONT/V-shape
+      //    EXH (valid + wait-exh + wait-exh-only + wait-exh-pending) → isM5SetupOK_EXH
+      //    Tout le reste                                              → isM5SetupOK CONT/V-shape
       const isExh = opp?.type === 'EXHAUSTION'
                  || opp?.waitReason === 'wait-exh'
-                 || opp?.waitReason === 'wait-exh-only';
+                 || opp?.waitReason === 'wait-exh-only'
+                 || opp?.waitReason === 'wait-exh-pending';
       const setupOK = isExh
         ? isM5SetupOK_EXH(num(opp?.rsi_m5), _slope_m5, _slope_m5_s0, side)
         : isM5SetupOK(_slope_m5, _slope_m5_s0, _dslope_m5, side, mode);

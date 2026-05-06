@@ -30,8 +30,9 @@ function classifyOpp(opp) {
     if (opp.side === 'SELL') return { bucket: 'CONT_SELL', mode: 'valid' };
   }
   const wr = opp.waitReason;
-  if (wr === 'wait-exh') {
-    // Candidat EXH (L1 OK, L2 fail) : dim dans EXH_BUY/EXH_SELL selon side
+  if (wr === 'wait-exh' || wr === 'wait-exh-pending') {
+    // Candidat EXH (L1 OK, L2 fail) ou retournement amorcé pas mûr (L1.3/L1.4 timing fail)
+    // dim dans EXH_BUY/EXH_SELL selon side
     if (opp.side === 'BUY')  return { bucket: 'EXH_BUY',   mode: 'dim' };
     if (opp.side === 'SELL') return { bucket: 'EXH_SELL',  mode: 'dim' };
     return null;

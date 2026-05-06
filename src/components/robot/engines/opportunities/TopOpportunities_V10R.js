@@ -215,69 +215,69 @@ const TopOpportunities_V10R = (() => {
     const rsiPrevLow3  = num(row?.rsi_h1_previouslow3);
     const dsigma   = num(row?.dsigma_ratio_h1_pct);
 
-    // Garde-fous null
+    // Garde-fous null — failCause STRUCT (données manquantes traitées comme structurel safe)
     if (slope_h1 === null || slope_s0 === null || dsigma === null) {
-      return { valid: false, vshape: false, level: 'L1_FAIL' };
+      return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
-    if (side === 'SELL' && rsiPrevHigh3 === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
-    if (side === 'BUY'  && rsiPrevLow3  === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
-    if (rsi === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (side === 'SELL' && rsiPrevHigh3 === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+    if (side === 'BUY'  && rsiPrevLow3  === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+    if (rsi === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
 
     const isExtreme = routeName === 'extreme_haute_SELL_EXH' || routeName === 'extreme_basse_BUY_EXH';
     const isForte   = routeName === 'haute_SELL_EXH'         || routeName === 'basse_BUY_EXH'
                   || routeName === 'normale_haute_SELL_EXH' || routeName === 'normale_basse_BUY_EXH';
-    if (!isExtreme && !isForte) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (!isExtreme && !isForte) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
 
     // ====================================
     // NIVEAU 1 — Classification candidat EXH
     // ====================================
 
-    // L1.1 : RSI dual (uniforme Forte ET Extreme)
+    // L1.1 : RSI dual (uniforme Forte ET Extreme) — STRUCTUREL (RSI invalide la thèse retournement)
     if (side === 'SELL') {
-      if (!(rsi > 55 && rsiPrevHigh3 > 69)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi > 55 && rsiPrevHigh3 > 69)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     } else {
-      if (!(rsi < 45 && rsiPrevLow3 < 31)) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (!(rsi < 45 && rsiPrevLow3 < 31)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
 
-    // L1.2 : slope_h1 par zone ET side (seuils signés)
+    // L1.2 : slope_h1 par zone ET side — STRUCTUREL (pente fermée hors range = thèse morte)
     //   BUY  Forte   : slope_h1 <= +5.5
     //   BUY  Extrême : slope_h1 <= +3.5
     //   SELL Forte   : slope_h1 >= -5.5
     //   SELL Extrême : slope_h1 >= -3.5
     if (side === 'SELL') {
       const minSlope = isExtreme ? -3.5 : -5.5;
-      if (slope_h1 < minSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (slope_h1 < minSlope) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     } else {
       const maxSlope = isExtreme ? 3.5 : 5.5;
-      if (slope_h1 > maxSlope) return { valid: false, vshape: false, level: 'L1_FAIL' };
+      if (slope_h1 > maxSlope) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
 
-    // L1.3 : règle combinée dslope_h1_live + dsigma classe
+    // L1.3 : règle combinée dslope_h1_live + dsigma classe — TIMING (retournement amorcé mais pas mûr)
     //   BUY  : dslope_live ∈ [+1.5, +7.5[ ET dsigma ∈ {stable, expansion, explosion}
     //   SELL : dslope_live ∈ ]-7.5, -1.5] ET dsigma ∈ {stable, expansion, explosion}
     //   (cap V-shape intégré ici — ancien L2.1 supprimé)
     //   Stable admis : sigma rolling pas encore impactée par le retournement amorcé.
     const dsigmaLevel = classifyDsigmaForExh(dsigma);
-    if (dsigmaLevel === null) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (dsigmaLevel === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
 
     const dslope_live = slope_s0 - slope_h1;
     const dsigmaOk = dsigmaLevel === 'stable' || dsigmaLevel === 'expansion' || dsigmaLevel === 'explosion';
 
     if (side === 'BUY') {
       if (!(dslope_live >= 1.5 && dslope_live < 7.5 && dsigmaOk)) {
-        return { valid: false, vshape: false, level: 'L1_FAIL' };
+        return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
       }
     } else {
       if (!(dslope_live > -7.5 && dslope_live <= -1.5 && dsigmaOk)) {
-        return { valid: false, vshape: false, level: 'L1_FAIL' };
+        return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
       }
     }
 
-    // L1.4 : cap dur slope_h1_s0 (live encore trop fort dans le sens contraire au trade)
+    // L1.4 : cap dur slope_h1_s0 — TIMING (pente live pas encore retournée)
     //   SELL : slope_h1_s0 <= +0.5  (live encore trop haussier → pas la peine de SELL)
     //   BUY  : slope_h1_s0 >= -0.5  (live encore trop baissier → pas la peine de BUY)
-    if (side === 'SELL' && slope_s0 > 0.5)  return { valid: false, vshape: false, level: 'L1_FAIL' };
-    if (side === 'BUY'  && slope_s0 < -0.5) return { valid: false, vshape: false, level: 'L1_FAIL' };
+    if (side === 'SELL' && slope_s0 > 0.5)  return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
+    if (side === 'BUY'  && slope_s0 < -0.5) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
 
     // === À partir d'ici : L1 OK ===
 
@@ -690,6 +690,7 @@ const TopOpportunities_V10R = (() => {
       const intra         = num(row?.intraday_change);
       const intradayLevel = getIntradayLevel(intra, intCfg);
 
+      const _rsi_h1      = num(row?.rsi_h1);
       const _slope_h1    = num(row?.slope_h1);
       const _slope_h1_s0 = num(row?.slope_h1_s0);
       const _dslope_h1_live = (_slope_h1_s0 !== null && _slope_h1 !== null)
@@ -899,9 +900,35 @@ const TopOpportunities_V10R = (() => {
           });
           exhEmitted = true;
         } else {
-          // L1 fail
+          // L1 fail — distinguer cause structurelle vs timing
           funnel.inc(`${exhKey}_L1Fail`);
-          _exhFailed = true;
+          if (exhResult.failCause === 'STRUCT') {
+            // STRUCT (RSI invalide ou slope_h1 hors range) : la thèse retournement est morte
+            // → fallback CONT autorisé (comportement historique)
+            funnel.inc(`${exhKey}_L1Fail_STRUCT`);
+            _exhFailed = true;
+          } else {
+            // TIMING (L1.3 dslope ou L1.4 slope_s0 cap) : retournement en cours mais pas mûr
+            // → push wait-exh-pending, bloque la cascade CONT (évite oscillation EXH↔CONT contraire)
+            funnel.inc(`${exhKey}_L1Fail_TIMING`);
+
+            const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
+            const scoringRow = buildScoringRow(row, 'EXHAUSTION', exhSide, intradayLevel, gateD1ForScoring.reason);
+            const scoreResult = scoreOpportunity(scoringRow);
+
+            opps.push({
+              type: null, regime: 'WAIT', route: 'WAIT', signalPhase: 'WAIT',
+              engine: 'V10R', isWait: true, waitReason: 'wait-exh-pending',
+              symbol, timestamp: row?.timestamp,
+              zone,
+              side: exhSide,
+              score: scoreResult.total,
+              score_brut: scoreResult.total_brut,
+              breakdown: scoreResult.breakdown,
+              ...propagated,
+            });
+            exhEmitted = true;
+          }
         }
       }
 
@@ -931,6 +958,17 @@ const TopOpportunities_V10R = (() => {
         for (const side of contSides) {
           const isBuy = side === 'BUY';
           if (isBuy) _contBuy_tested = true; else _contSell_tested = true;
+
+          // L0 cap RSI : bloque CONT quand zone H1 déjà saturée dans le sens du trade
+          //   BUY  CONT : rsi_h1 <= 72  (sinon overbought, pas la peine de buy)
+          //   SELL CONT : rsi_h1 >= 28  (sinon oversold, pas la peine de sell)
+          if (_rsi_h1 !== null) {
+            if ((isBuy && _rsi_h1 > 72) || (!isBuy && _rsi_h1 < 28)) {
+              if (isBuy) _contBuy_d1 = true; else _contSell_d1 = true;
+              _bumpDeepest('d1', side);
+              continue;
+            }
+          }
 
           const allowed = (side === 'BUY')  ? gateD1.buyAllowed
                         : (side === 'SELL') ? gateD1.sellAllowed

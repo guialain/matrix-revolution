@@ -56,6 +56,11 @@ const TopOpportunities_V10R = (() => {
   const IC_BULLISH_FOR_TIEBREAKER = new Set(['SOFT_UP',   'STRONG_UP',   'EXPLOSIVE_UP']);
   const IC_BEARISH_FOR_TIEBREAKER = new Set(['SOFT_DOWN', 'STRONG_DOWN', 'EXPLOSIVE_DOWN']);
 
+  // SUPER_EXH — climax RSI super-extrême. Bypasse L1.3, L1.4 et L2 ; seul L1.2 reste actif.
+  const SUPER_EXH_RSI_HIGH = 85;   // SELL si rsi_h1 > 85
+  const SUPER_EXH_RSI_LOW  = 15;   // BUY  si rsi_h1 < 15
+  const SUPER_EXH_BONUS    = 15;   // bonus score appliqué aux opps SUPER_EXH
+
   // ============================================================================
   // Gate IC — seuils dsigma_ratio_h1_pct et matrices IC × dsigma -> mode
   // ============================================================================
@@ -304,6 +309,52 @@ const TopOpportunities_V10R = (() => {
                 || (side === 'BUY'  && slope_h1 <= -vshapeMag && dslope_live >=  1.5);
 
     return { valid: true, vshape, level: 'L2_OK' };
+  }
+
+  // ============================================================================
+  // evaluateSuperExhRoute — route SUPER_EXH (climax RSI super-extrême avec Bollinger aligné).
+  //
+  //   BUY  : rsi_h1 < 15 ET zscore_h1_s0 <= -2.0
+  //   SELL : rsi_h1 > 85 ET zscore_h1_s0 >= +2.0
+  //
+  // Critère zscore ±2.0 : zone BASSE + EXTREME_BASSE (et miroir HAUTE + EXTREME_HAUTE).
+  // Empiriquement, RSI super-extrême se produit en zone -2.0/+2.0 dans 60-90% des cas
+  // selon l'actif (stats N=3-26 par actif). Resserrer à ±2.0 filtre les cas où RSI
+  // mène et Bollinger n'a pas encore réagi (probable pré-climax) au profit
+  // d'une convergence RSI + Bollinger garantie.
+  //
+  // Gates : seul L1.2 slope_h1 structurel reste actif (filet de sécurité).
+  //         L1.3 dslope_live, L1.4 cap slope_h1_s0, L2 matrice IC×dsigma : bypass.
+  //         La conviction RSI suffit, on évite les blocages timing.
+  //
+  // Returns :
+  //   { eligible: false, valid: false }                   — pas un cas SUPER_EXH
+  //   { eligible: true,  valid: false, level: 'L1_2_FAIL' } — RSI OK mais slope_h1 hors range
+  //   { eligible: true,  valid: true }                    — SUPER_EXH valid
+  // ============================================================================
+  function evaluateSuperExhRoute(side, row) {
+    const rsi      = num(row?.rsi_h1);
+    const zscore   = num(row?.zscore_h1_s0);
+    const slope_h1 = num(row?.slope_h1);
+
+    if (rsi === null || zscore === null || slope_h1 === null) {
+      return { eligible: false, valid: false };
+    }
+
+    // Critère d'éligibilité : RSI super-extrême + Bollinger aligné (zscore ±2.0)
+    if (side === 'SELL') {
+      if (!(rsi > SUPER_EXH_RSI_HIGH && zscore >= 2.0)) return { eligible: false, valid: false };
+    } else {
+      if (!(rsi < SUPER_EXH_RSI_LOW && zscore <= -2.0)) return { eligible: false, valid: false };
+    }
+
+    // L1.2 slope_h1 structurel — seul gate conservé (filet de sécurité)
+    //   SELL : slope_h1 >= -5.5  (pas en pleine baisse violente)
+    //   BUY  : slope_h1 <=  +5.5 (pas en pleine hausse violente)
+    if (side === 'SELL' && slope_h1 < -5.5) return { eligible: true, valid: false, level: 'L1_2_FAIL' };
+    if (side === 'BUY'  && slope_h1 >  5.5) return { eligible: true, valid: false, level: 'L1_2_FAIL' };
+
+    return { eligible: true, valid: true };
   }
 
   // ============================================================================
@@ -819,10 +870,67 @@ const TopOpportunities_V10R = (() => {
         range_ratio_h1: num(row?.range_ratio_h1),
       };
 
-      // ====== 1. Test EXH (2 niveaux : L1 candidat + L2 affinage) ======
+      // ====== 0. Test SUPER_EXH (climax RSI super-extrême) ======
+      // Évalué AVANT EXH classique. Si valid : skip EXH classique et CONT.
+      // Si non éligible (RSI pas super-extrême ou zone GRISE) : cascade EXH normale.
       let exhEmitted = false;
       let _exhFailed = false;
-      if (exhRoute !== null) {
+      let superExhEmitted = false;
+      if (exhSide !== null) {
+        const superKey = exhSide === 'BUY' ? 'superExhBuy' : 'superExhSell';
+        const superResult = evaluateSuperExhRoute(exhSide, row);
+        if (superResult.eligible) {
+          funnel.inc(`${superKey}_tested`);
+          if (superResult.valid) {
+            if (riskCfg.exhaustionEnabled !== false) {
+              const gateD1ForScoring = evaluateGateD1(_slope_d1, _slope_d1_s0, _dslope_d1_live, intradayLevel);
+              const reasonD1 = gateD1ForScoring.reason;
+
+              const scoringRow = buildScoringRow(row, 'EXHAUSTION', exhSide, intradayLevel, reasonD1);
+              const scoreResult = scoreOpportunity(scoringRow);
+              const finalScore = scoreResult.total + SUPER_EXH_BONUS;
+
+              if (TOP_CFG.verbose) {
+                console.log(`[V10R SUPER_EXH] ${symbol} zone=${zone} side=${exhSide} rsi=${num(row.rsi_h1)} score=${finalScore}`);
+              }
+
+              opps.push({
+                type:        'EXHAUSTION',
+                mode:        'super',
+                regime:      `EXHAUSTION_${exhSide}`,
+                route:       `super_${zone.toLowerCase()}_${exhSide}_EXH`,
+                signalPhase: `super_${zone.toLowerCase()}_${exhSide}_EXH`,
+                engine:      'V10R',
+                index:       i,
+                timestamp:   row?.timestamp,
+                symbol,
+                side:        exhSide,
+                signalType:  'EXHAUSTION',
+                score:       finalScore,
+                score_brut:  scoreResult.total_brut + SUPER_EXH_BONUS,
+                breakdown:   scoreResult.breakdown,
+                reasonD1,
+                zone,
+                vshape:      false,
+                super:       true,
+                intradayLevel,
+                ...propagated,
+                exhaustion:  true,
+              });
+              funnel.inc(`${superKey}_emit`);
+              funnel.inc('v10rEmit');
+              superExhEmitted = true;
+              exhEmitted      = true;
+            }
+          } else {
+            funnel.inc(`${superKey}_L1_2_Fail`);
+            // Pas de wait dédié : on laisse la cascade EXH classique faire son travail
+          }
+        }
+      }
+
+      // ====== 1. Test EXH (2 niveaux : L1 candidat + L2 affinage) ======
+      if (!superExhEmitted && exhRoute !== null) {
         const exhKey = exhSide === 'BUY' ? 'exhBuy' : 'exhSell';
         funnel.inc(`${exhKey}_tested`);
         const exhResult = evaluateExhRoute(exhRoute, exhSide, row, intradayLevel);

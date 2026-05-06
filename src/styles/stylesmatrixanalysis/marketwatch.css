@@ -109,11 +109,11 @@
 
 /* largeur optimisée pour éviter scroll */
 .mw-table th:nth-child(1) { width: 30%; } /* symbol */
-.mw-table th:nth-child(2) { width: 18%; } /* price */
-.mw-table th:nth-child(3) { width: 16%; } /* daily */
-.mw-table th:nth-child(4) { width: 12%; } /* rsi */
+.mw-table th:nth-child(2) { width: 22%; } /* signal (chip) */
+.mw-table th:nth-child(3) { width: 14%; } /* daily */
+.mw-table th:nth-child(4) { width: 11%; } /* rsi */
 .mw-table th:nth-child(5) { width: 12%; } /* zscore */
-.mw-table th:nth-child(6) { width: 12%; } /* slope */
+.mw-table th:nth-child(6) { width: 11%; } /* slope */
 
 /* ============================================================
    BODY
@@ -202,3 +202,82 @@ td.sym {
   opacity: 0.5;
   text-align: center;
 }
+
+/* ============================================================
+   SIGNAL CHIP — cellule + chip compact
+   Cohérence visuelle 100% avec ASSETS TRENDS (zoneclassification)
+============================================================ */
+.mw-signal-cell {
+  padding: 0.18rem 0.10rem !important;
+}
+
+.mw-chip {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  border: 1px solid transparent;
+  background: rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.1;
+}
+
+.mw-chip-none {
+  color: rgba(255, 233, 194, 0.25);
+  font-size: 0.65rem;
+}
+
+/* Mode dim : opacité 50% pour les waits non-blocked */
+.mw-chip-dim {
+  opacity: 0.5;
+}
+
+/* EXH BUY — vert plein */
+.mw-chip-exh-buy {
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.55);
+  background: rgba(74, 222, 128, 0.10);
+}
+
+/* EXH SELL — rouge plein */
+.mw-chip-exh-sell {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.55);
+  background: rgba(239, 68, 68, 0.10);
+}
+
+/* CONT BUY — vert plus pâle */
+.mw-chip-cont-buy {
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.30);
+  background: rgba(74, 222, 128, 0.05);
+}
+
+/* CONT SELL — rouge plus pâle */
+.mw-chip-cont-sell {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.30);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* GRISE — neutre */
+.mw-chip-grise {
+  color: #999;
+  border-color: rgba(180, 180, 180, 0.30);
+  background: rgba(180, 180, 180, 0.05);
+}
+
+/* BLOCKED — base */
+.mw-chip-blocked {
+  color: #ddd;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+/* BLOCKED — par waitReason (alignées sur zoneclassification) */
+.mw-chip-spike   { border-color: rgba(226, 75, 74, 0.55);   color: #e24b4a; }
+.mw-chip-hours   { border-color: rgba(150, 150, 150, 0.40); color: #aaa;    }
+.mw-chip-atr     { border-color: rgba(239, 159, 39, 0.55);  color: #ef9f27; }
+.mw-chip-exhonly { border-color: rgba(127, 119, 221, 0.55); color: #7f77dd; }

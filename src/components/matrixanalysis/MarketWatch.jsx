@@ -1,11 +1,12 @@
 // ============================================================================
 // MARKET WATCH groupé par classe d'actif
 // Source : marketWatch complet
-// Colonnes : SYMBOL | PRICE | DAILY% | RSI H1 | ZSCORE H1 | SLOPE H1
+// Colonnes : SYMBOL | SIGNAL | DAILY% | RSI H1 | ZSCORE H1 | SLOPE H1
 // ============================================================================
 
 import { useMemo, Fragment } from "react";
 import useMT5Data from "../../hooks/useMT5Data";
+import { classifyOpp } from "../marketopportunities/ZoneClassification";
 import "../../styles/stylesmatrixanalysis/marketwatch.css";
 
 // ============================================================================
@@ -23,6 +24,22 @@ const GROUP_LABEL = {
   AGRI:   "AGRI",
 };
 
+// Mapping bucket → texte chip + classe CSS de couleur
+const BUCKET_CHIP = {
+  EXH_BUY:   { text: "EXH BUY",   cls: "mw-chip-exh-buy"   },
+  EXH_SELL:  { text: "EXH SELL",  cls: "mw-chip-exh-sell"  },
+  CONT_BUY:  { text: "CONT BUY",  cls: "mw-chip-cont-buy"  },
+  CONT_SELL: { text: "CONT SELL", cls: "mw-chip-cont-sell" },
+  GRISE:     { text: "GRISE",     cls: "mw-chip-grise"     },
+};
+
+const BLOCKED_CHIP = {
+  'wait-spike':    { text: "SPK", cls: "mw-chip-blocked mw-chip-spike"   },
+  'wait-atr':      { text: "ATR", cls: "mw-chip-blocked mw-chip-atr"     },
+  'wait-hours':    { text: "HRS", cls: "mw-chip-blocked mw-chip-hours"   },
+  'wait-exh-only': { text: "EXH", cls: "mw-chip-blocked mw-chip-exhonly" },
+};
+
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -32,13 +49,6 @@ function normalizeClass(cls) {
   if (cls === "OIL_GAS") return "ENERGY";
   if (GROUP_ORDER.includes(cls)) return cls;
   return null;
-}
-
-function fmtPrice(v) {
-  if (!Number.isFinite(v)) return "—";
-  if (v >= 1000) return v.toFixed(2);
-  if (v >= 10) return v.toFixed(3);
-  return v.toFixed(5);
 }
 
 function fmtNum(v, d = 2) {
@@ -72,12 +82,46 @@ function clsSlope(v) {
 }
 
 // ============================================================================
+// SIGNAL CHIP (inline component)
+// ============================================================================
+
+function SignalChip({ opp }) {
+  if (!opp) return <span className="mw-chip-none">—</span>;
+
+  const cls = classifyOpp(opp);
+  if (!cls) return <span className="mw-chip-none">—</span>;
+
+  if (cls.bucket === 'BLOCKED') {
+    const meta = BLOCKED_CHIP[opp.waitReason] ?? { text: '?', cls: 'mw-chip-blocked' };
+    return <span className={`mw-chip ${meta.cls}`}>{meta.text}</span>;
+  }
+
+  const meta = BUCKET_CHIP[cls.bucket];
+  if (!meta) return <span className="mw-chip-none">—</span>;
+
+  const dimCls = cls.mode === 'dim' ? 'mw-chip-dim' : '';
+  return <span className={`mw-chip ${meta.cls} ${dimCls}`}>{meta.text}</span>;
+}
+
+// ============================================================================
 // COMPONENT
 // ============================================================================
 
-export default function TopMoversPanel({ onSwitchSymbol }) {
+export default function TopMoversPanel({ onSwitchSymbol, topOpportunities }) {
 
   const { data, ready } = useMT5Data();
+
+  // Map symbol → opp (V10R) : valids tradables d'abord, puis blocked en fallback.
+  const opMap = useMemo(() => {
+    const m = new Map();
+    for (const opp of topOpportunities?.list ?? []) {
+      if (opp?.engine === 'V10R' && opp.symbol) m.set(opp.symbol, opp);
+    }
+    for (const opp of topOpportunities?.blocked ?? []) {
+      if (opp?.engine === 'V10R' && opp.symbol && !m.has(opp.symbol)) m.set(opp.symbol, opp);
+    }
+    return m;
+  }, [topOpportunities]);
 
   const groups = useMemo(() => {
 
@@ -98,7 +142,6 @@ export default function TopMoversPanel({ onSwitchSymbol }) {
 
       map[cls].push({
         symbol: r.symbol,
-        price: r.price ?? null,
         intraday_change: r.intraday_change ?? null,
         rsi_h1: r.rsi_h1_s0 ?? null,
         zscore_h1: r.zscore_h1_s0 ?? null,
@@ -151,7 +194,7 @@ export default function TopMoversPanel({ onSwitchSymbol }) {
             <thead>
               <tr>
                 <th>SYMBOL</th>
-                <th>PRICE</th>
+                <th>SIGNAL</th>
                 <th>DAILY%</th>
                 <th>RSI H1</th>
                 <th>ZSCORE</th>
@@ -188,8 +231,8 @@ export default function TopMoversPanel({ onSwitchSymbol }) {
                           {r.symbol}
                         </td>
 
-                        <td>
-                          {fmtPrice(r.price)}
+                        <td className="mw-signal-cell">
+                          <SignalChip opp={opMap.get(r.symbol)} />
                         </td>
 
                         <td className={clsDaily(r.intraday_change)}>

@@ -20,7 +20,7 @@ const REASON_TAG = {
 
 const REASON_ORDER = { 'wait-exh-only': 0, 'wait-spike': 1, 'wait-atr': 2, 'wait-hours': 3 };
 
-function classifyOpp(opp) {
+export function classifyOpp(opp) {
   if (opp.type === 'EXHAUSTION') {
     if (opp.side === 'BUY')  return { bucket: 'EXH_BUY',   mode: 'valid' };
     if (opp.side === 'SELL') return { bucket: 'EXH_SELL',  mode: 'valid' };

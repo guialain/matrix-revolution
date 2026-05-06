@@ -218,14 +218,14 @@ const TopOpportunities_V10R = (() => {
     const rsi      = num(row?.rsi_h1);
     const rsiPrevHigh3 = num(row?.rsi_h1_previoushigh3);
     const rsiPrevLow3  = num(row?.rsi_h1_previouslow3);
+    const rsiPrevHigh5 = num(row?.rsi_h1_previoushigh5);
+    const rsiPrevLow5  = num(row?.rsi_h1_previouslow5);
     const dsigma   = num(row?.dsigma_ratio_h1_pct);
 
     // Garde-fous null — failCause STRUCT (données manquantes traitées comme structurel safe)
     if (slope_h1 === null || slope_s0 === null || dsigma === null) {
       return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
-    if (side === 'SELL' && rsiPrevHigh3 === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
-    if (side === 'BUY'  && rsiPrevLow3  === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     if (rsi === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
 
     const isExtreme = routeName === 'extreme_haute_SELL_EXH' || routeName === 'extreme_basse_BUY_EXH';
@@ -233,12 +233,19 @@ const TopOpportunities_V10R = (() => {
                   || routeName === 'normale_haute_SELL_EXH' || routeName === 'normale_basse_BUY_EXH';
     if (!isExtreme && !isForte) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
 
+    // Fenêtre prev RSI selon zone : prev5 en Forte (capter retournements lents),
+    // prev3 en Extrême (timing serré, climax/capitulation imminente).
+    const rsiPrevHighEff = isForte ? rsiPrevHigh5 : rsiPrevHigh3;
+    const rsiPrevLowEff  = isForte ? rsiPrevLow5  : rsiPrevLow3;
+    if (side === 'SELL' && rsiPrevHighEff === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+    if (side === 'BUY'  && rsiPrevLowEff  === null) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+
     // ====================================
     // NIVEAU 1 — Classification candidat EXH
     // ====================================
 
     // L1.1 : RSI dual — STRUCTUREL (RSI invalide la thèse retournement)
-    //   Forte (NORMALE_*, BASSE/HAUTE)  : SELL rsi > 55 + prevHigh3 > 69 / BUY rsi < 45 + prevLow3 < 31
+    //   Forte (NORMALE_*, BASSE/HAUTE)  : SELL rsi > 55 + prevHigh5 > 69 / BUY rsi < 45 + prevLow5 < 31
     //   Extrême (EXTREME_*)              : SELL rsi > 65 + prevHigh3 > 69 / BUY rsi < 35 + prevLow3 < 31
     //   En zone Extrême, on exige une vraie capitulation/climax confirmée car
     //   L1.4 cap slope_s0 est bypassé. Fenêtre RSI ∈ [15, 35[ pour BUY (et [65, 85] SELL),
@@ -246,11 +253,11 @@ const TopOpportunities_V10R = (() => {
     if (side === 'SELL') {
       const rsiMin     = isExtreme ? 65 : 55;
       const prevHighMin = 69;
-      if (!(rsi > rsiMin && rsiPrevHigh3 > prevHighMin)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+      if (!(rsi > rsiMin && rsiPrevHighEff > prevHighMin)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     } else {
       const rsiMax     = isExtreme ? 35 : 45;
       const prevLowMax = 31;
-      if (!(rsi < rsiMax && rsiPrevLow3 < prevLowMax)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+      if (!(rsi < rsiMax && rsiPrevLowEff < prevLowMax)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
 
     // L1.2 : slope_h1 par zone ET side — STRUCTUREL (pente fermée hors range = thèse morte)
@@ -851,6 +858,11 @@ const TopOpportunities_V10R = (() => {
         zscore_h1:      num(row?.zscore_h1),
         dz_h1:          num(row?.dz_h1),
         atr_h1:         atrH1,
+        // Fenêtres prev RSI H1 (3 et 5 bars) — trace pour calibration empirique
+        rsi_h1_previouslow3:  num(row?.rsi_h1_previouslow3),
+        rsi_h1_previoushigh3: num(row?.rsi_h1_previoushigh3),
+        rsi_h1_previouslow5:  num(row?.rsi_h1_previouslow5),
+        rsi_h1_previoushigh5: num(row?.rsi_h1_previoushigh5),
 
         // H1 s0
         rsi_h1_s0:      num(row?.rsi_h1_s0),

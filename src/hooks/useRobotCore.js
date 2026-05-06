@@ -54,6 +54,11 @@ function buildSignalLogPayload(opp, verdict) {
     zscore_m5:       opp.zscore_m5,
     middle_h1:       opp.middle_h1,
     sigma_h1:        opp.sigma_h1,
+    rsi_h1_previouslow3:  opp.rsi_h1_previouslow3  ?? null,
+    rsi_h1_previoushigh3: opp.rsi_h1_previoushigh3 ?? null,
+    rsi_h1_previouslow5:  opp.rsi_h1_previouslow5  ?? null,
+    rsi_h1_previoushigh5: opp.rsi_h1_previoushigh5 ?? null,
+    prev_used:       (opp.zone === 'EXTREME_HAUTE' || opp.zone === 'EXTREME_BASSE') ? 3 : 5,
     spread:          opp.spread ?? null,
     // TP/SL distances appliquees (miroir computeSLTP : max(sigma_delta, spread_mult * spread))
     tp_used:         computeTpUsed(opp),

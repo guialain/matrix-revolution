@@ -572,6 +572,8 @@ app.get("/api/mt5data", (req, res) => {
           atr_h1:          num(r.atr_h1),
           rsi_h1_previouslow3:  num(r.rsi_h1_previouslow3),
           rsi_h1_previoushigh3: num(r.rsi_h1_previoushigh3),
+          rsi_h1_previouslow5:  num(r.rsi_h1_previouslow5),
+          rsi_h1_previoushigh5: num(r.rsi_h1_previoushigh5),
           zscore_h1_min3:       num(r.zscore_h1_min3),
           zscore_h1_max3:       num(r.zscore_h1_max3),
           range_h1_s0:          num(r.range_h1_s0),
@@ -894,6 +896,9 @@ const SIGNALS_LOG_COLUMNS = [
   "slope_m5_s0", "slope_m5", "dslope_m5_s0", "is_vshape_m5",
   "rsi_m5_s0", "zscore_m5",
   "middle_h1", "sigma_h1",
+  "rsi_h1_previouslow3", "rsi_h1_previoushigh3",
+  "rsi_h1_previouslow5", "rsi_h1_previoushigh5",
+  "prev_used",
   "spread", "tp_used", "sl_used",
 ];
 // Separateur ; aligne avec les autres CSV du projet (Excel FR compatible)

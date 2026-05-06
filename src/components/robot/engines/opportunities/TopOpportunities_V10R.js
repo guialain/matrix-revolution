@@ -237,11 +237,20 @@ const TopOpportunities_V10R = (() => {
     // NIVEAU 1 — Classification candidat EXH
     // ====================================
 
-    // L1.1 : RSI dual (uniforme Forte ET Extreme) — STRUCTUREL (RSI invalide la thèse retournement)
+    // L1.1 : RSI dual — STRUCTUREL (RSI invalide la thèse retournement)
+    //   Forte (NORMALE_*, BASSE/HAUTE)  : SELL rsi > 55 + prevHigh3 > 69 / BUY rsi < 45 + prevLow3 < 31
+    //   Extrême (EXTREME_*)              : SELL rsi > 65 + prevHigh3 > 69 / BUY rsi < 35 + prevLow3 < 31
+    //   En zone Extrême, on exige une vraie capitulation/climax confirmée car
+    //   L1.4 cap slope_s0 est bypassé. Fenêtre RSI ∈ [15, 35[ pour BUY (et [65, 85] SELL),
+    //   complémentaire de SUPER_EXH (rsi < 15 / > 85).
     if (side === 'SELL') {
-      if (!(rsi > 55 && rsiPrevHigh3 > 69)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+      const rsiMin     = isExtreme ? 65 : 55;
+      const prevHighMin = 69;
+      if (!(rsi > rsiMin && rsiPrevHigh3 > prevHighMin)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     } else {
-      if (!(rsi < 45 && rsiPrevLow3 < 31)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
+      const rsiMax     = isExtreme ? 35 : 45;
+      const prevLowMax = 31;
+      if (!(rsi < rsiMax && rsiPrevLow3 < prevLowMax)) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'STRUCT' };
     }
 
     // L1.2 : slope_h1 par zone ET side — STRUCTUREL (pente fermée hors range = thèse morte)
@@ -281,8 +290,14 @@ const TopOpportunities_V10R = (() => {
     // L1.4 : cap dur slope_h1_s0 — TIMING (pente live pas encore retournée)
     //   SELL : slope_h1_s0 <= +0.5  (live encore trop haussier → pas la peine de SELL)
     //   BUY  : slope_h1_s0 >= -0.5  (live encore trop baissier → pas la peine de BUY)
-    if (side === 'SELL' && slope_s0 > 0.5)  return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
-    if (side === 'BUY'  && slope_s0 < -0.5) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
+    //
+    // Bypass en zone EXTREME (zscore < -2.9 BUY / > +2.9 SELL) : la conviction
+    // climax est si forte qu'on n'attend pas le retournement live. Le filet L1.2
+    // (slope_h1 ≤ +3.5 / ≥ -3.5) suffit à éviter les spikes structurels.
+    if (!isExtreme) {
+      if (side === 'SELL' && slope_s0 > 0.5)  return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
+      if (side === 'BUY'  && slope_s0 < -0.5) return { valid: false, vshape: false, level: 'L1_FAIL', failCause: 'TIMING' };
+    }
 
     // === À partir d'ici : L1 OK ===
 

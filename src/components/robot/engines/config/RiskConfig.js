@@ -42,6 +42,13 @@ export const RISK_CONFIG = {
     contractSize: 100000, refPrice: 0.789, baseToEUR: 0.847,
     volume_min: 0.01, volume_max: 150, volume_step: 0.01,
   },
+  USDCAD: {
+    atrH1Cap: 0.00200, maxHoldH: 96, exhaustionEnabled: true,
+    spread: 0.00018,
+    targetLeveragePerTrade: 3.0,
+    contractSize: 100000, refPrice: 1.36, baseToEUR: 0.851,
+    volume_min: 0.01, volume_max: 150, volume_step: 0.01,
+  },
   GBPUSD: {
     atrH1Cap: 0.00319, maxHoldH: 96, exhaustionEnabled: true,
     spread: 0.00012,

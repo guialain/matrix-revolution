@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 // ============================================================================
 // CONFIG
@@ -104,9 +105,58 @@ function readAllData() {
 // PUSH DATA TO SERVER (every 1s)
 // ============================================================================
 
+// ============================================================================
+// DIAG INSTRUMENTATION (pour debug divergence multi-agents)
+//   - Trace chaque push: hash MD5, scan TS, scan rows count, account/asset OK,
+//     header hash (détecte EA versions différentes).
+//   - Ecrit dans diag-agent.log à côté du process. Désactivable via DIAG=0.
+// ============================================================================
+const DIAG_ENABLED = process.env.DIAG !== "0";
+const DIAG_LOG_PATH = path.join(path.resolve(), "diag-agent.log");
+let diagHeaderHash = null; // calcul one-shot au démarrage
+
+function md5(s) { return crypto.createHash("md5").update(s).digest("hex").slice(0, 12); }
+
+function computeHeaderHash() {
+  try {
+    const scanPath = path.join(mt5_dir, FILES.scan);
+    if (!fs.existsSync(scanPath)) return "no-file";
+    const content = fs.readFileSync(scanPath, "utf8").replace(/\0/g, "");
+    const firstLine = content.split(/\r?\n/)[0] ?? "";
+    return md5(firstLine);
+  } catch { return "err"; }
+}
+
+function diagLog(data) {
+  if (!DIAG_ENABLED) return;
+  try {
+    const payloadStr = JSON.stringify(data);
+    const scanFirst = data.scan?.[0] ?? null;
+    const line = JSON.stringify({
+      t: new Date().toISOString(),
+      tokenShort: token.slice(0, 8),
+      payloadHash: md5(payloadStr),
+      payloadBytes: payloadStr.length,
+      scanRows: data.scan?.length ?? 0,
+      scanFirstTs: scanFirst?.timestamp ?? null,
+      scanFirstSym: scanFirst?.symbol ?? null,
+      accountOK: !!data.account,
+      assetOK: !!data.asset,
+      assetSym: data.asset?.symbol ?? null,
+      macroOK: !!data.macro,
+      headerHash: diagHeaderHash,
+      openPosCount: data.openpositions?.length ?? 0,
+    }) + "\n";
+    fs.appendFileSync(DIAG_LOG_PATH, line);
+  } catch (err) {
+    console.error("⚠️ diagLog error:", err.message);
+  }
+}
+
 async function pushData() {
   try {
     const data = readAllData();
+    diagLog(data);
     const res = await fetch(API_PUSH, {
       method: "POST",
       headers: {
@@ -169,6 +219,10 @@ console.log(`✅ NEO Agent started`);
 console.log(`   Token:  ${token.slice(0, 8)}...`);
 console.log(`   MT5:    ${mt5_dir}`);
 console.log(`   Server: ${server}`);
+
+// DIAG: snapshot du header CSV au démarrage (détecte EA versions différentes)
+diagHeaderHash = computeHeaderHash();
+console.log(`   Diag:   ${DIAG_ENABLED ? "ON" : "OFF"} | header=${diagHeaderHash} | log=${DIAG_LOG_PATH}`);
 
 setInterval(pushData, 1000);
 setInterval(pollOrders, 200);

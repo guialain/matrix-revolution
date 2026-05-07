@@ -128,6 +128,7 @@ export default function MarketOpportunities() {
       <aside className="mo-col mo-col-trends">
         <ZoneClassification
           topOpportunities={topOpportunities}
+          marketWatch={data.marketWatch}
           onPillClick={handlePillClick}
         />
       </aside>

@@ -577,3 +577,45 @@ export function getD1State(slope_d1_s0, dslope_d1_s0) {
   if (accel) return "D1_FADING_DOWN";
   return "D1_STRONG_DOWN";
 }
+
+// ============================================================================
+// getH1State — état multi-TF H1 (analogue D1, seuils provisoires)
+// Sortie : H1_STRONG_UP / H1_FADING_UP / H1_EMERGING_UP / H1_FLAT
+//          H1_EMERGING_DOWN / H1_FADING_DOWN / H1_STRONG_DOWN
+// Seuils calqués sur D1 — à recalibrer si distribution H1 différente.
+// ============================================================================
+const H1_SLOPE_STRONG = 2.2;
+const H1_SLOPE_SOFT   = 0.5;
+const H1_DSLOPE_THR   = 0.5;
+
+export function getH1State(slope_h1, dslope_h1) {
+  if (slope_h1 === null || slope_h1 === undefined ||
+      dslope_h1 === null || dslope_h1 === undefined) return "H1_FLAT";
+
+  const slope  = Number(slope_h1);
+  const dslope = Number(dslope_h1);
+  if (!Number.isFinite(slope) || !Number.isFinite(dslope)) return "H1_FLAT";
+
+  const accel = dslope >=  H1_DSLOPE_THR;
+  const decel = dslope <= -H1_DSLOPE_THR;
+
+  if (slope >= H1_SLOPE_STRONG) {
+    if (decel) return "H1_FADING_UP";
+    return "H1_STRONG_UP";
+  }
+  if (slope >= H1_SLOPE_SOFT) {
+    if (decel) return "H1_FLAT";
+    return "H1_FADING_UP";
+  }
+  if (slope > -H1_SLOPE_SOFT) {
+    if (accel) return "H1_EMERGING_UP";
+    if (decel) return "H1_EMERGING_DOWN";
+    return "H1_FLAT";
+  }
+  if (slope > -H1_SLOPE_STRONG) {
+    if (accel) return "H1_FLAT";
+    return "H1_FADING_DOWN";
+  }
+  if (accel) return "H1_FADING_DOWN";
+  return "H1_STRONG_DOWN";
+}

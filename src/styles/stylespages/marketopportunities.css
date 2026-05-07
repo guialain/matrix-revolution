@@ -365,23 +365,24 @@
 }
 
 .zc-symbols {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
 }
 
 .zc-chip {
+  position: relative;
   display: inline-flex;
   flex-direction: column;
-  min-width: 95px;
-  max-width: 130px;
-  padding: 3px 7px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 4px 8px;
   border: 1px solid rgba(180, 180, 180, 0.25);
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.25);
   font-family: 'Courier New', monospace;
-  gap: 2px;
-  flex-shrink: 0;
+  gap: 3px;
   box-sizing: border-box;
 }
 
@@ -407,6 +408,18 @@
   font-size: 0.64rem;
   white-space: nowrap;
 }
+
+/* Intraday% affiché à droite du symbole en compact (remplace le zscore) */
+.zc-chip-intraday {
+  font-size: 0.66rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+}
+.zc-chip-intraday.intraday-pos  { color: #4ade80; }
+.zc-chip-intraday.intraday-neg  { color: #ef4444; }
+.zc-chip-intraday.intraday-zero { color: #888;    }
+.zc-chip-intraday.intraday-na   { color: #555;    }
 
 .zc-chip-bar {
   display: block;
@@ -508,6 +521,115 @@
 }
 .zc-chip-clickable:active {
   transform: translateY(0);
+}
+
+/* ===================================================================
+   ZC TOOLTIP — apparaît au hover, position absolue, z-index élevé
+   =================================================================== */
+.zc-tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(8, 8, 8, 0.97);
+  border: 1px solid rgba(245, 208, 0, 0.35);
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  font-family: 'Courier New', monospace;
+  font-size: 0.66rem;
+  pointer-events: none;
+  white-space: normal;
+}
+/* Couleur de bordure tooltip selon catégorie parente */
+.zc-exh-buy   .zc-tooltip { border-color: rgba(74, 222, 128, 0.5); }
+.zc-exh-sell  .zc-tooltip { border-color: rgba(239, 68, 68, 0.5);  }
+.zc-cont-buy  .zc-tooltip { border-color: rgba(74, 222, 128, 0.4); }
+.zc-cont-sell .zc-tooltip { border-color: rgba(239, 68, 68, 0.4);  }
+.zc-grey      .zc-tooltip { border-color: rgba(180, 180, 180, 0.4); }
+
+.zc-chip:hover .zc-tooltip,
+.zc-chip:focus-visible .zc-tooltip {
+  display: flex;
+}
+
+/* Alignement tooltip selon colonne grid 2-col pour éviter clipping bordure */
+.zc-symbols > :nth-child(2n+1) .zc-tooltip { left: 0;    right: auto; transform: none; }
+.zc-symbols > :nth-child(2n)   .zc-tooltip { left: auto; right: 0;    transform: none; }
+
+.zc-tt-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.zc-tt-header {
+  align-items: center;
+  font-size: 0.72rem;
+}
+.zc-tt-sym {
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 0.4px;
+}
+.zc-tt-intraday {
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+}
+.zc-tt-intraday.intraday-pos  { color: #4ade80; }
+.zc-tt-intraday.intraday-neg  { color: #ef4444; }
+.zc-tt-intraday.intraday-zero { color: #888;    }
+
+.zc-tt-sep {
+  display: block;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 2px 0;
+}
+.zc-tt-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.zc-tt-cell-full {
+  flex: 1 1 100%;
+}
+.zc-tt-lbl {
+  font-size: 0.55rem;
+  color: #777;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.zc-tt-val {
+  font-size: 0.7rem;
+  color: #ddd;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+.zc-tt-score {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #f5d000;
+}
+.zc-tt-val.tf-up    { color: #4ade80; }
+.zc-tt-val.tf-down  { color: #ef4444; }
+.zc-tt-val.tf-flat  { color: #aaa;    }
+
+/* ===================================================================
+   ZC PILL HIGHLIGHT — flash 1.5s quand pill cliquée (cyber jaune)
+   =================================================================== */
+@keyframes zc-pill-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 208, 0, 0); }
+  20%, 50% { box-shadow: 0 0 0 2px #f5d000, 0 0 12px rgba(245, 208, 0, 0.5); }
+}
+.zc-chip-clickable:focus:not(:focus-visible) {
+  animation: zc-pill-pulse 1.5s ease-out;
 }
 
 /* ===================================================================

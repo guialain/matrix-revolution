@@ -10,6 +10,7 @@
 // ============================================================================
 
 import React, { useMemo } from "react";
+import { getD1State, getH1State } from "../../utils/marketLevels";
 
 const REASON_TAG = {
   'wait-exh-only': { tag: 'EXH', cls: 'zc-blk-exh'   },
@@ -17,6 +18,35 @@ const REASON_TAG = {
   'wait-atr':      { tag: 'ATR', cls: 'zc-blk-atr'   },
   'wait-hours':    { tag: 'HRS', cls: 'zc-blk-hours' },
 };
+
+// Labels compacts D1/H1 (5 caractères max)
+const TF_LABEL = {
+  D1_STRONG_UP:    'STR↑', D1_FADING_UP:    'FAD↑', D1_EMERGING_UP:   'EMR↑',
+  D1_FLAT:         'FLAT',
+  D1_EMERGING_DOWN:'EMR↓', D1_FADING_DOWN:  'FAD↓', D1_STRONG_DOWN:   'STR↓',
+  H1_STRONG_UP:    'STR↑', H1_FADING_UP:    'FAD↑', H1_EMERGING_UP:   'EMR↑',
+  H1_FLAT:         'FLAT',
+  H1_EMERGING_DOWN:'EMR↓', H1_FADING_DOWN:  'FAD↓', H1_STRONG_DOWN:   'STR↓',
+};
+
+function tfStateClass(state) {
+  if (!state) return 'tf-flat';
+  if (state.endsWith('_UP'))   return 'tf-up';
+  if (state.endsWith('_DOWN')) return 'tf-down';
+  return 'tf-flat';
+}
+
+function fmtPct(v) {
+  if (!Number.isFinite(v)) return '—';
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${v.toFixed(2)}%`;
+}
+
+function fmtSetup(signalType) {
+  if (signalType === 'EXHAUSTION')   return 'REV';
+  if (signalType === 'CONTINUATION') return 'CONT';
+  return '—';
+}
 
 const REASON_ORDER = { 'wait-exh-only': 0, 'wait-spike': 1, 'wait-atr': 2, 'wait-hours': 3 };
 
@@ -49,10 +79,30 @@ export function classifyOpp(opp) {
   return null;
 }
 
-function HeatChip({ symbol, zscore, dim, onClick }) {
+function HeatChip(props) {
+  const { symbol, zscore, dim, onClick,
+          intraday, score, signalType,
+          d1State, h1State, sigmaRatio, rsi_h1, dslope_h1 } = props;
+
   const hasZ = Number.isFinite(zscore);
   const force = hasZ ? Math.min(Math.abs(zscore) / 3, 1) * 100 : 0;
-  const zStr  = hasZ ? (zscore >= 0 ? `+${zscore.toFixed(2)}` : zscore.toFixed(2)) : '—';
+
+  // Compact = symbole + intraday% (au lieu du zscore)
+  const intradayCls = !Number.isFinite(intraday) ? 'intraday-na'
+                    : intraday > 0 ? 'intraday-pos'
+                    : intraday < 0 ? 'intraday-neg'
+                    : 'intraday-zero';
+
+  // Tooltip values
+  const scoreStr = Number.isFinite(score) && score > 0 ? Math.round(score) : '—';
+  const setupStr = fmtSetup(signalType);
+  const d1Lbl    = TF_LABEL[d1State] ?? '—';
+  const h1Lbl    = TF_LABEL[h1State] ?? '—';
+  const sigStr   = Number.isFinite(sigmaRatio) ? sigmaRatio.toFixed(4) : '—';
+  const rsiStr   = Number.isFinite(rsi_h1)     ? rsi_h1.toFixed(1)     : '—';
+  const dsStr    = Number.isFinite(dslope_h1)
+                    ? (dslope_h1 >= 0 ? `+${dslope_h1.toFixed(4)}` : dslope_h1.toFixed(4))
+                    : '—';
 
   const Tag = onClick ? "button" : "span";
   return (
@@ -64,10 +114,34 @@ function HeatChip({ symbol, zscore, dim, onClick }) {
       {dim && <span className="zc-chip-dot" />}
       <span className="zc-chip-row">
         <span className="zc-chip-symbol">{symbol}</span>
-        <span className="zc-chip-zscore">{zStr}</span>
+        <span className={`zc-chip-intraday ${intradayCls}`}>{fmtPct(intraday)}</span>
       </span>
       <span className="zc-chip-bar">
         <span className="zc-chip-bar-fill" style={{ width: `${force}%` }} />
+      </span>
+
+      {/* TOOLTIP — affiché au hover via CSS */}
+      <span className="zc-tooltip" role="tooltip">
+        <span className="zc-tt-row zc-tt-header">
+          <span className="zc-tt-sym">{symbol}</span>
+          <span className={`zc-tt-intraday ${intradayCls}`}>{fmtPct(intraday)}</span>
+        </span>
+        <span className="zc-tt-sep" />
+        <span className="zc-tt-row">
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">Score</span><span className="zc-tt-val zc-tt-score">{scoreStr}</span></span>
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">Setup</span><span className="zc-tt-val">{setupStr}</span></span>
+        </span>
+        <span className="zc-tt-row">
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">D1</span><span className={`zc-tt-val ${tfStateClass(d1State)}`}>{d1Lbl}</span></span>
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">H1</span><span className={`zc-tt-val ${tfStateClass(h1State)}`}>{h1Lbl}</span></span>
+        </span>
+        <span className="zc-tt-row">
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">σ-ratio</span><span className="zc-tt-val">{sigStr}</span></span>
+          <span className="zc-tt-cell"><span className="zc-tt-lbl">RSI-H1</span><span className="zc-tt-val">{rsiStr}</span></span>
+        </span>
+        <span className="zc-tt-row">
+          <span className="zc-tt-cell zc-tt-cell-full"><span className="zc-tt-lbl">dSlope-H1</span><span className="zc-tt-val">{dsStr}</span></span>
+        </span>
       </span>
     </Tag>
   );
@@ -138,7 +212,7 @@ function SectionBlocked({ title, bucket, cls }) {
   );
 }
 
-function ZoneClassification({ topOpportunities, onPillClick = null }) {
+function ZoneClassification({ topOpportunities, marketWatch = null, onPillClick = null }) {
   const buckets = useMemo(() => {
     const out = {
       EXH_BUY:   { valid: [], dim: [], blocked: [] },
@@ -149,16 +223,46 @@ function ZoneClassification({ topOpportunities, onPillClick = null }) {
       BLOCKED:   { valid: [], dim: [], blocked: [] },
     };
 
+    // Index marketWatch par symbole pour enrichissement live (intraday, sigma, rsi, dslope)
+    const mwIdx = new Map();
+    if (Array.isArray(marketWatch)) {
+      for (const r of marketWatch) if (r?.symbol) mwIdx.set(r.symbol, r);
+    }
+
     const list = topOpportunities?.list ?? [];
     for (const opp of list) {
       if (opp?.engine !== 'V10R') continue;
       const r = classifyOpp(opp);
       if (!r) continue;
+
+      const mw = mwIdx.get(opp.symbol) ?? null;
+
+      const atr_m15  = Number(mw?.atr_m15);
+      const close    = Number(mw?.price ?? mw?.close_m5_s1);
+      const sigmaRatio = (Number.isFinite(atr_m15) && Number.isFinite(close) && close > 0)
+        ? atr_m15 / close
+        : null;
+
+      const slope_d1_s0  = Number(mw?.slope_d1_s0);
+      const dslope_d1_s0 = Number(mw?.dslope_d1_s0);
+      const slope_h1     = Number(mw?.slope_h1);
+      const dslope_h1    = Number(mw?.dslope_h1);
+
       const item = {
         symbol:     opp.symbol,
         zscore:     Number(opp.zscore_h1_s0),
         side:       opp.side ?? null,
         waitReason: opp.waitReason ?? null,
+
+        // Enrichissement tooltip
+        intraday:    Number(mw?.intraday_change),
+        score:       Number(opp.score),
+        signalType:  opp.signalType ?? opp.type ?? null,
+        d1State:     getD1State(slope_d1_s0, dslope_d1_s0),
+        h1State:     getH1State(slope_h1, dslope_h1),
+        sigmaRatio,
+        rsi_h1:      Number(mw?.rsi_h1),
+        dslope_h1:   Number.isFinite(dslope_h1) ? dslope_h1 : null,
       };
       out[r.bucket][r.mode].push(item);
     }

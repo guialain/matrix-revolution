@@ -1,113 +1,415 @@
 /* =========================================================
-   MarketOpportunities — 3-column layout (50-15-35)
+   MARKET OPPORTUNITIES — LAYOUT 3 COLONNES (25 / 50 / 25)
+   Page sous le HEADER global (80px assumé).
    ========================================================= */
 
+/* ─── ROOT PAGE ──────────────────────────────────────────── */
 .mo-page {
-  display: grid;
-  grid-template-columns: 38fr 20fr 42fr;
-  align-items: stretch;
-  gap: 12px;
-  padding: 16px;
   height: calc(100vh - 80px);
+  margin: 0;
+  padding: 4px 6px 6px;
+  display: grid;
+  grid-template-columns: 25fr 50fr 25fr;
+  gap: 8px;
   overflow: hidden;
-  min-height: 0;
+  background: #000;
+  color: #fff;
   font-family: 'Courier New', Courier, monospace;
+  min-height: 0;
 }
 
+.mo-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+.mo-col-news    { gap: 0; }
+.mo-col-center  { gap: 6px; }
+.mo-col-trends  { gap: 0; }
+
+/* ─── Cartes legacy (.mo-section) — gardées pour compat éventuelle ── */
 .mo-section {
   display: flex;
   flex-direction: column;
   padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 200, 120, 0.25);
-  background: radial-gradient(
-    circle at top,
-    rgba(255, 215, 140, 0.08),
-    rgba(0, 0, 0, 0.92)
-  );
+  border-radius: 8px;
+  border: 1px solid rgba(255, 200, 120, 0.18);
+  background: radial-gradient(circle at top, rgba(255, 215, 140, 0.06), rgba(0, 0, 0, 0.92));
   overflow-y: auto;
   min-height: 0;
 }
 
-/* ── Center column: robot + not eligible stacked ── */
-.mo-center {
+/* ===================================================================
+   ROBOT COMPACT — paysage 200px, overlay texte, animations pulse
+   =================================================================== */
+.rc-compact {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at center, #0d0d0d 0%, #000 80%);
+  box-sizing: border-box;
+}
+
+.rc-compact-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  display: block;
+  filter: brightness(0.9) contrast(1.1);
+}
+
+.rc-compact-overlay {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 6px 10px 8px;
+  background: linear-gradient(to top, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0));
+  color: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  line-height: 1.3;
+  letter-spacing: 0.4px;
+  pointer-events: none;
+}
+
+.rc-compact-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rc-compact-brand   { font-weight: 700; color: #f5d000; letter-spacing: 1px; }
+.rc-compact-sep     { color: #555; }
+.rc-compact-state   { font-weight: 700; }
+.rc-compact-count   { color: #aaa; }
+.rc-compact-time    { color: #ccc; font-variant-numeric: tabular-nums; }
+.rc-compact-reason  { margin-top: 2px; color: #888; font-size: 10px; }
+
+/* État SCANNING (vert) */
+.rc-state-scanning .rc-compact { box-shadow: inset 0 0 0 1px rgba(0,255,127,0.15); }
+.rc-state-scanning .rc-compact-state-scanning { color: #22c55e; }
+.rc-state-scanning::after,
+.rc-state-prudent::after,
+.rc-state-block::after {
+  content: "";
+  position: absolute;
+  top: 8px; right: 10px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  z-index: 2;
+}
+.rc-state-scanning::after {
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,0.7);
+  animation: mo-pulse-green 1.6s infinite;
+}
+.rc-state-prudent .rc-compact-state-prudent { color: #f59e0b; }
+.rc-state-prudent::after {
+  background: #f59e0b;
+  box-shadow: 0 0 0 0 rgba(245,158,11,0.7);
+  animation: mo-pulse-orange 1.2s infinite;
+}
+.rc-state-block .rc-compact-state-block { color: #ef4444; }
+.rc-state-block::after {
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239,68,68,0.85);
+  animation: mo-pulse-red 0.9s infinite;
+}
+.rc-state-idle .rc-compact-state-idle { color: #888; }
+.rc-state-idle .rc-compact { filter: grayscale(0.6) brightness(0.7); }
+
+@keyframes mo-pulse-green {
+  0%   { box-shadow: 0 0 0 0   rgba(34,197,94,0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0   rgba(34,197,94,0); }
+}
+@keyframes mo-pulse-orange {
+  0%   { box-shadow: 0 0 0 0   rgba(245,158,11,0.7); }
+  70%  { box-shadow: 0 0 0 10px rgba(245,158,11,0); }
+  100% { box-shadow: 0 0 0 0   rgba(245,158,11,0); }
+}
+@keyframes mo-pulse-red {
+  0%   { box-shadow: 0 0 0 0   rgba(239,68,68,0.85); }
+  60%  { box-shadow: 0 0 0 12px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 0   rgba(239,68,68,0); }
+}
+
+/* ===================================================================
+   COLONNE CENTRE — zone scrollable sous robot
+   =================================================================== */
+.mo-center-scrollable {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  min-height: 0;
-  overflow: hidden;
+  gap: 6px;
+  padding-right: 2px;
+}
+.mo-center-scrollable::-webkit-scrollbar           { width: 6px; }
+.mo-center-scrollable::-webkit-scrollbar-thumb     { background: #222; border-radius: 3px; }
+.mo-center-scrollable::-webkit-scrollbar-thumb:hover { background: #333; }
+
+.mo-center-card {
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  background: #0a0a0a;
+  padding: 8px 10px;
 }
 
-.mo-robot {
+/* ===================================================================
+   WAIT M5 — countdown + liste
+   =================================================================== */
+.ma-wait-m5-header {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  gap: 8px;
+  margin-bottom: 6px;
 }
-
-.mo-robot-img {
-  width: 320px;
-  height: 250px;
-  filter: drop-shadow(0 0 6px rgba(255, 200, 120, 0.35));
-}
-
-.mo-wait {
-  overflow-y: auto;
-}
-
-.mo-wait-count {
-  margin-left: 6px;
+.ma-wait-m5-title {
   font-size: 11px;
-  opacity: 0.6;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #f5d000;
 }
-
-.mo-wait-card {
-  opacity: 0.7;
+.ma-wait-m5-count {
+  font-size: 10px;
+  color: #888;
+  background: #1a1a1a;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
 }
-
-.mo-not-eligible {
-  flex: 1;
-  border-color: rgba(255, 80, 80, 0.35);
-  background: radial-gradient(
-    circle at top,
-    rgba(180, 40, 40, 0.15),
-    rgba(0, 0, 0, 0.92)
-  );
+.ma-wait-m5-spacer { flex: 1 1 0; }
+.ma-wait-m5-countdown {
+  font-size: 10px;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
 }
-
-/* ── Market Watch — full-height scroll ── */
-.mo-market-watch {
-  padding: 0;
-  border: none;
-  background: none;
-  overflow: hidden;
-}
-
-.mo-market-watch .panel-topmovers {
-  height: 100%;
-  max-height: none;
-}
-
-/* ── Market Watch — fit content in frame, no scroll ── */
-.mo-market-watch .mw-table tbody td {
+.ma-wait-m5-empty {
   font-size: 11px;
-  padding: 2.3px 6px;
-  line-height: 1.2;
+  color: #555;
+  font-style: italic;
+  padding: 4px 0;
 }
+.ma-wait-m5-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.ma-wait-m5-item {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.6fr 1.4fr;
+  gap: 8px;
+  padding: 3px 4px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 3px;
+  font-size: 10.5px;
+  align-items: center;
+}
+.ma-wait-m5-sym  { font-weight: 700; color: #fff; }
+.ma-wait-m5-side { font-weight: 700; text-align: center; font-size: 10px; }
+.ma-wait-m5-side-buy  { color: #22c55e; }
+.ma-wait-m5-side-sell { color: #ef4444; }
+.ma-wait-m5-type {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.ma-wait-m5-type-continuation { color: #60a5fa; }
+.ma-wait-m5-type-exhaustion   { color: #c084fc; }
+.ma-wait-m5-state { color: #999; font-size: 10px; letter-spacing: 0.3px; }
 
-.mo-market-watch .mw-table thead th {
+/* ===================================================================
+   ACTIVE POSITION
+   =================================================================== */
+.ma-active-position {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ma-ap-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ma-ap-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #f5d000;
+}
+.ma-ap-ticket {
+  font-size: 10px;
+  color: #666;
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.ma-ap-row-main {
+  display: grid;
+  grid-template-columns: 1.5fr 0.7fr 0.8fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0;
+  border-top: 1px solid #1a1a1a;
+  border-bottom: 1px solid #1a1a1a;
+}
+.ma-ap-sym  { font-weight: 700; color: #fff; font-size: 13px; }
+.ma-ap-side { font-weight: 700; font-size: 11px; text-align: center; }
+.ma-ap-side-buy  { color: #22c55e; }
+.ma-ap-side-sell { color: #ef4444; }
+.ma-ap-lots { color: #aaa; font-size: 11px; font-variant-numeric: tabular-nums; }
+.ma-ap-pnl  { font-weight: 700; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; }
+.ma-ap-pnl-pos  { color: #22c55e; }
+.ma-ap-pnl-neg  { color: #ef4444; }
+.ma-ap-pnl-zero { color: #888; }
+.ma-ap-row-meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.ma-ap-meta-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
   padding: 3px 6px;
-  font-size: 0.64rem;
+  background: rgba(255,255,255,0.025);
+  border-radius: 3px;
+}
+.ma-ap-meta-label { font-size: 9px; color: #666; letter-spacing: 0.5px; }
+.ma-ap-meta-val   { font-size: 11px; color: #ccc; font-variant-numeric: tabular-nums; }
+.ma-ap-row-guards {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ma-ap-guard {
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.ma-ap-guard-armed {
+  background: rgba(34,197,94,0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34,197,94,0.3);
 }
 
-.mo-market-watch .mw-group-title {
-  font-size: 0.72rem;
-  padding: 4px 8px 3px;
+/* ===================================================================
+   NEWS FEED — chips de filtres (additif au CSS existant nf-*)
+   =================================================================== */
+.nf-filters {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid #1a1a1a;
+  flex-wrap: wrap;
+}
+.nf-chip {
+  appearance: none;
+  border: 1px solid #2a2a2a;
+  background: #0d0d0d;
+  color: #888;
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.nf-chip:hover {
+  border-color: #444;
+  color: #ccc;
+}
+.nf-chip-active {
+  background: rgba(245,208,0,0.12);
+  border-color: #f5d000;
+  color: #f5d000;
+  font-weight: 700;
 }
 
-.mo-market-watch .panel-topmovers {
-  padding: 0.6rem 0.9rem;
+/* ===================================================================
+   TOP OPPORTUNITIES — empty state actionnable + highlight
+   =================================================================== */
+.neo-empty-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 11px;
+  color: #888;
+}
+.neo-empty-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.neo-empty-line b { color: #ccc; font-weight: 700; }
+.neo-empty-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  color: #777;
+  letter-spacing: 0.4px;
 }
 
-.mo-market-watch .panel-header {
-  margin-bottom: 0.4rem;
+/* highlight transitoire d'une card depuis click pill */
+.neo-op-wrap          { transition: box-shadow 0.3s ease, background 0.3s ease; border-radius: 4px; }
+.neo-op-highlight     {
+  box-shadow: 0 0 0 2px #f5d000, 0 0 12px rgba(245,208,0,0.4);
+  background: rgba(245,208,0,0.04);
+}
+
+/* ===================================================================
+   ZONE CLASSIFICATION — pills cliquables
+   =================================================================== */
+.zc-chip-clickable {
+  appearance: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.15s ease;
+}
+.zc-chip-clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px #f5d000;
+}
+.zc-chip-clickable:active {
+  transform: translateY(0);
+}
+
+/* ===================================================================
+   RESPONSIVE
+   =================================================================== */
+
+/* 1366 — réduit paddings, conserve 3 cols */
+@media (max-width: 1500px) {
+  .mo-page { gap: 6px; padding: 3px 4px 4px; }
+  .rc-compact { height: 180px; }
+  .rc-compact-overlay { font-size: 10px; }
+}
+
+/* < 1100 — single column stack */
+@media (max-width: 1100px) {
+  .mo-page {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    overflow-y: auto;
+  }
+  .mo-col { height: auto; }
+  .mo-col-news, .mo-col-trends { max-height: 40vh; }
+  .mo-col-center { min-height: 60vh; }
+  .rc-compact { height: 160px; }
 }

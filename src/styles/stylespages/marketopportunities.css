@@ -374,13 +374,198 @@
 }
 
 /* ===================================================================
-   ZONE CLASSIFICATION — pills cliquables
+   ZONE CLASSIFICATION — pills (copie de marketopportunities/robotneo.css
+   car RobotNeo n'est plus importé dans MarketOpportunities)
    =================================================================== */
+.zone-classification {
+  flex: 1;
+  margin-top: 0;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a4a2a;
+  border-radius: 4px;
+  overflow-y: auto;
+}
+
+.zc-header {
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #2a4a2a;
+}
+
+.zc-title {
+  color: #f5c26b;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+}
+
+.zc-section {
+  margin-bottom: 16px;
+}
+
+.zc-section:last-child {
+  margin-bottom: 0;
+}
+
+.zc-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.zc-section-title {
+  color: #888;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+}
+
+.zc-section-count {
+  color: #4ade80;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+}
+
+.zc-symbols {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.zc-chip {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 95px;
+  max-width: 130px;
+  padding: 3px 7px;
+  border: 1px solid rgba(180, 180, 180, 0.25);
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.25);
+  font-family: 'Courier New', monospace;
+  gap: 2px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.zc-chip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+}
+
+.zc-chip-symbol {
+  color: #d4d4d4;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.zc-chip-zscore {
+  color: #888;
+  font-size: 0.64rem;
+  white-space: nowrap;
+}
+
+.zc-chip-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.zc-chip-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.3s ease;
+}
+
+/* Couleur de la barre par section */
+.zc-grey      .zc-chip-bar-fill { background: linear-gradient(90deg, rgba(180,180,180,0.3), rgba(180,180,180,0.7)); }
+.zc-exh-buy   .zc-chip-bar-fill { background: linear-gradient(90deg, rgba(74,222,128,0.4), rgba(74,222,128,0.95)); }
+.zc-exh-sell  .zc-chip-bar-fill { background: linear-gradient(90deg, rgba(239,68,68,0.4), rgba(239,68,68,0.95));  }
+.zc-cont-buy  .zc-chip-bar-fill { background: linear-gradient(90deg, rgba(74,222,128,0.3), rgba(74,222,128,0.7));  }
+.zc-cont-sell .zc-chip-bar-fill { background: linear-gradient(90deg, rgba(239,68,68,0.3), rgba(239,68,68,0.7));   }
+
+/* Bordures de chip par section */
+.zc-grey      .zc-chip { border-color: rgba(180, 180, 180, 0.25); }
+.zc-exh-buy   .zc-chip { border-color: rgba(74, 222, 128, 0.4);   }
+.zc-exh-sell  .zc-chip { border-color: rgba(239, 68, 68, 0.4);    }
+.zc-cont-buy  .zc-chip { border-color: rgba(74, 222, 128, 0.25);  }
+.zc-cont-sell .zc-chip { border-color: rgba(239, 68, 68, 0.25);   }
+
+/* Couleur du zscore par section */
+.zc-grey      .zc-chip-zscore { color: #999;    }
+.zc-exh-buy   .zc-chip-zscore,
+.zc-cont-buy  .zc-chip-zscore { color: #4ade80; }
+.zc-exh-sell  .zc-chip-zscore,
+.zc-cont-sell .zc-chip-zscore { color: #ef4444; }
+
+/* Titres de section colorés par sens */
+.zc-exh-buy   .zc-section-title,
+.zc-cont-buy  .zc-section-title { color: #4ade80; }
+.zc-exh-sell  .zc-section-title,
+.zc-cont-sell .zc-section-title { color: #ef4444; }
+
+/* Chip dim (wait-cont-*) */
+.zc-chip-dim {
+  position: relative;
+  opacity: 0.55;
+}
+.zc-chip-dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.8);
+}
+
+/* Chip BLOCKED — tag textuel, pas de Heat Strip */
+.zc-chip-blocked {
+  opacity: 0.85;
+}
+.zc-chip-blocked .zc-chip-bar { display: none; }
+.zc-chip-tag {
+  font-size: 0.58rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Bordures BLOCKED par waitReason */
+.zc-blk-spike  { border-color: rgba(226, 75, 74, 0.55);  }
+.zc-blk-hours  { border-color: rgba(150, 150, 150, 0.4); }
+.zc-blk-atr    { border-color: rgba(239, 159, 39, 0.55); }
+.zc-blk-exh    { border-color: rgba(127, 119, 221, 0.55); }
+
+.zc-blocked .zc-section-title { color: #888; }
+
+.zc-empty {
+  color: #555;
+  font-family: 'Courier New', monospace;
+  font-size: 0.7rem;
+  font-style: italic;
+}
+
+/* ─── Pills cliquables (override .zc-chip pour <button>) ─────────────── */
 .zc-chip-clickable {
   appearance: none;
-  font-family: inherit;
+  font-family: 'Courier New', monospace;
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.15s ease;
+  text-align: left;
 }
 .zc-chip-clickable:hover {
   transform: translateY(-1px);

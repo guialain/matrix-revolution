@@ -17,7 +17,6 @@ import TopOpportunities                  from "../marketopportunities/TopOpportu
 import ZoneClassification, { classifyOpp } from "../marketopportunities/ZoneClassification";
 import RobotCompact                      from "../marketopportunities/RobotCompact";
 import WaitM5                            from "../marketopportunities/WaitM5";
-import ActivePosition                    from "../marketopportunities/ActivePosition";
 
 import "../../styles/stylespages/marketopportunities.css";
 
@@ -93,7 +92,6 @@ export default function MarketOpportunities() {
   const waitOpportunities  = core?.waitOpportunities  ?? [];
   const topOpportunities   = core?.topOpportunities   ?? { list: [], blocked: [] };
   const zoneCounts         = computeZoneCounts(topOpportunities);
-  const activePos          = data.openPositions?.[0] ?? null;
 
   return (
     <div className="mo-page">
@@ -123,11 +121,6 @@ export default function MarketOpportunities() {
           <section className="mo-center-card">
             <WaitM5 waitOpportunities={waitOpportunities} />
           </section>
-          {activePos && (
-            <section className="mo-center-card">
-              <ActivePosition position={activePos} />
-            </section>
-          )}
         </div>
       </main>
 

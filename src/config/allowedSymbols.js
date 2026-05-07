@@ -7,8 +7,8 @@
 //   - TRADABLE_SYMBOLS (22) : sous-ensemble trading, utilise par
 //                             AssetEligibility.js comme gate per-symbol
 //
-// Les 5 symboles dans ALLOWED_SYMBOLS mais PAS dans TRADABLE_SYMBOLS
-// (DOLLAR_INDX, PLATINUM, PALLADIUM, COCOA, COFFEE_C) sont des proxies
+// Les 4 symboles dans ALLOWED_SYMBOLS mais PAS dans TRADABLE_SYMBOLS
+// (DOLLAR_INDX, PLATINUM, PALLADIUM, COFFEE_C) sont des proxies
 // macro pour NeoMacroContext (Data_Structure.mqh, FillMacroContext()) :
 // scannes pour analyse contextuelle, jamais trades par le bot.
 //
@@ -48,7 +48,7 @@ export const TRADABLE_SYMBOLS = [
   // ENERGY
   "CrudeOIL", "BRENT_OIL", "GASOLINE",
   // AGRI
-  "WHEAT",
+  "WHEAT", "COCOA",
 ];
 
 const ALLOWED_SET  = new Set(ALLOWED_SYMBOLS.map(s => s.toUpperCase()));

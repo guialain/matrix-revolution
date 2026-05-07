@@ -31,6 +31,8 @@ export const VOLATILITY_CONFIG = {
   CrudeOIL:    { lowMax: 0.003162, medMax: 0.008548, highMax: 0.015038 },
   BRENT_OIL:   { lowMax: 0.001392, medMax: 0.006946, highMax: 0.013604 },
   GASOLINE:    { lowMax: 0.001796, medMax: 0.006127, highMax: 0.012005 },
+  // AGRI
+  COCOA:       { lowMax: 0.002736, medMax: 0.005852, highMax: 0.009482 },
   // DEFAULT
   default:     { lowMax: 0.000366, medMax: 0.000700, highMax: 0.005200 },
 };

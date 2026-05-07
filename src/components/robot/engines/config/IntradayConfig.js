@@ -134,9 +134,13 @@ export const INTRADAY_CONFIG = {
   },
 
   // ── AGRI ─────────────────────────────────────────────────────────────────────
-  WHEAT: { 
+  WHEAT: {
     spikeDown: -2.76, explosiveDown: -1.73, strongDown: -0.83, softDown: -0.51,
     softUp: 0.51, strongUp: 0.71, explosiveUp: 1.82, spikeUp: 3.05,
+  },
+  COCOA: {
+    spikeDown: -6.73, explosiveDown: -4.25, strongDown: -1.87, softDown: -0.99,
+    softUp: 0.98, strongUp: 1.67, explosiveUp: 4.01, spikeUp: 6.02,
   },
 
   // ── Default — actifs sans context CSV ─────────────────────────────────────

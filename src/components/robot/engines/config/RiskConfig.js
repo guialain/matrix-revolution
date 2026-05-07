@@ -233,6 +233,15 @@ export const RISK_CONFIG = {
     tickSize: 0.25,
     volume_min: 0.01, volume_max: 100, volume_step: 0.01,
   },
+  COCOA: {
+    atrH1Cap: 187, maxHoldH: 96, exhaustionEnabled: true,
+    spread: 10, spread_price: 10,
+    targetLeveragePerTrade: 0.40,
+    contractSize: 100, refPrice: 4490, baseToEUR: 0.847,
+    tickSize: 1, tickValue: 100,
+    stopsLevel: 16, marginPct: 0.02,
+    volume_min: 0.01, volume_max: 100, volume_step: 0.01,
+  },
 
   // ── DEFAULT ───────────────────────────────────────────────────────────────
 

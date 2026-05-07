@@ -50,8 +50,9 @@ const GlobalMarketHours = {
   // SYMBOL OVERRIDES (heures spécifiques par actif)
   // =========================
   symbolOverrides: {
-    WHEAT:      { label: "CBOT Wheat",   open: 9.0,  close: 16.0 },
-    JAPAN_225:  { label: "Nikkei 225",   open: 0.0,  close: 24.0 },
+    WHEAT:      { label: "CBOT Wheat",      open: 9.0,    close: 16.0    },
+    COCOA:      { label: "AvaTrade Cocoa",  open: 5.75,   close: 14.4833 }, // 08:45-17:29 MT5 server (GMT+3 été) en UTC. Hiver: -1h en bordure (acceptable).
+    JAPAN_225:  { label: "Nikkei 225",      open: 0.0,    close: 24.0    },
   },
 
   // =========================

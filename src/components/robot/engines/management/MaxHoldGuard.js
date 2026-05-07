@@ -3,6 +3,16 @@
 // Rôle : détecter les positions ouvertes dépassant maxHoldH (RiskConfig)
 // Retourne un tableau de { ticket, symbol, reason, duration_h, maxHoldH }
 //         à fermer via sendCloseToMT5
+//
+// TODO — exit guard non branché sur GlobalMarketHours.
+//   Symptôme : une position ouverte juste avant la cloche d'un actif à
+//   fenêtre intraday (WHEAT 9-16 UTC, COCOA 5.75-14.4833 UTC, futurs indices
+//   intraday) reste détenue hors-marché jusqu'à TP/SL hit ou maxHoldH (96h).
+//   Risque concret : position COCOA ouverte Jeudi 14:00 UTC, non close avant
+//   Ven 14:29 UTC → détenue ~65h hors-marché → swap × 2 nuits + gap dim/lun.
+//   Fix proposé : ajouter dans evaluate() un check
+//     if (!GlobalMarketHours.check(market, now, symbol).allowed) → force-close
+//   À traiter pour tous les symboles avec entrée dans symbolOverrides.
 // ============================================================================
 
 import { getRiskConfig, RISK_CONFIG } from "../config/RiskConfig";

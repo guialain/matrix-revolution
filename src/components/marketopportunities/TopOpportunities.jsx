@@ -101,7 +101,13 @@ function NeoOpportunityLine({ op, dim = false }) {
 
 const M5_WAIT_STATES = new Set(['WAIT_M5_OVEREXTENDED', 'WAIT_M5_SETUP']);
 
-export default function TopOpportunities({ validOpportunities = [], waitOpportunities = [] }) {
+export default function TopOpportunities({
+  validOpportunities = [],
+  waitOpportunities = [],
+  emptyStats = null,    // { EXH_BUY, EXH_SELL, CONT_BUY, CONT_SELL, GRISE }
+  symbolCount = null,
+  highlightedSymbol = null,
+}) {
   const valids = [...validOpportunities].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
   const waitsM5 = waitOpportunities
     .filter(op => M5_WAIT_STATES.has(op.state))
@@ -117,11 +123,32 @@ export default function TopOpportunities({ validOpportunities = [], waitOpportun
       <div className="neo-title neo-title-section">TOP OPPORTUNITIES</div>
 
       {!display.length ? (
-        <div className="neo-muted">No exploitable opportunities</div>
+        emptyStats ? (
+          <div className="neo-muted neo-empty-stats">
+            {symbolCount != null && (
+              <span className="neo-empty-line">Scanning <b>{symbolCount}</b> symbols</span>
+            )}
+            <span className="neo-empty-line">
+              <span className="neo-empty-stat"><b>{emptyStats.EXH_BUY ?? 0}</b> EXH BUY</span>
+              <span className="neo-empty-stat"><b>{emptyStats.EXH_SELL ?? 0}</b> EXH SELL</span>
+              <span className="neo-empty-stat"><b>{emptyStats.CONT_BUY ?? 0}</b> CONT BUY</span>
+              <span className="neo-empty-stat"><b>{emptyStats.CONT_SELL ?? 0}</b> CONT SELL</span>
+              <span className="neo-empty-stat"><b>{emptyStats.GRISE ?? 0}</b> GRISE</span>
+            </span>
+          </div>
+        ) : (
+          <div className="neo-muted">No exploitable opportunities</div>
+        )
       ) : (
         <div className="neo-op-list">
           {display.slice(0, 6).map(({ op, dim }, i) => (
-            <NeoOpportunityLine key={i} op={op} dim={dim} />
+            <div
+              key={i}
+              data-mo-symbol={op?.symbol ?? ""}
+              className={highlightedSymbol === op?.symbol ? "neo-op-wrap neo-op-highlight" : "neo-op-wrap"}
+            >
+              <NeoOpportunityLine op={op} dim={dim} />
+            </div>
           ))}
         </div>
       )}

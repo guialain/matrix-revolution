@@ -49,13 +49,18 @@ export function classifyOpp(opp) {
   return null;
 }
 
-function HeatChip({ symbol, zscore, dim }) {
+function HeatChip({ symbol, zscore, dim, onClick }) {
   const hasZ = Number.isFinite(zscore);
   const force = hasZ ? Math.min(Math.abs(zscore) / 3, 1) * 100 : 0;
   const zStr  = hasZ ? (zscore >= 0 ? `+${zscore.toFixed(2)}` : zscore.toFixed(2)) : '—';
 
+  const Tag = onClick ? "button" : "span";
   return (
-    <span className={`zc-chip ${dim ? 'zc-chip-dim' : ''}`}>
+    <Tag
+      type={onClick ? "button" : undefined}
+      className={`zc-chip ${dim ? 'zc-chip-dim' : ''} ${onClick ? 'zc-chip-clickable' : ''}`}
+      onClick={onClick ? () => onClick(symbol) : undefined}
+    >
       {dim && <span className="zc-chip-dot" />}
       <span className="zc-chip-row">
         <span className="zc-chip-symbol">{symbol}</span>
@@ -64,7 +69,7 @@ function HeatChip({ symbol, zscore, dim }) {
       <span className="zc-chip-bar">
         <span className="zc-chip-bar-fill" style={{ width: `${force}%` }} />
       </span>
-    </span>
+    </Tag>
   );
 }
 
@@ -88,7 +93,7 @@ function BlockedChip({ symbol, zscore, waitReason }) {
   );
 }
 
-function Section({ title, bucket, cls }) {
+function Section({ title, bucket, cls, onPillClick }) {
   const total = bucket.valid.length + bucket.dim.length;
   return (
     <div className={`zc-section ${cls}`}>
@@ -101,10 +106,10 @@ function Section({ title, bucket, cls }) {
           ? <span className="zc-empty">—</span>
           : <>
               {bucket.valid.map((item, i) => (
-                <HeatChip key={`v-${item.symbol}-${i}`} {...item} dim={false} />
+                <HeatChip key={`v-${item.symbol}-${i}`} {...item} dim={false} onClick={onPillClick} />
               ))}
               {bucket.dim.map((item, i) => (
-                <HeatChip key={`d-${item.symbol}-${item.waitReason ?? ''}-${i}`} {...item} dim={true} />
+                <HeatChip key={`d-${item.symbol}-${item.waitReason ?? ''}-${i}`} {...item} dim={true} onClick={onPillClick} />
               ))}
             </>
         }
@@ -133,7 +138,7 @@ function SectionBlocked({ title, bucket, cls }) {
   );
 }
 
-function ZoneClassification({ topOpportunities }) {
+function ZoneClassification({ topOpportunities, onPillClick = null }) {
   const buckets = useMemo(() => {
     const out = {
       EXH_BUY:   { valid: [], dim: [], blocked: [] },
@@ -179,11 +184,11 @@ function ZoneClassification({ topOpportunities }) {
         <span className="zc-title">ASSETS TRENDS</span>
       </div>
 
-      <Section title="EXH BUY"   bucket={buckets.EXH_BUY}   cls="zc-exh-buy"   />
-      <Section title="EXH SELL"  bucket={buckets.EXH_SELL}  cls="zc-exh-sell"  />
-      <Section title="CONT BUY"  bucket={buckets.CONT_BUY}  cls="zc-cont-buy"  />
-      <Section title="CONT SELL" bucket={buckets.CONT_SELL} cls="zc-cont-sell" />
-      <Section title="GRISE"     bucket={buckets.GRISE}     cls="zc-grey"      />
+      <Section title="EXH BUY"   bucket={buckets.EXH_BUY}   cls="zc-exh-buy"   onPillClick={onPillClick} />
+      <Section title="EXH SELL"  bucket={buckets.EXH_SELL}  cls="zc-exh-sell"  onPillClick={onPillClick} />
+      <Section title="CONT BUY"  bucket={buckets.CONT_BUY}  cls="zc-cont-buy"  onPillClick={onPillClick} />
+      <Section title="CONT SELL" bucket={buckets.CONT_SELL} cls="zc-cont-sell" onPillClick={onPillClick} />
+      <Section title="GRISE"     bucket={buckets.GRISE}     cls="zc-grey"      onPillClick={onPillClick} />
       <SectionBlocked title="BLOCKED" bucket={buckets.BLOCKED} cls="zc-blocked" />
     </div>
   );

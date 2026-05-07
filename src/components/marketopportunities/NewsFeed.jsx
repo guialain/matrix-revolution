@@ -24,11 +24,12 @@ function fmtTime(pubDate) {
   return `${mo}/${dd} ${hh}:${mm}`;
 }
 
-export default function NewsFeed() {
+export default function NewsFeed({ filters = null, defaultFilter = "All" }) {
   const [items, setItems]       = useState([]);
   const [fetchedAt, setFetchedAt] = useState(null);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState(null);
+  const [activeFilter, setActiveFilter] = useState(defaultFilter);
 
   const fetchNews = useCallback(async () => {
     try {
@@ -55,6 +56,15 @@ export default function NewsFeed() {
     ? new Date(fetchedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
     : null;
 
+  // Filtrage client-side par regex (si filters fournis)
+  const activeRegex = (filters && activeFilter !== "All")
+    ? filters.find(f => f.key === activeFilter)?.regex ?? null
+    : null;
+
+  const filteredItems = activeRegex
+    ? items.filter(it => activeRegex.test(`${it.title ?? ""} ${it.description ?? ""}`))
+    : items;
+
   return (
     <div className="nf-container">
       <div className="nf-header">
@@ -63,14 +73,31 @@ export default function NewsFeed() {
         {lastUpdate && <span className="nf-updated">↻ {lastUpdate}</span>}
       </div>
 
+      {filters && filters.length > 0 && (
+        <div className="nf-filters">
+          {filters.map(f => (
+            <button
+              key={f.key}
+              type="button"
+              className={`nf-chip ${activeFilter === f.key ? "nf-chip-active" : ""}`}
+              onClick={() => setActiveFilter(f.key)}
+            >
+              {f.label ?? f.key}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="nf-body">
         {loading && <div className="nf-status">Chargement…</div>}
         {error   && <div className="nf-status nf-error">Erreur : {error}</div>}
-        {!loading && !error && items.length === 0 && (
-          <div className="nf-status">Aucun article</div>
+        {!loading && !error && filteredItems.length === 0 && (
+          <div className="nf-status">
+            {items.length === 0 ? "Aucun article" : `Aucun article pour "${activeFilter}"`}
+          </div>
         )}
 
-        {items.map((item, i) => (
+        {filteredItems.map((item, i) => (
           <a
             key={i}
             className="nf-item"

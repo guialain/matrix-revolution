@@ -9,7 +9,7 @@
   margin: 0;
   padding: 4px 6px 6px;
   display: grid;
-  grid-template-columns: 25fr 50fr 25fr;
+  grid-template-columns: 35fr 30fr 35fr;
   gap: 8px;
   overflow: hidden;
   background: #000;
@@ -48,7 +48,7 @@
 .rc-compact {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 160px;
   flex-shrink: 0;
   overflow: hidden;
   border: 1px solid #1a1a1a;
@@ -165,6 +165,15 @@
   padding: 8px 10px;
 }
 
+/* Top Opps : row peut wrap quand col centrale étroite (30%) */
+.mo-center-card .neo-op-row {
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.mo-center-card .neo-op-meta {
+  margin-left: 0;
+}
+
 /* ===================================================================
    WAIT M5 — countdown + liste
    =================================================================== */
@@ -173,6 +182,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 6px;
+  flex-wrap: wrap;
 }
 .ma-wait-m5-title {
   font-size: 11px;
@@ -256,10 +266,11 @@
   font-variant-numeric: tabular-nums;
 }
 .ma-ap-row-main {
-  display: grid;
-  grid-template-columns: 1.5fr 0.7fr 0.8fr 1fr;
-  gap: 8px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
+  gap: 6px 10px;
   padding: 4px 0;
   border-top: 1px solid #1a1a1a;
   border-bottom: 1px solid #1a1a1a;
@@ -275,7 +286,7 @@
 .ma-ap-pnl-zero { color: #888; }
 .ma-ap-row-meta {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
 .ma-ap-meta-cell {
@@ -579,10 +590,10 @@
    RESPONSIVE
    =================================================================== */
 
-/* 1366 — réduit paddings, conserve 3 cols */
+/* 1366 — réduit paddings, robot un cran plus court (col centrale 30% étroite) */
 @media (max-width: 1500px) {
   .mo-page { gap: 6px; padding: 3px 4px 4px; }
-  .rc-compact { height: 180px; }
+  .rc-compact { height: 140px; }
   .rc-compact-overlay { font-size: 10px; }
 }
 
